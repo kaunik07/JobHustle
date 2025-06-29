@@ -26,8 +26,8 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
-import { addUser } from '@/app/actions';
 import { Loader2 } from 'lucide-react';
+import { User } from '@/lib/types';
 
 const formSchema = z.object({
   firstName: z.string().min(1, 'First name is required'),
@@ -39,9 +39,10 @@ type FormValues = z.infer<typeof formSchema>;
 
 interface AddUserDialogProps {
   children: React.ReactNode;
+  onUserAdded: (data: Omit<User, 'id' | 'avatarUrl'>) => void;
 }
 
-export function AddUserDialog({ children }: AddUserDialogProps) {
+export function AddUserDialog({ children, onUserAdded }: AddUserDialogProps) {
   const [open, setOpen] = React.useState(false);
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const { toast } = useToast();
@@ -58,12 +59,7 @@ export function AddUserDialog({ children }: AddUserDialogProps) {
   async function onSubmit(values: FormValues) {
     setIsSubmitting(true);
     try {
-      const formData = new FormData();
-      formData.append('firstName', values.firstName);
-      formData.append('lastName', values.lastName);
-      formData.append('email', values.email);
-      
-      await addUser(formData);
+      onUserAdded(values);
 
       toast({
         title: 'User Added',

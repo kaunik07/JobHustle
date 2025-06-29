@@ -32,9 +32,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { User, categories, statuses } from '@/lib/types';
+import { User, categories, statuses, Application } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
-import { addApplication } from '@/app/actions';
 import { Loader2 } from 'lucide-react';
 
 const formSchema = z.object({
@@ -52,9 +51,10 @@ type FormValues = z.infer<typeof formSchema>;
 interface AddApplicationDialogProps {
   children: React.ReactNode;
   users: User[];
+  onApplicationAdded: (data: Omit<Application, 'id' | 'user'>) => void;
 }
 
-export function AddApplicationDialog({ children, users }: AddApplicationDialogProps) {
+export function AddApplicationDialog({ children, users, onApplicationAdded }: AddApplicationDialogProps) {
   const [open, setOpen] = React.useState(false);
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const { toast } = useToast();
@@ -74,15 +74,8 @@ export function AddApplicationDialog({ children, users }: AddApplicationDialogPr
   async function onSubmit(values: FormValues) {
     setIsSubmitting(true);
     try {
-      // We are not handling file uploads in this example.
-      const formData = new FormData();
-      Object.entries(values).forEach(([key, value]) => {
-        if (key !== 'resume') {
-          formData.append(key, value as string);
-        }
-      });
-      
-      await addApplication(formData);
+      const { resume, ...appData } = values;
+      onApplicationAdded(appData);
 
       toast({
         title: 'Application Added',

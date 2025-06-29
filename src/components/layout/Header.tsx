@@ -4,7 +4,7 @@
 import * as React from 'react';
 import { Briefcase, Plus } from 'lucide-react';
 import { AddApplicationDialog } from '@/components/kanban/AddApplicationDialog';
-import type { User } from '@/lib/types';
+import type { User, Application } from '@/lib/types';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '../ui/button';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../ui/tooltip';
@@ -14,9 +14,11 @@ interface HeaderProps {
   users: User[];
   selectedUser: string;
   onUserChange: (userId: string) => void;
+  onUserAdded: (data: Omit<User, 'id' | 'avatarUrl'>) => void;
+  onApplicationAdded: (data: Omit<Application, 'id' | 'user'>) => void;
 }
 
-export function Header({ users, selectedUser, onUserChange }: HeaderProps) {
+export function Header({ users, selectedUser, onUserChange, onUserAdded, onApplicationAdded }: HeaderProps) {
 
   return (
     <header className="sticky top-0 z-30 flex h-16 items-center gap-4 border-b bg-background/80 px-4 backdrop-blur-sm md:px-6">
@@ -45,7 +47,7 @@ export function Header({ users, selectedUser, onUserChange }: HeaderProps) {
           </div>
         </TooltipProvider>
 
-        <AddUserDialog>
+        <AddUserDialog onUserAdded={onUserAdded}>
           <Button variant="outline" size="icon" className="rounded-full h-10 w-10">
             <Plus className="h-4 w-4" />
             <span className="sr-only">Add User</span>
@@ -54,7 +56,7 @@ export function Header({ users, selectedUser, onUserChange }: HeaderProps) {
       </div>
 
       <div className="flex items-center gap-4">
-        <AddApplicationDialog users={users}>
+        <AddApplicationDialog users={users} onApplicationAdded={onApplicationAdded}>
            <Button>+ Add Application</Button>
         </AddApplicationDialog>
       </div>
