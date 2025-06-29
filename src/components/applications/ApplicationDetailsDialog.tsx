@@ -15,11 +15,15 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { type Application, type ApplicationStatus, statuses } from '@/lib/types';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { ExternalLink, Trash2 } from 'lucide-react';
+import { ExternalLink, Trash2, CalendarIcon } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Calendar } from '@/components/ui/calendar';
+import { format } from 'date-fns';
+import { cn } from '@/lib/utils';
 
 interface ApplicationDetailsDialogProps {
   application: Application;
@@ -42,6 +46,13 @@ export function ApplicationDetailsDialog({ application, children, onApplicationU
   const handleStatusChange = (newStatus: ApplicationStatus) => {
     onApplicationUpdate(application.id, { status: newStatus });
     toast({ title: `Status changed to ${newStatus}.` });
+  };
+
+  const handleDateChange = (date: Date | undefined, field: 'appliedOn' | 'dueDate') => {
+    if (date) {
+        onApplicationUpdate(application.id, { [field]: date.toISOString() });
+        toast({ title: `${field === 'appliedOn' ? 'Applied date' : 'Due date'} updated.` });
+    }
   };
 
 
@@ -67,7 +78,7 @@ export function ApplicationDetailsDialog({ application, children, onApplicationU
             </div>
           </div>
         </DialogHeader>
-        <div className="grid gap-4 py-4">
+        <div className="grid gap-6 py-4">
           <div className="flex flex-wrap items-center gap-4">
              <div className="flex items-center gap-2">
                 <Badge variant="secondary">{application.status}</Badge>
@@ -86,6 +97,63 @@ export function ApplicationDetailsDialog({ application, children, onApplicationU
                     </SelectContent>
                 </Select>
             </div>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-4">
+            {application.status !== 'Yet to Apply' && (
+              <div className="space-y-1">
+                <label className="text-sm font-medium">Applied On</label>
+                 <Popover>
+                    <PopoverTrigger asChild>
+                        <Button
+                        variant={"outline"}
+                        className={cn(
+                            "w-[200px] justify-start text-left font-normal",
+                            !application.appliedOn && "text-muted-foreground"
+                        )}
+                        >
+                        <CalendarIcon className="mr-2 h-4 w-4" />
+                        {application.appliedOn ? format(new Date(application.appliedOn), "PPP") : <span>Pick a date</span>}
+                        </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0">
+                        <Calendar
+                        mode="single"
+                        selected={application.appliedOn ? new Date(application.appliedOn) : undefined}
+                        onSelect={(date) => handleDateChange(date, 'appliedOn')}
+                        initialFocus
+                        />
+                    </PopoverContent>
+                </Popover>
+              </div>
+            )}
+             {['OA', 'Interview'].includes(application.status) && (
+              <div className="space-y-1">
+                <label className="text-sm font-medium">Due Date</label>
+                 <Popover>
+                    <PopoverTrigger asChild>
+                        <Button
+                        variant={"outline"}
+                        className={cn(
+                            "w-[200px] justify-start text-left font-normal",
+                            !application.dueDate && "text-muted-foreground"
+                        )}
+                        >
+                        <CalendarIcon className="mr-2 h-4 w-4" />
+                        {application.dueDate ? format(new Date(application.dueDate), "PPP") : <span>Pick a date</span>}
+                        </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0">
+                        <Calendar
+                        mode="single"
+                        selected={application.dueDate ? new Date(application.dueDate) : undefined}
+                        onSelect={(date) => handleDateChange(date, 'dueDate')}
+                        initialFocus
+                        />
+                    </PopoverContent>
+                </Popover>
+              </div>
+            )}
           </div>
 
           {application.user && <Badge variant="outline">Applied by {`${application.user.firstName} ${application.user.lastName}`.trim()}</Badge>}

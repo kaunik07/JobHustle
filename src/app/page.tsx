@@ -50,7 +50,20 @@ export default function Home() {
     data: Partial<Application>
   ) => {
     setApplications(prev =>
-      prev.map(app => (app.id === appId ? { ...app, ...data } : app))
+      prev.map(app => {
+        if (app.id === appId) {
+          const updatedApp = { ...app, ...data };
+          
+          // If status is being updated to 'Applied' (or later stages) for the first time
+          // and `appliedOn` isn't already set, set it now.
+          if (data.status && data.status !== 'Yet to Apply' && !app.appliedOn) {
+            updatedApp.appliedOn = new Date().toISOString();
+          }
+
+          return updatedApp;
+        }
+        return app;
+      })
     );
   };
 

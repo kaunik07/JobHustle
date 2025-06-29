@@ -6,6 +6,8 @@ import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import type { Application } from '@/lib/types';
 import { ApplicationDetailsDialog } from '@/components/applications/ApplicationDetailsDialog';
+import { format } from 'date-fns';
+import { Clock } from 'lucide-react';
 
 interface KanbanCardProps {
   application: Application;
@@ -14,6 +16,16 @@ interface KanbanCardProps {
 
 export function KanbanCard({ application, onApplicationUpdate }: KanbanCardProps) {
   const companyDomain = application.companyName.toLowerCase().replace(/[^a-z0-9]/gi, '') + '.com';
+
+  const renderDate = () => {
+    if (application.dueDate && ['OA', 'Interview'].includes(application.status)) {
+        return `Due ${format(new Date(application.dueDate), "MMM d")}`;
+    }
+    if (application.appliedOn) {
+        return `Applied ${format(new Date(application.appliedOn), "MMM d")}`;
+    }
+    return 'Added Today';
+  }
 
   return (
     <ApplicationDetailsDialog application={application} onApplicationUpdate={onApplicationUpdate}>
@@ -39,7 +51,10 @@ export function KanbanCard({ application, onApplicationUpdate }: KanbanCardProps
           </Badge>
           
           <div className="flex justify-between items-center pt-2">
-            <p className="text-xs text-muted-foreground">Added Today</p>
+            <p className="text-xs text-muted-foreground flex items-center gap-1">
+                <Clock className="h-3 w-3" />
+                {renderDate()}
+            </p>
             <Badge variant="outline">{application.status}</Badge>
           </div>
         </CardContent>

@@ -28,4 +28,6 @@ export interface Application {
   userId: string;
   user?: User;
   notes?: string;
+  appliedOn?: string;
+  dueDate?: string;
 }

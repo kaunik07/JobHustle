@@ -25,6 +25,7 @@ export const applications: Omit<Application, 'user'>[] = [
     status: 'Applied',
     userId: 'user-1',
     notes: 'Reached out to John Smith on LinkedIn. He is a manager in the frontend team.',
+    appliedOn: new Date(new Date().setDate(new Date().getDate() - 2)).toISOString(),
   },
   {
     id: 'app-2',
@@ -35,6 +36,8 @@ export const applications: Omit<Application, 'user'>[] = [
     status: 'Interview',
     userId: 'user-1',
     notes: 'Interview scheduled for next Tuesday. Be prepared to discuss the case study.',
+    appliedOn: new Date(new Date().setDate(new Date().getDate() - 7)).toISOString(),
+    dueDate: new Date(new Date().setDate(new Date().getDate() + 3)).toISOString(),
   },
   {
     id: 'app-3',
@@ -44,6 +47,8 @@ export const applications: Omit<Application, 'user'>[] = [
     category: 'SRE/Devops',
     status: 'OA',
     userId: 'user-2',
+    appliedOn: new Date(new Date().setDate(new Date().getDate() - 5)).toISOString(),
+    dueDate: new Date(new Date().setDate(new Date().getDate() + 7)).toISOString(),
   },
   {
     id: 'app-4',
@@ -53,6 +58,7 @@ export const applications: Omit<Application, 'user'>[] = [
     category: 'Quant',
     status: 'Offer',
     userId: 'user-1',
+    appliedOn: new Date(new Date().setDate(new Date().getDate() - 14)).toISOString(),
   },
   {
     id: 'app-5',
@@ -62,6 +68,8 @@ export const applications: Omit<Application, 'user'>[] = [
     category: 'Systems',
     status: 'Interview',
     userId: 'user-2',
+    appliedOn: new Date(new Date().setDate(new Date().getDate() - 10)).toISOString(),
+    dueDate: new Date(new Date().setDate(new Date().getDate() + 1)).toISOString(),
   },
     {
     id: 'app-6',
@@ -71,6 +79,7 @@ export const applications: Omit<Application, 'user'>[] = [
     category: 'SWE',
     status: 'Interview',
     userId: 'user-2',
+    appliedOn: new Date().toISOString(),
   },
   {
     id: 'app-7',
@@ -80,5 +89,6 @@ export const applications: Omit<Application, 'user'>[] = [
     category: 'Data Scientist',
     status: 'Applied',
     userId: 'user-2',
+    appliedOn: new Date(new Date().setDate(new Date().getDate() - 1)).toISOString(),
   },
 ];
