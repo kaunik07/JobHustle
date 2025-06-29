@@ -6,8 +6,17 @@ import { db } from '@/lib/db';
 import { applications, users } from '@/lib/db/schema';
 import { eq } from 'drizzle-orm';
 import type { Application, User } from '@/lib/types';
+import { fetchJobDescription } from '@/ai/flows/fetch-job-description';
 
-export async function addApplication(data: Omit<Application, 'id' | 'user'>) {
+export async function addApplication(data: Omit<Application, 'id' | 'user' | 'jobDescription' | 'resumeUrl' | 'appliedOn' | 'dueDate'>) {
+  let jobDescription = '';
+  try {
+    const result = await fetchJobDescription({ jobUrl: data.jobUrl });
+    jobDescription = result.jobDescription;
+  } catch (error) {
+    console.error("Failed to fetch job description:", error);
+  }
+  
   const usersToApplyFor = data.userId === 'all' 
     ? await db.select().from(users) 
     : await db.select().from(users).where(eq(users.id, data.userId));
@@ -22,6 +31,7 @@ export async function addApplication(data: Omit<Application, 'id' | 'user'>) {
       notes: data.notes,
       userId: user.id,
       appliedOn: data.status !== 'Yet to Apply' ? new Date() : null,
+      jobDescription: jobDescription,
     });
   }
   revalidatePath('/');
