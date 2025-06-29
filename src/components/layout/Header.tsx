@@ -46,18 +46,10 @@ export function Header({ users, selectedUser, onUserChange }: HeaderProps) {
         </TooltipProvider>
 
         <AddUserDialog>
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button variant="outline" size="icon" className="rounded-full h-10 w-10">
-                  <Plus className="h-4 w-4" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>
-                <p>Add User</p>
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
+          <Button variant="outline" size="icon" className="rounded-full h-10 w-10">
+            <Plus className="h-4 w-4" />
+            <span className="sr-only">Add User</span>
+          </Button>
         </AddUserDialog>
       </div>
 

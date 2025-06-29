@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -66,7 +67,7 @@ export function AddApplicationDialog({ children, users }: AddApplicationDialogPr
       jobUrl: '',
       category: 'SWE',
       status: 'Yet to Apply',
-      userId: users[0]?.id || '',
+      userId: 'all',
     },
   });
 
@@ -187,6 +188,7 @@ export function AddApplicationDialog({ children, users }: AddApplicationDialogPr
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
+                        <SelectItem value="all">All Users</SelectItem>
                         {users.map(user => (
                           <SelectItem key={user.id} value={user.id}>{user.name}</SelectItem>
                         ))}

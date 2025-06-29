@@ -7,8 +7,15 @@ import { fetchJobDescription } from '@/ai/flows/fetch-job-description';
 export async function addApplication(formData: FormData) {
   const jobUrl = formData.get('jobUrl') as string;
   const companyName = formData.get('companyName') as string;
+  const userId = formData.get('userId') as string;
 
-  console.log('New application added for:', companyName);
+  if (userId === 'all') {
+    console.log(`New application for "${formData.get('jobTitle')}" at ${companyName} will be added for all users.`);
+    // In a real application, you would loop through all users and create an application for each.
+  } else {
+    console.log('New application added for:', companyName);
+  }
+  
   console.log('Data:', Object.fromEntries(formData.entries()));
 
   // In a real application, you would save this data to a database.
