@@ -25,6 +25,7 @@ export const applications = pgTable('applications', {
     jobTitle: varchar('job_title', { length: 255 }).notNull(),
     jobUrl: text('job_url').notNull(),
     jobDescription: text('job_description'),
+    resumeUrl: text('resume_url'),
     category: categoriesEnum('category').notNull(),
     status: statusesEnum('status').notNull(),
     userId: text('user_id').references(() => users.id, { onDelete: 'cascade' }).notNull(),

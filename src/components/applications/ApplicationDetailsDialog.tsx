@@ -15,7 +15,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { type Application, type ApplicationStatus, statuses, categories, type ApplicationCategory } from '@/lib/types';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { ExternalLink, Trash2, CalendarIcon } from 'lucide-react';
+import { ExternalLink, Trash2, CalendarIcon, Paperclip, FileText } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -61,6 +61,7 @@ export function ApplicationDetailsDialog({ application, children }: ApplicationD
   const [currentNotes, setCurrentNotes] = React.useState(application.notes || '');
   const [currentJobTitle, setCurrentJobTitle] = React.useState(application.jobTitle);
   const [currentCompanyName, setCurrentCompanyName] = React.useState(application.companyName);
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
 
   React.useEffect(() => {
     if (open) {
@@ -77,6 +78,31 @@ export function ApplicationDetailsDialog({ application, children }: ApplicationD
     } catch (error) {
       toast({ variant: 'destructive', title: 'Update failed. Please try again.' });
       return false;
+    }
+  };
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const userIdentifier = application.user ? `${application.user.firstName}-${application.user.lastName}` : application.userId;
+    const companyIdentifier = application.companyName.replace(/\s+/g, '-');
+    const resumeUrl = `gdrive:///${userIdentifier}/${companyIdentifier}/${file.name}`;
+    
+    if (await handleUpdate({ resumeUrl })) {
+      toast({ title: 'Resume attached successfully.' });
+    } else {
+      toast({ variant: 'destructive', title: 'Failed to attach resume.' });
+    }
+
+    if (e.target) {
+      e.target.value = '';
+    }
+  };
+
+  const handleDeleteResume = async () => {
+    if (await handleUpdate({ resumeUrl: null })) {
+      toast({ title: 'Resume removed.' });
     }
   };
 
@@ -298,6 +324,56 @@ export function ApplicationDetailsDialog({ application, children }: ApplicationD
                 onChange={(e) => setCurrentNotes(e.target.value)}
                 onBlur={handleNotesBlur}
                 className="min-h-[100px] text-sm"
+                />
+            </div>
+            
+            <div className="space-y-2">
+                <h3 className="font-semibold">Resume</h3>
+                {application.resumeUrl ? (
+                    <div className="flex items-center justify-between rounded-md border p-2 pl-3">
+                        <a href="#" onClick={(e) => e.preventDefault()} className="flex items-center gap-2 text-primary font-medium overflow-hidden">
+                            <FileText className="h-4 w-4 flex-shrink-0" />
+                            <span className="truncate" title={application.resumeUrl.split('/').pop() || 'resume.pdf'}>{application.resumeUrl.split('/').pop() || 'resume.pdf'}</span>
+                        </a>
+                        <div className="flex items-center gap-1">
+                             <Button variant="outline" size="sm" onClick={() => fileInputRef.current?.click()}>
+                                Replace
+                            </Button>
+                             <AlertDialog>
+                                <AlertDialogTrigger asChild>
+                                  <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-destructive">
+                                    <Trash2 className="h-4 w-4" />
+                                  </Button>
+                                </AlertDialogTrigger>
+                                <AlertDialogContent>
+                                  <AlertDialogHeader>
+                                    <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                                    <AlertDialogDescription>
+                                      This will remove the currently attached resume. This action cannot be undone.
+                                    </AlertDialogDescription>
+                                  </AlertDialogHeader>
+                                  <AlertDialogFooter>
+                                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                    <AlertDialogAction onClick={handleDeleteResume}>
+                                      Remove
+                                    </AlertDialogAction>
+                                  </AlertDialogFooter>
+                                </AlertDialogContent>
+                              </AlertDialog>
+                        </div>
+                    </div>
+                ) : (
+                    <Button variant="outline" onClick={() => fileInputRef.current?.click()}>
+                        <Paperclip className="mr-2 h-4 w-4" />
+                        Attach Resume
+                    </Button>
+                )}
+                 <input
+                    type="file"
+                    ref={fileInputRef}
+                    onChange={handleFileChange}
+                    className="hidden"
+                    accept=".pdf,.doc,.docx"
                 />
             </div>
 

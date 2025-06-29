@@ -23,7 +23,7 @@ export interface Application {
   jobTitle: string;
   jobUrl: string;
   jobDescription?: string | null;
-  resumeUrl?: string;
+  resumeUrl?: string | null;
   category: ApplicationCategory;
   status: ApplicationStatus;
   userId: string;
