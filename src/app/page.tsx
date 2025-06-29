@@ -1,4 +1,3 @@
-
 'use client';
 
 import * as React from 'react';
@@ -86,6 +85,18 @@ export default function Home() {
       })
     );
   };
+  
+  const handleRemoveApplication = (appIdToRemove: string) => {
+    const appToRemove = applications.find(app => app.id === appIdToRemove);
+    if (!appToRemove) return;
+
+    setApplications(prev => prev.filter(app => app.id !== appIdToRemove));
+
+    toast({
+      title: 'Application Removed',
+      description: `${appToRemove.jobTitle} at ${appToRemove.companyName} has been removed.`,
+    });
+  };
 
   const filteredApplications = applications.filter(app => {
     const userMatch = selectedUser === 'all' || app.userId === selectedUser;
@@ -113,11 +124,13 @@ export default function Home() {
         <YetToApplyList 
             applications={yetToApplyApplications} 
             onApplicationUpdate={handleUpdateApplication}
+            onApplicationDelete={handleRemoveApplication}
         />
         <Separator />
         <KanbanBoard 
           applications={kanbanApplications} 
           onApplicationUpdate={handleUpdateApplication}
+          onApplicationDelete={handleRemoveApplication}
         />
       </main>
     </div>

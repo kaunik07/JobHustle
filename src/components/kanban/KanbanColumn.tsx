@@ -9,9 +9,10 @@ interface KanbanColumnProps {
   title: string;
   applications: Application[];
   onApplicationUpdate: (appId: string, data: Partial<Application>) => void;
+  onApplicationDelete: (appId: string) => void;
 }
 
-export function KanbanColumn({ title, applications, onApplicationUpdate }: KanbanColumnProps) {
+export function KanbanColumn({ title, applications, onApplicationUpdate, onApplicationDelete }: KanbanColumnProps) {
   return (
     <div className="flex h-full flex-col rounded-lg bg-secondary shadow-sm">
       <div className="flex items-center justify-between p-4">
@@ -23,7 +24,7 @@ export function KanbanColumn({ title, applications, onApplicationUpdate }: Kanba
       <ScrollArea className="flex-1">
         <div className="flex flex-col gap-3 p-4 pt-0">
           {applications.map(app => (
-            <KanbanCard key={app.id} application={app} onApplicationUpdate={onApplicationUpdate} />
+            <KanbanCard key={app.id} application={app} onApplicationUpdate={onApplicationUpdate} onApplicationDelete={onApplicationDelete} />
           ))}
            {applications.length === 0 && (
             <div className="flex h-24 items-center justify-center rounded-md border-2 border-dashed border-border text-sm text-muted-foreground">

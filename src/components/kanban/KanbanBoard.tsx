@@ -9,9 +9,10 @@ import { Application, kanbanStatuses } from '@/lib/types';
 interface KanbanBoardProps {
   applications: Application[];
   onApplicationUpdate: (appId: string, data: Partial<Application>) => void;
+  onApplicationDelete: (appId: string) => void;
 }
 
-export function KanbanBoard({ applications, onApplicationUpdate }: KanbanBoardProps) {
+export function KanbanBoard({ applications, onApplicationUpdate, onApplicationDelete }: KanbanBoardProps) {
 
   const columns = useMemo(() => {
     return kanbanStatuses.map(status => ({
@@ -31,6 +32,7 @@ export function KanbanBoard({ applications, onApplicationUpdate }: KanbanBoardPr
               title={column.title} 
               applications={column.applications}
               onApplicationUpdate={onApplicationUpdate} 
+              onApplicationDelete={onApplicationDelete}
             />
           ))}
         </div>

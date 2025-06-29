@@ -24,14 +24,26 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Calendar } from '@/components/ui/calendar';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 interface ApplicationDetailsDialogProps {
   application: Application;
   children: React.ReactNode;
   onApplicationUpdate: (appId: string, data: Partial<Application>) => void;
+  onApplicationDelete: (appId: string) => void;
 }
 
-export function ApplicationDetailsDialog({ application, children, onApplicationUpdate }: ApplicationDetailsDialogProps) {
+export function ApplicationDetailsDialog({ application, children, onApplicationUpdate, onApplicationDelete }: ApplicationDetailsDialogProps) {
   const { toast } = useToast();
   const companyDomain = application.companyName.toLowerCase().replace(/[^a-z0-9]/gi, '') + '.com';
   const [currentNotes, setCurrentNotes] = React.useState(application.notes || '');
@@ -184,10 +196,28 @@ export function ApplicationDetailsDialog({ application, children, onApplicationU
           </div>
         </div>
         <DialogFooter>
-          <Button variant="outline">
-            <Trash2 className="mr-2 h-4 w-4" />
-            Delete
-          </Button>
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button variant="outline">
+                <Trash2 className="mr-2 h-4 w-4" />
+                Delete
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  This action cannot be undone. This will permanently delete this application.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction onClick={() => onApplicationDelete(application.id)}>
+                  Delete
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
         </DialogFooter>
       </DialogContent>
     </Dialog>

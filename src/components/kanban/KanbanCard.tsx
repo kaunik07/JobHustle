@@ -12,9 +12,10 @@ import { Clock } from 'lucide-react';
 interface KanbanCardProps {
   application: Application;
   onApplicationUpdate: (appId: string, data: Partial<Application>) => void;
+  onApplicationDelete: (appId: string) => void;
 }
 
-export function KanbanCard({ application, onApplicationUpdate }: KanbanCardProps) {
+export function KanbanCard({ application, onApplicationUpdate, onApplicationDelete }: KanbanCardProps) {
   const companyDomain = application.companyName.toLowerCase().replace(/[^a-z0-9]/gi, '') + '.com';
 
   const renderDate = () => {
@@ -28,7 +29,7 @@ export function KanbanCard({ application, onApplicationUpdate }: KanbanCardProps
   }
 
   return (
-    <ApplicationDetailsDialog application={application} onApplicationUpdate={onApplicationUpdate}>
+    <ApplicationDetailsDialog application={application} onApplicationUpdate={onApplicationUpdate} onApplicationDelete={onApplicationDelete}>
       <Card className="cursor-pointer transition-shadow hover:shadow-lg">
         <CardContent className="p-4 space-y-3">
           <div className="flex items-center gap-4">
