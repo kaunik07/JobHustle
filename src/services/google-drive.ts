@@ -32,22 +32,26 @@ function getDriveClient(): drive_v3.Drive {
 async function findOrCreateFolder(drive: drive_v3.Drive, name: string, parentId: string): Promise<string> {
   const query = `mimeType='application/vnd.google-apps.folder' and name='${name}' and '${parentId}' in parents and trashed=false`;
   
-  const { data } = await drive.files.list({ q: query, fields: 'files(id)' });
+  try {
+    const { data } = await drive.files.list({ q: query, fields: 'files(id)' });
 
-  if (data.files && data.files.length > 0) {
-    return data.files[0].id!;
+    if (data.files && data.files.length > 0) {
+      return data.files[0].id!;
+    }
+
+    const { data: newFolder } = await drive.files.create({
+      requestBody: {
+        name: name,
+        mimeType: 'application/vnd.google-apps.folder',
+        parents: [parentId],
+      },
+      fields: 'id',
+    });
+
+    return newFolder.id!;
+  } catch (error) {
+    throw new Error(`Failed to find or create folder '${name}' in Google Drive. Check permissions. Original error: ${error.message}`);
   }
-
-  const { data: newFolder } = await drive.files.create({
-    requestBody: {
-      name: name,
-      mimeType: 'application/vnd.google-apps.folder',
-      parents: [parentId],
-    },
-    fields: 'id',
-  });
-
-  return newFolder.id!;
 }
 
 export async function uploadResume(
@@ -57,6 +61,16 @@ export async function uploadResume(
 ): Promise<string> {
   const drive = getDriveClient();
   const rootFolderId = process.env.GOOGLE_DRIVE_FOLDER_ID!;
+
+  // 1. Pre-flight check to ensure the root folder is accessible
+  try {
+    await drive.files.get({ fileId: rootFolderId, fields: 'id' });
+  } catch(e) {
+    if (e.code === 404) {
+        throw new Error(`Google Drive folder with ID '${rootFolderId}' not found. Please verify GOOGLE_DRIVE_FOLDER_ID in your .env file.`);
+    }
+    throw new Error(`Failed to access Google Drive folder with ID '${rootFolderId}'. Please verify it's shared with your service account email with 'Editor' permissions. Original error: ${e.message}`);
+  }
 
   const userFolderName = `${user.firstName}-${user.lastName}`.replace(/[^a-zA-Z0-9-]/g, '_');
   const userFolderId = await findOrCreateFolder(drive, userFolderName, rootFolderId);
@@ -69,7 +83,7 @@ export async function uploadResume(
     mimeType: file.type,
     body: Readable.from(fileBuffer),
   };
-
+  
   const { data: uploadedFile } = await drive.files.create({
     media: media,
     requestBody: {
@@ -80,17 +94,27 @@ export async function uploadResume(
   });
 
   if (!uploadedFile.id || !uploadedFile.webViewLink) {
-    throw new Error('File upload succeeded but no webViewLink or id was returned.');
+    throw new Error('File upload succeeded but no webViewLink or id was returned from Google Drive.');
   }
 
-  // Make the file publicly readable so the link works for any user
-  await drive.permissions.create({
-    fileId: uploadedFile.id,
-    requestBody: {
-      role: 'reader',
-      type: 'anyone',
-    },
-  });
+  // 2. Make the file publicly readable and handle potential errors
+  try {
+    await drive.permissions.create({
+      fileId: uploadedFile.id,
+      requestBody: {
+        role: 'reader',
+        type: 'anyone',
+      },
+    });
+  } catch (error) {
+    // If setting permissions fails, delete the file to avoid orphans
+    try {
+      await drive.files.delete({ fileId: uploadedFile.id });
+    } catch (cleanupError) {
+      console.error(`Failed to cleanup file '${uploadedFile.id}' after a permission error. Please delete it manually.`, cleanupError);
+    }
+    throw new Error(`File was uploaded but failed to be made public. Please ensure your service account has 'Editor' permissions on the folder. Original error: ${error.message}`);
+  }
 
   return uploadedFile.webViewLink;
 }
@@ -100,9 +124,7 @@ export async function deleteResumeByUrl(fileUrl: string): Promise<void> {
   const fileIdMatch = fileUrl.match(/\/d\/([a-zA-Z0-9-_]+)/);
 
   if (!fileIdMatch || !fileIdMatch[1]) {
-    console.warn(`Could not extract file ID from URL: ${fileUrl}`);
-    // If we can't parse the ID, we can't delete it.
-    // This is better than throwing an error, as it allows the DB record to be cleared.
+    console.warn(`Could not extract file ID from URL for deletion: ${fileUrl}`);
     return;
   }
   const fileId = fileIdMatch[1];
@@ -113,6 +135,7 @@ export async function deleteResumeByUrl(fileUrl: string): Promise<void> {
     // If the file is already deleted or not found, Google API returns a 404.
     // We can safely ignore this error.
     if (error.code !== 404) {
+      console.error(`Failed to delete file from Google Drive: ${error.message}`);
       throw error;
     }
   }
