@@ -9,6 +9,7 @@ import { KanbanBoard } from '@/components/kanban/KanbanBoard';
 import { YetToApplyList } from '@/components/applications/YetToApplyList';
 import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/hooks/use-toast';
+import { AnalyticsOverview } from '@/components/analytics/AnalyticsOverview';
 
 export default function Home() {
   const [users, setUsers] = React.useState<User[]>(mockUsers);
@@ -51,15 +52,15 @@ export default function Home() {
     setApplications(prev =>
       prev.map(app => (app.id === appId ? { ...app, ...data } : app))
     );
-    toast({
-      title: 'Application Updated',
-      description: 'Your changes have been saved.',
-    });
   };
 
-  const yetToApplyApplications = applications.filter(app => {
+  const filteredApplications = applications.filter(app => {
     const userMatch = selectedUser === 'all' || app.userId === selectedUser;
-    return app.status === 'Yet to Apply' && userMatch;
+    return userMatch;
+  });
+
+  const yetToApplyApplications = filteredApplications.filter(app => {
+    return app.status === 'Yet to Apply';
   });
 
   const kanbanApplications = applications.filter(app => app.status !== 'Yet to Apply');
@@ -74,6 +75,7 @@ export default function Home() {
         onApplicationAdded={handleAddApplication}
       />
       <main className="flex-1 p-4 md:p-6 lg:p-8 space-y-6">
+        <AnalyticsOverview applications={filteredApplications} />
         <YetToApplyList 
             applications={yetToApplyApplications} 
             onApplicationUpdate={handleUpdateApplication}
