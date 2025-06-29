@@ -4,38 +4,30 @@ import { applications as applicationsSchema, users as usersSchema } from '@/lib/
 import { eq, desc } from 'drizzle-orm';
 import type { Application, User } from '@/lib/types';
 import { JobTrackerClient } from '@/components/layout/JobTrackerClient';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { AlertCircle } from 'lucide-react';
 
 export default async function Home({
   searchParams,
 }: {
   searchParams: { user?: string };
 }) {
-  let allUsers: User[] = [];
-  let applicationsForClient: Application[] = [];
+  try {
+    const allUsers: User[] = await db.select().from(usersSchema);
 
-  try {
-    allUsers = await db.select().from(usersSchema);
-  } catch (e) {
-    console.error("Database connection error while fetching users:", e);
-    // Return the client with empty data to prevent a hard crash
-    return <JobTrackerClient users={[]} applications={[]} selectedUserId="all" />;
-  }
-  
-  // If there are no users, there's nothing to show.
-  if (allUsers.length === 0) {
-    return <JobTrackerClient users={[]} applications={[]} selectedUserId={'all'} />;
-  }
-  
-  // Determine the selected user ID based on all available users
-  let selectedUser: User | undefined = allUsers.find(u => u.id === searchParams.user);
-  // Default to the user named 'U' or the first user if the param is invalid
-  if (!selectedUser && searchParams.user !== 'all') {
-    selectedUser = allUsers.find(u => u.firstName === 'U') || allUsers[0];
-  }
-  const selectedUserId = searchParams.user === 'all' ? 'all' : selectedUser?.id || 'all';
-  
-  // Now fetch applications for the selected user
-  try {
+    if (allUsers.length === 0) {
+      // If there are no users, we can show the main screen with a prompt to add one.
+      return <JobTrackerClient users={[]} applications={[]} selectedUserId="all" />;
+    }
+    
+    // Determine the selected user ID
+    let selectedUser: User | undefined = allUsers.find(u => u.id === searchParams.user);
+    if (!selectedUser && searchParams.user !== 'all') {
+      selectedUser = allUsers.find(u => u.firstName === 'U') || allUsers[0];
+    }
+    const selectedUserId = searchParams.user === 'all' ? 'all' : selectedUser?.id || 'all';
+    
+    // Fetch applications for the selected user
     const query = db
       .select({
         application: applicationsSchema,
@@ -51,20 +43,40 @@ export default async function Home({
     
     const results = await query;
     
-    applicationsForClient = results.map(r => ({
+    const applicationsForClient = results.map(r => ({
       ...(r.application as Omit<Application, 'user'>),
       user: r.user as User,
     }));
-  } catch (error) {
-    console.error("Database connection error while fetching applications:", error);
-    // applicationsForClient will remain an empty array, so the UI will show an empty state.
-  }
 
-  return (
-    <JobTrackerClient
-      users={allUsers}
-      applications={applicationsForClient}
-      selectedUserId={selectedUserId}
-    />
-  );
+    return (
+      <JobTrackerClient
+        users={allUsers}
+        applications={applicationsForClient}
+        selectedUserId={selectedUserId}
+      />
+    );
+
+  } catch (e) {
+    const errorMessage = e instanceof Error ? e.message : String(e);
+    console.error("Database operation failed:", errorMessage);
+    
+    return (
+      <div className="flex h-screen w-full items-center justify-center p-4 bg-background">
+        <Alert variant="destructive" className="max-w-xl">
+          <AlertCircle className="h-4 w-4" />
+          <AlertTitle>Database Operation Failed</AlertTitle>
+          <AlertDescription>
+            <p>Could not fetch data from the database.</p>
+            <p className="mt-2">This can happen if the database is not running, not accessible, or if the connection URL is incorrect.</p>
+            <details className="mt-4 text-xs bg-muted/50 p-2 rounded">
+              <summary className="cursor-pointer font-medium">Error Details</summary>
+              <pre className="mt-2 whitespace-pre-wrap text-xs font-mono">
+                {errorMessage}
+              </pre>
+            </details>
+          </AlertDescription>
+        </Alert>
+      </div>
+    );
+  }
 }
