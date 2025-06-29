@@ -1,6 +1,6 @@
-export type ApplicationStatus = 'Applied' | 'OA' | 'Interview' | 'Cleared Interview' | 'Offer Letter';
+export type ApplicationStatus = 'Yet to Apply' | 'Applied' | 'OA' | 'Interview' | 'Cleared' | 'Offer';
 
-export const statuses: ApplicationStatus[] = ['Applied', 'OA', 'Interview', 'Cleared Interview', 'Offer Letter'];
+export const statuses: ApplicationStatus[] = ['Yet to Apply', 'Applied', 'OA', 'Interview', 'Cleared', 'Offer'];
 
 export type ApplicationCategory = 'SWE' | 'SRE/Devops' | 'Quant' | 'Systems' | 'Data Scientist';
 

@@ -1,11 +1,21 @@
-import type { Application, User, ApplicationCategory, ApplicationStatus } from './types';
+import type { Application, User } from './types';
 
 export const users: User[] = [
   { id: 'user-1', name: 'Alex Doe', avatarUrl: 'https://placehold.co/40x40.png' },
   { id: 'user-2', name: 'Jane Smith', avatarUrl: 'https://placehold.co/40x40.png' },
+  { id: 'user-3', name: 'U', avatarUrl: 'https://placehold.co/40x40.png' },
 ];
 
 export const applications: Omit<Application, 'user'>[] = [
+  {
+    id: 'app-elastic',
+    companyName: 'Elastic',
+    jobTitle: 'Software Engineer',
+    jobUrl: 'https://example.com/job/elastic',
+    category: 'SRE/Devops',
+    status: 'Yet to Apply',
+    userId: 'user-3',
+  },
   {
     id: 'app-1',
     companyName: 'Innovate Inc.',
@@ -39,7 +49,7 @@ export const applications: Omit<Application, 'user'>[] = [
     jobTitle: 'Quantitative Analyst',
     jobUrl: 'https://example.com/job/4',
     category: 'Quant',
-    status: 'Offer Letter',
+    status: 'Offer',
     userId: 'user-1',
   },
   {
@@ -48,7 +58,7 @@ export const applications: Omit<Application, 'user'>[] = [
     jobTitle: 'Systems Engineer',
     jobUrl: 'https://example.com/job/5',
     category: 'Systems',
-    status: 'Cleared Interview',
+    status: 'Cleared',
     userId: 'user-2',
   },
     {

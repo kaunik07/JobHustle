@@ -65,7 +65,7 @@ export function AddApplicationDialog({ children, users }: AddApplicationDialogPr
       jobTitle: '',
       jobUrl: '',
       category: 'SWE',
-      status: 'Applied',
+      status: 'Yet to Apply',
       userId: users[0]?.id || '',
     },
   });
@@ -184,7 +184,7 @@ export function AddApplicationDialog({ children, users }: AddApplicationDialogPr
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue placeholder="Select user" />
-                        </SelectTrigger>
+                        </Trigger>
                       </FormControl>
                       <SelectContent>
                         {users.map(user => (
@@ -197,6 +197,28 @@ export function AddApplicationDialog({ children, users }: AddApplicationDialogPr
                 )}
               />
             </div>
+             <FormField
+                control={form.control}
+                name="status"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Status</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select a status" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {statuses.map(s => (
+                          <SelectItem key={s} value={s}>{s}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
              <FormField
                 control={form.control}
                 name="resume"
