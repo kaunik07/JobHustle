@@ -1,4 +1,3 @@
-
 'use client';
 
 import * as React from 'react';
@@ -110,9 +109,16 @@ export function ApplicationDetailsDialog({ application, children }: ApplicationD
             );
             toast({ title: 'Resume attached successfully.' });
         } catch (error) {
-            console.error(error);
-            const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred';
-            toast({ variant: 'destructive', title: 'Failed to attach resume.', description: errorMessage });
+            console.error("Full error object:", error);
+            const errorMessage = error instanceof Error 
+                ? error.message 
+                : 'An unknown error occurred. Please check the server terminal logs for more details.';
+            toast({ 
+                variant: 'destructive', 
+                title: 'Failed to attach resume.', 
+                description: errorMessage,
+                duration: 10000,
+            });
         } finally {
             setIsUploading(false);
             if (e.target) e.target.value = '';
