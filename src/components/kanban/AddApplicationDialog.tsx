@@ -69,14 +69,10 @@ export function AddApplicationDialog({ children, users, selectedUserId }: AddApp
       jobUrl: '',
       category: 'SWE',
       status: 'Yet to Apply',
-      userId: selectedUserId,
+      userId: 'all',
       notes: '',
     },
   });
-
-  React.useEffect(() => {
-    form.setValue('userId', selectedUserId);
-  }, [selectedUserId, form]);
 
   async function onSubmit(values: FormValues) {
     setIsSubmitting(true);
@@ -88,7 +84,15 @@ export function AddApplicationDialog({ children, users, selectedUserId }: AddApp
         description: `${values.jobTitle} at ${values.companyName} has been added.`,
       });
       setOpen(false);
-      form.reset();
+      form.reset({
+        ...form.getValues(),
+        companyName: '',
+        jobTitle: '',
+        jobUrl: '',
+        notes: '',
+        userId: 'all',
+        status: 'Yet to Apply',
+      });
     } catch (error) {
       toast({
         variant: 'destructive',
