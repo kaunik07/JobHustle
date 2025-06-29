@@ -111,7 +111,8 @@ export function ApplicationDetailsDialog({ application, children }: ApplicationD
             toast({ title: 'Resume attached successfully.' });
         } catch (error) {
             console.error(error);
-            toast({ variant: 'destructive', title: 'Failed to attach resume.' });
+            const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred';
+            toast({ variant: 'destructive', title: 'Failed to attach resume.', description: errorMessage });
         } finally {
             setIsUploading(false);
             if (e.target) e.target.value = '';
