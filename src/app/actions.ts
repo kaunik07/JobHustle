@@ -46,7 +46,9 @@ export async function deleteApplication(appId: string) {
 
 export async function addUser(data: Omit<User, 'id' | 'avatarUrl'>) {
   await db.insert(users).values({
-    ...data,
+    firstName: data.firstName,
+    lastName: data.lastName,
+    email: data.email,
     avatarUrl: 'https://placehold.co/40x40.png',
   });
   revalidatePath('/');
