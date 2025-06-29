@@ -54,6 +54,12 @@ export async function attachResume(
   user: User,
   companyName: string
 ) {
+  // First, check if a resume already exists and delete it from Drive before uploading a new one.
+  const [app] = await db.select({ resumeUrl: applications.resumeUrl }).from(applications).where(eq(applications.id, applicationId));
+  if (app && app.resumeUrl) {
+    await deleteResumeByUrl(app.resumeUrl);
+  }
+
   const driveLink = await uploadResume(fileData, user, companyName);
   await db.update(applications).set({ resumeUrl: driveLink }).where(eq(applications.id, applicationId));
   revalidatePath('/');

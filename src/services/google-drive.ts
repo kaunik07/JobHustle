@@ -79,9 +79,18 @@ export async function uploadResume(
     fields: 'id,webViewLink',
   });
 
-  if (!uploadedFile.webViewLink) {
-    throw new Error('File upload succeeded but no webViewLink was returned.');
+  if (!uploadedFile.id || !uploadedFile.webViewLink) {
+    throw new Error('File upload succeeded but no webViewLink or id was returned.');
   }
+
+  // Make the file publicly readable so the link works for any user
+  await drive.permissions.create({
+    fileId: uploadedFile.id,
+    requestBody: {
+      role: 'reader',
+      type: 'anyone',
+    },
+  });
 
   return uploadedFile.webViewLink;
 }
