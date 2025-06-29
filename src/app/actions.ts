@@ -7,6 +7,7 @@ import { applications, users } from '@/lib/db/schema';
 import { eq } from 'drizzle-orm';
 import type { Application, User } from '@/lib/types';
 import { fetchJobDescription } from '@/ai/flows/fetch-job-description';
+import { uploadResume, deleteResumeByUrl } from '@/services/google-drive';
 
 export async function addApplication(data: Omit<Application, 'id' | 'user' | 'jobDescription' | 'resumeUrl' | 'appliedOn' | 'dueDate'>) {
   let jobDescription = '';
@@ -47,8 +48,32 @@ export async function updateApplication(appId: string, data: Partial<Application
   revalidatePath('/');
 }
 
+export async function attachResume(
+  applicationId: string,
+  fileData: { name: string; type: string; content: string }, // content is base64
+  user: User,
+  companyName: string
+) {
+  const driveLink = await uploadResume(fileData, user, companyName);
+  await db.update(applications).set({ resumeUrl: driveLink }).where(eq(applications.id, applicationId));
+  revalidatePath('/');
+  return driveLink;
+}
+
+export async function removeResume(applicationId: string) {
+  const [app] = await db.select({ resumeUrl: applications.resumeUrl }).from(applications).where(eq(applications.id, applicationId));
+  
+  if (app && app.resumeUrl) {
+    await deleteResumeByUrl(app.resumeUrl);
+  }
+  
+  await db.update(applications).set({ resumeUrl: null }).where(eq(applications.id, applicationId));
+  revalidatePath('/');
+}
+
 
 export async function deleteApplication(appId: string) {
+  await removeResume(appId); // Also remove resume from drive if it exists
   await db.delete(applications).where(eq(applications.id, appId));
   revalidatePath('/');
 }

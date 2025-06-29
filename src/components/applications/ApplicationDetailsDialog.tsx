@@ -13,9 +13,9 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { type Application, type ApplicationStatus, statuses, categories, type ApplicationCategory } from '@/lib/types';
+import { type Application, type ApplicationStatus, statuses, categories, type ApplicationCategory, type User } from '@/lib/types';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { ExternalLink, Trash2, CalendarIcon, Paperclip, FileText } from 'lucide-react';
+import { ExternalLink, Trash2, CalendarIcon, Paperclip, FileText, Loader2 } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -37,7 +37,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { updateApplication, deleteApplication } from '@/app/actions';
+import { updateApplication, deleteApplication, attachResume, removeResume } from '@/app/actions';
 
 interface ApplicationDetailsDialogProps {
   application: Application;
@@ -58,6 +58,7 @@ export function ApplicationDetailsDialog({ application, children }: ApplicationD
   const { toast } = useToast();
   const companyDomain = application.companyName.toLowerCase().replace(/[^a-z0-9]/gi, '') + '.com';
   
+  const [isUploading, setIsUploading] = React.useState(false);
   const [currentNotes, setCurrentNotes] = React.useState(application.notes || '');
   const [currentJobTitle, setCurrentJobTitle] = React.useState(application.jobTitle);
   const [currentCompanyName, setCurrentCompanyName] = React.useState(application.companyName);
@@ -68,10 +69,11 @@ export function ApplicationDetailsDialog({ application, children }: ApplicationD
       setCurrentJobTitle(application.jobTitle);
       setCurrentCompanyName(application.companyName);
       setCurrentNotes(application.notes || '');
+      setIsUploading(false);
     }
   }, [application, open]);
 
-  const handleUpdate = async (data: Partial<Application>) => {
+  const handleUpdate = async (data: Partial<Omit<Application, 'id'>>) => {
     try {
       await updateApplication(application.id, data);
       return true;
@@ -80,29 +82,54 @@ export function ApplicationDetailsDialog({ application, children }: ApplicationD
       return false;
     }
   };
-
+  
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (!file) return;
+    if (!file || !application.user) {
+        toast({ variant: 'destructive', title: 'User context is required to upload a resume.' });
+        return;
+    };
 
-    const userIdentifier = application.user ? `${application.user.firstName}-${application.user.lastName}` : application.userId;
-    const companyIdentifier = application.companyName.replace(/\s+/g, '-');
-    const resumeUrl = `gdrive:///${userIdentifier}/${companyIdentifier}/${file.name}`;
-    
-    if (await handleUpdate({ resumeUrl })) {
-      toast({ title: 'Resume attached successfully.' });
-    } else {
-      toast({ variant: 'destructive', title: 'Failed to attach resume.' });
-    }
+    setIsUploading(true);
 
-    if (e.target) {
-      e.target.value = '';
-    }
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = async () => {
+        try {
+            const base64Content = (reader.result as string).split(',')[1];
+            if (!base64Content) {
+                toast({ variant: 'destructive', title: 'Could not read file.' });
+                return;
+            }
+
+            await attachResume(
+                application.id,
+                { name: file.name, type: file.type, content: base64Content },
+                application.user as User,
+                application.companyName
+            );
+            toast({ title: 'Resume attached successfully.' });
+        } catch (error) {
+            console.error(error);
+            toast({ variant: 'destructive', title: 'Failed to attach resume.' });
+        } finally {
+            setIsUploading(false);
+            if (e.target) e.target.value = '';
+        }
+    };
+    reader.onerror = () => {
+        setIsUploading(false);
+        toast({ variant: 'destructive', title: 'Error reading file.' });
+    };
   };
 
   const handleDeleteResume = async () => {
-    if (await handleUpdate({ resumeUrl: null })) {
+    try {
+      await removeResume(application.id);
       toast({ title: 'Resume removed.' });
+    } catch (error) {
+       console.error(error);
+       toast({ variant: 'destructive', title: 'Failed to remove resume.' });
     }
   };
 
@@ -331,12 +358,15 @@ export function ApplicationDetailsDialog({ application, children }: ApplicationD
                 <h3 className="font-semibold">Resume</h3>
                 {application.resumeUrl ? (
                     <div className="flex items-center justify-between rounded-md border p-2 pl-3">
-                        <a href="#" onClick={(e) => e.preventDefault()} className="flex items-center gap-2 text-primary font-medium overflow-hidden">
+                        <a href={application.resumeUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-primary font-medium overflow-hidden">
                             <FileText className="h-4 w-4 flex-shrink-0" />
-                            <span className="truncate" title={application.resumeUrl.split('/').pop() || 'resume.pdf'}>{application.resumeUrl.split('/').pop() || 'resume.pdf'}</span>
+                            <span className="truncate" title={application.companyName + ' Resume'}>
+                                View Resume in Drive
+                            </span>
                         </a>
                         <div className="flex items-center gap-1">
-                             <Button variant="outline" size="sm" onClick={() => fileInputRef.current?.click()}>
+                             <Button variant="outline" size="sm" onClick={() => fileInputRef.current?.click()} disabled={isUploading}>
+                                {isUploading ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : null}
                                 Replace
                             </Button>
                              <AlertDialog>
@@ -349,7 +379,7 @@ export function ApplicationDetailsDialog({ application, children }: ApplicationD
                                   <AlertDialogHeader>
                                     <AlertDialogTitle>Are you sure?</AlertDialogTitle>
                                     <AlertDialogDescription>
-                                      This will remove the currently attached resume. This action cannot be undone.
+                                      This will remove the resume from your Google Drive and detach it from this application. This action cannot be undone.
                                     </AlertDialogDescription>
                                   </AlertDialogHeader>
                                   <AlertDialogFooter>
@@ -363,9 +393,9 @@ export function ApplicationDetailsDialog({ application, children }: ApplicationD
                         </div>
                     </div>
                 ) : (
-                    <Button variant="outline" onClick={() => fileInputRef.current?.click()}>
-                        <Paperclip className="mr-2 h-4 w-4" />
-                        Attach Resume
+                    <Button variant="outline" onClick={() => fileInputRef.current?.click()} disabled={isUploading}>
+                        {isUploading ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : <Paperclip className="mr-2 h-4 w-4" />}
+                        {isUploading ? 'Uploading...' : 'Attach Resume'}
                     </Button>
                 )}
                  <input
@@ -373,7 +403,8 @@ export function ApplicationDetailsDialog({ application, children }: ApplicationD
                     ref={fileInputRef}
                     onChange={handleFileChange}
                     className="hidden"
-                    accept=".pdf,.doc,.docx"
+                    accept=".pdf,.doc,.docx,.txt"
+                    disabled={isUploading}
                 />
             </div>
 
@@ -400,7 +431,7 @@ export function ApplicationDetailsDialog({ application, children }: ApplicationD
               <AlertDialogHeader>
                 <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
                 <AlertDialogDescription>
-                  This action cannot be undone. This will permanently delete this application.
+                  This action cannot be undone. This will permanently delete this application and its associated resume from Google Drive.
                 </AlertDialogDescription>
               </AlertDialogHeader>
               <AlertDialogFooter>
