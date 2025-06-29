@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -9,11 +10,12 @@ import { Application, User, kanbanStatuses } from '@/lib/types';
 interface KanbanBoardProps {
   initialApplications: Application[];
   users: User[];
+  selectedUser: string;
+  onUserChange: (userId: string) => void;
 }
 
-export function KanbanBoard({ initialApplications, users }: KanbanBoardProps) {
+export function KanbanBoard({ initialApplications, users, selectedUser, onUserChange }: KanbanBoardProps) {
   const [applications, setApplications] = useState<Application[]>(initialApplications);
-  const [selectedUser, setSelectedUser] = useState<string>('all');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
 
   const filteredApplications = useMemo(() => {
@@ -37,7 +39,7 @@ export function KanbanBoard({ initialApplications, users }: KanbanBoardProps) {
       <KanbanFilters
         users={users}
         selectedUser={selectedUser}
-        onUserChange={setSelectedUser}
+        onUserChange={onUserChange}
         selectedCategory={selectedCategory}
         onCategoryChange={setSelectedCategory}
       />

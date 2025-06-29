@@ -1,3 +1,4 @@
+
 'use client';
 
 import { Application } from '@/lib/types';
@@ -11,10 +12,10 @@ interface KanbanColumnProps {
 
 export function KanbanColumn({ title, applications }: KanbanColumnProps) {
   return (
-    <div className="flex h-full flex-col rounded-lg bg-card shadow-sm">
+    <div className="flex h-full flex-col rounded-lg bg-secondary shadow-sm">
       <div className="flex items-center justify-between p-4">
         <h2 className="font-headline text-lg font-semibold text-primary">{title}</h2>
-        <span className="rounded-full bg-secondary px-2 py-0.5 text-sm font-medium text-secondary-foreground">
+        <span className="rounded-full bg-background px-2 py-0.5 text-sm font-medium text-secondary-foreground">
           {applications.length}
         </span>
       </div>

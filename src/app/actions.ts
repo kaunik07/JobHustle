@@ -1,3 +1,4 @@
+
 'use server';
 
 import { revalidatePath } from 'next/cache';
@@ -27,5 +28,14 @@ export async function addApplication(formData: FormData) {
   }
 
   // Revalidate the page to reflect changes if data were persisted.
+  revalidatePath('/');
+}
+
+export async function addUser(formData: FormData) {
+  const name = formData.get('name') as string;
+  console.log('New user added:', name);
+
+  // In a real application, you would save this data to a database.
+  // We are not saving it here, just revalidating the path.
   revalidatePath('/');
 }

@@ -1,3 +1,4 @@
+
 'use client';
 
 import { Card, CardContent } from '@/components/ui/card';
@@ -11,13 +12,19 @@ interface KanbanCardProps {
 }
 
 export function KanbanCard({ application }: KanbanCardProps) {
+  const companyDomain = application.companyName.toLowerCase().replace(/[^a-z0-9]/gi, '') + '.com';
+
   return (
     <ApplicationDetailsDialog application={application}>
-      <Card className="cursor-pointer transition-colors hover:border-primary">
+      <Card className="cursor-pointer transition-shadow hover:shadow-lg">
         <CardContent className="p-4 space-y-3">
           <div className="flex items-center gap-4">
             <Avatar className="h-12 w-12 rounded-lg">
-              <AvatarImage data-ai-hint={`${application.companyName} logo`} src={`https://placehold.co/48x48.png`} alt={application.companyName} />
+              <AvatarImage 
+                data-ai-hint={`${application.companyName} logo`} 
+                src={`https://logo.clearbit.com/${companyDomain}`} 
+                alt={application.companyName}
+              />
               <AvatarFallback className="rounded-lg text-lg">{application.companyName.charAt(0)}</AvatarFallback>
             </Avatar>
             <div>

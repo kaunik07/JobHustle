@@ -1,3 +1,4 @@
+
 'use client';
 
 import {
@@ -22,6 +23,8 @@ interface ApplicationDetailsDialogProps {
 }
 
 export function ApplicationDetailsDialog({ application, children }: ApplicationDetailsDialogProps) {
+  const companyDomain = application.companyName.toLowerCase().replace(/[^a-z0-9]/gi, '') + '.com';
+
   return (
     <Dialog>
       <DialogTrigger asChild>{children}</DialogTrigger>
@@ -29,7 +32,11 @@ export function ApplicationDetailsDialog({ application, children }: ApplicationD
         <DialogHeader>
           <div className="flex items-start gap-4">
             <Avatar className="h-16 w-16 rounded-lg">
-              <AvatarImage data-ai-hint={`${application.companyName} logo`} src={`https://placehold.co/64x64.png`} alt={application.companyName} />
+              <AvatarImage 
+                data-ai-hint={`${application.companyName} logo`} 
+                src={`https://logo.clearbit.com/${companyDomain}`} 
+                alt={application.companyName} 
+              />
               <AvatarFallback className="rounded-lg text-2xl">{application.companyName.charAt(0)}</AvatarFallback>
             </Avatar>
             <div>
