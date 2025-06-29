@@ -4,7 +4,7 @@ import * as React from 'react';
 import { useMemo, useState } from 'react';
 import { KanbanColumn } from './KanbanColumn';
 import { KanbanFilters } from './KanbanFilters';
-import { Application, User, statuses } from '@/lib/types';
+import { Application, User, kanbanStatuses } from '@/lib/types';
 
 interface KanbanBoardProps {
   initialApplications: Application[];
@@ -25,7 +25,7 @@ export function KanbanBoard({ initialApplications, users }: KanbanBoardProps) {
   }, [applications, selectedUser, selectedCategory]);
 
   const columns = useMemo(() => {
-    return statuses.map(status => ({
+    return kanbanStatuses.map(status => ({
       id: status,
       title: status,
       applications: filteredApplications.filter(app => app.status === status),

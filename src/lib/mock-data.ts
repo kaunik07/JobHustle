@@ -58,7 +58,7 @@ export const applications: Omit<Application, 'user'>[] = [
     jobTitle: 'Systems Engineer',
     jobUrl: 'https://example.com/job/5',
     category: 'Systems',
-    status: 'Cleared',
+    status: 'Interview',
     userId: 'user-2',
   },
     {

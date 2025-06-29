@@ -3,7 +3,7 @@ import './globals.css';
 import { Toaster } from "@/components/ui/toaster"
 
 export const metadata: Metadata = {
-  title: 'JobTrackr',
+  title: 'HustleHub',
   description: 'Track your job applications with ease.',
 };
 

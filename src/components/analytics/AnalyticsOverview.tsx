@@ -2,7 +2,7 @@
 
 import type { Application } from '@/lib/types';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Briefcase, Clock, FileText, BarChart, Users, CheckCircle, Award } from 'lucide-react';
+import { Briefcase, Clock, FileText, BarChart, Users, Award } from 'lucide-react';
 
 interface AnalyticsOverviewProps {
   applications: Application[];
@@ -15,7 +15,6 @@ export function AnalyticsOverview({ applications }: AnalyticsOverviewProps) {
     Applied: applications.filter(a => a.status === 'Applied').length,
     OA: applications.filter(a => a.status === 'OA').length,
     Interview: applications.filter(a => a.status === 'Interview').length,
-    Cleared: applications.filter(a => a.status === 'Cleared').length,
     Offer: applications.filter(a => a.status === 'Offer').length,
   };
 
@@ -25,12 +24,11 @@ export function AnalyticsOverview({ applications }: AnalyticsOverviewProps) {
     { title: 'Applied', value: stats.Applied, icon: FileText, color: 'text-primary' },
     { title: 'OA', value: stats.OA, icon: BarChart, color: 'text-chart-4' },
     { title: 'Interview', value: stats.Interview, icon: Users, color: 'text-chart-1' },
-    { title: 'Cleared', value: stats.Cleared, icon: CheckCircle, color: 'text-chart-2' },
     { title: 'Offers', value: stats.Offer, icon: Award, color: 'text-chart-2' },
   ];
 
   return (
-    <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7">
+    <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6">
       {statItems.map(item => (
         <Card key={item.title}>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
