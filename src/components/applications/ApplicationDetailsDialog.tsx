@@ -171,7 +171,7 @@ export function ApplicationDetailsDialog({ application, children }: ApplicationD
           </div>
         </DialogHeader>
 
-        <ScrollArea className="flex-1 min-h-0">
+        <div className="flex-1 min-h-0 overflow-y-auto">
           <div className="p-6 grid gap-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
@@ -310,7 +310,7 @@ export function ApplicationDetailsDialog({ application, children }: ApplicationD
                 </ScrollArea>
             </div>
           </div>
-        </ScrollArea>
+        </div>
 
         <DialogFooter className="p-6 pt-4 flex-shrink-0 border-t">
           <AlertDialog>
