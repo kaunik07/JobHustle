@@ -20,6 +20,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import { getUserColor } from '@/lib/utils';
 
 interface HeaderProps {
   users: User[];
@@ -56,7 +57,7 @@ export function Header({ users, selectedUser, onUserChange, onUserRemoved }: Hea
                          <Button variant="ghost" size="icon" className={`rounded-full h-10 w-10 ${selectedUser === user.id ? 'ring-2 ring-primary ring-offset-2 ring-offset-background' : ''}`} onClick={() => onUserChange(user.id)}>
                             <Avatar className="h-10 w-10">
                                 <AvatarImage src={user.avatarUrl || undefined} alt={`${user.firstName} ${user.lastName}`} />
-                                <AvatarFallback>{user.firstName.charAt(0)}</AvatarFallback>
+                                <AvatarFallback className={getUserColor(user.id)}>{user.firstName.charAt(0)}</AvatarFallback>
                             </Avatar>
                         </Button>
                       </TooltipTrigger>
