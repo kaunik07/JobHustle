@@ -35,6 +35,8 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 
 interface ApplicationDetailsDialogProps {
   application: Application;
@@ -55,7 +57,40 @@ const categoryStyles: Record<ApplicationCategory, string> = {
 export function ApplicationDetailsDialog({ application, children, onApplicationUpdate, onApplicationDelete }: ApplicationDetailsDialogProps) {
   const { toast } = useToast();
   const companyDomain = application.companyName.toLowerCase().replace(/[^a-z0-9]/gi, '') + '.com';
+  
   const [currentNotes, setCurrentNotes] = React.useState(application.notes || '');
+  const [currentJobTitle, setCurrentJobTitle] = React.useState(application.jobTitle);
+  const [currentCompanyName, setCurrentCompanyName] = React.useState(application.companyName);
+
+  React.useEffect(() => {
+    setCurrentJobTitle(application.jobTitle);
+    setCurrentCompanyName(application.companyName);
+    setCurrentNotes(application.notes || '');
+  }, [application]);
+
+  const handleJobTitleBlur = () => {
+    if (currentJobTitle.trim() === '') {
+        setCurrentJobTitle(application.jobTitle);
+        toast({ variant: "destructive", title: "Job title cannot be empty." });
+        return;
+    }
+    if (currentJobTitle !== application.jobTitle) {
+      onApplicationUpdate(application.id, { jobTitle: currentJobTitle });
+      toast({ title: "Job title updated." });
+    }
+  };
+
+  const handleCompanyNameBlur = () => {
+    if (currentCompanyName.trim() === '') {
+        setCurrentCompanyName(application.companyName);
+        toast({ variant: "destructive", title: "Company name cannot be empty." });
+        return;
+    }
+    if (currentCompanyName !== application.companyName) {
+      onApplicationUpdate(application.id, { companyName: currentCompanyName });
+      toast({ title: "Company name updated." });
+    }
+  };
 
   const handleNotesBlur = () => {
     if (currentNotes !== (application.notes || '')) {
@@ -105,6 +140,26 @@ export function ApplicationDetailsDialog({ application, children, onApplicationU
           </div>
         </DialogHeader>
         <div className="grid gap-6 py-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+                <Label htmlFor="jobTitle">Job Title</Label>
+                <Input
+                    id="jobTitle"
+                    value={currentJobTitle}
+                    onChange={(e) => setCurrentJobTitle(e.target.value)}
+                    onBlur={handleJobTitleBlur}
+                />
+            </div>
+            <div className="space-y-2">
+                <Label htmlFor="companyName">Company Name</Label>
+                <Input
+                    id="companyName"
+                    value={currentCompanyName}
+                    onChange={(e) => setCurrentCompanyName(e.target.value)}
+                    onBlur={handleCompanyNameBlur}
+                />
+            </div>
+          </div>
           <div className="flex flex-wrap items-center gap-4">
              <div className="flex items-center gap-2">
                 <Badge variant="secondary">{application.status}</Badge>
