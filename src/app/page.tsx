@@ -8,7 +8,7 @@ import type { Application, User } from '@/lib/types';
 import { KanbanBoard } from '@/components/kanban/KanbanBoard';
 import { YetToApplyList } from '@/components/applications/YetToApplyList';
 import { Separator } from '@/components/ui/separator';
-import { fetchJobDescription } from '@/ai/flows/fetch-job-description';
+import { useToast } from '@/hooks/use-toast';
 
 export default function Home() {
   const [users, setUsers] = React.useState<User[]>(mockUsers);
@@ -20,6 +20,7 @@ export default function Home() {
   );
   
   const [selectedUser, setSelectedUser] = React.useState<string>(users.find(u => u.firstName === 'U')?.id || 'all');
+  const { toast } = useToast();
 
   const handleAddUser = (userData: Omit<User, 'id' | 'avatarUrl'>) => {
     const newUser: User = {
@@ -33,30 +34,28 @@ export default function Home() {
   const handleAddApplication = (appData: Omit<Application, 'id' | 'user'>) => {
     const usersToApplyFor = appData.userId === 'all' ? users : users.filter(u => u.id === appData.userId);
     
-    const newApplications: Application[] = usersToApplyFor.map(user => {
-      const newApp = {
-        ...appData,
-        id: `app-${Date.now()}-${user.id}`,
-        userId: user.id,
-        user: user,
-      };
-      
-      if (appData.jobUrl) {
-        fetchJobDescription({ jobUrl: appData.jobUrl })
-          .then(result => {
-            console.log(`Fetched job description for ${appData.companyName}:`, result.jobDescription.substring(0, 100) + '...');
-            setApplications(prev => prev.map(a => a.id === newApp.id ? { ...a, jobDescription: result.jobDescription } : a));
-          })
-          .catch(error => {
-            console.error(`Failed to fetch job description for ${appData.companyName}:`, error);
-          });
-      }
-      return newApp;
-    });
+    const newApplications: Application[] = usersToApplyFor.map(user => ({
+      ...appData,
+      id: `app-${Date.now()}-${user.id}`,
+      userId: user.id,
+      user: user,
+    }));
 
     setApplications(prev => [...prev, ...newApplications]);
   };
 
+  const handleUpdateApplication = (
+    appId: string,
+    data: Partial<Application>
+  ) => {
+    setApplications(prev =>
+      prev.map(app => (app.id === appId ? { ...app, ...data } : app))
+    );
+    toast({
+      title: 'Application Updated',
+      description: 'Your changes have been saved.',
+    });
+  };
 
   const yetToApplyApplications = applications.filter(app => {
     const userMatch = selectedUser === 'all' || app.userId === selectedUser;
@@ -75,13 +74,17 @@ export default function Home() {
         onApplicationAdded={handleAddApplication}
       />
       <main className="flex-1 p-4 md:p-6 lg:p-8 space-y-6">
-        <YetToApplyList applications={yetToApplyApplications} />
+        <YetToApplyList 
+            applications={yetToApplyApplications} 
+            onApplicationUpdate={handleUpdateApplication}
+        />
         <Separator />
         <KanbanBoard 
-          initialApplications={kanbanApplications} 
+          applications={kanbanApplications} 
           users={users} 
           selectedUser={selectedUser}
           onUserChange={setSelectedUser}
+          onApplicationUpdate={handleUpdateApplication}
         />
       </main>
     </div>

@@ -9,13 +9,14 @@ import { ApplicationDetailsDialog } from '@/components/applications/ApplicationD
 
 interface KanbanCardProps {
   application: Application;
+  onApplicationUpdate: (appId: string, data: Partial<Application>) => void;
 }
 
-export function KanbanCard({ application }: KanbanCardProps) {
+export function KanbanCard({ application, onApplicationUpdate }: KanbanCardProps) {
   const companyDomain = application.companyName.toLowerCase().replace(/[^a-z0-9]/gi, '') + '.com';
 
   return (
-    <ApplicationDetailsDialog application={application}>
+    <ApplicationDetailsDialog application={application} onApplicationUpdate={onApplicationUpdate}>
       <Card className="cursor-pointer transition-shadow hover:shadow-lg">
         <CardContent className="p-4 space-y-3">
           <div className="flex items-center gap-4">

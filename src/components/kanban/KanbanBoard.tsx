@@ -2,21 +2,21 @@
 'use client';
 
 import * as React from 'react';
-import { useMemo, useState } from 'react';
+import { useMemo } from 'react';
 import { KanbanColumn } from './KanbanColumn';
 import { KanbanFilters } from './KanbanFilters';
 import { Application, User, kanbanStatuses } from '@/lib/types';
 
 interface KanbanBoardProps {
-  initialApplications: Application[];
+  applications: Application[];
   users: User[];
   selectedUser: string;
   onUserChange: (userId: string) => void;
+  onApplicationUpdate: (appId: string, data: Partial<Application>) => void;
 }
 
-export function KanbanBoard({ initialApplications, users, selectedUser, onUserChange }: KanbanBoardProps) {
-  const [applications, setApplications] = useState<Application[]>(initialApplications);
-  const [selectedCategory, setSelectedCategory] = useState<string>('all');
+export function KanbanBoard({ applications, users, selectedUser, onUserChange, onApplicationUpdate }: KanbanBoardProps) {
+  const [selectedCategory, setSelectedCategory] = React.useState<string>('all');
 
   const filteredApplications = useMemo(() => {
     return applications.filter(app => {
@@ -46,7 +46,12 @@ export function KanbanBoard({ initialApplications, users, selectedUser, onUserCh
       <div className="flex-1 overflow-x-auto overflow-y-hidden">
         <div className="inline-grid h-full auto-cols-[280px] grid-flow-col gap-4">
           {columns.map(column => (
-            <KanbanColumn key={column.id} title={column.title} applications={column.applications} />
+            <KanbanColumn 
+              key={column.id} 
+              title={column.title} 
+              applications={column.applications}
+              onApplicationUpdate={onApplicationUpdate} 
+            />
           ))}
         </div>
       </div>

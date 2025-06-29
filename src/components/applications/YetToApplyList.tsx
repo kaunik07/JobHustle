@@ -1,3 +1,4 @@
+
 'use client';
 
 import { KanbanCard } from "@/components/kanban/KanbanCard";
@@ -6,9 +7,10 @@ import { FilePlus2 } from "lucide-react";
 
 interface YetToApplyListProps {
     applications: Application[];
+    onApplicationUpdate: (appId: string, data: Partial<Application>) => void;
 }
 
-export function YetToApplyList({ applications }: YetToApplyListProps) {
+export function YetToApplyList({ applications, onApplicationUpdate }: YetToApplyListProps) {
     return (
         <div className="space-y-4">
             <div className="flex items-center gap-2">
@@ -18,7 +20,7 @@ export function YetToApplyList({ applications }: YetToApplyListProps) {
             {applications.length > 0 ? (
                  <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                     {applications.map(app => (
-                        <KanbanCard key={app.id} application={app} />
+                        <KanbanCard key={app.id} application={app} onApplicationUpdate={onApplicationUpdate} />
                     ))}
                 </div>
             ) : (

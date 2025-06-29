@@ -1,6 +1,7 @@
 
 'use client';
 
+import * as React from 'react';
 import {
   Dialog,
   DialogContent,
@@ -12,18 +13,37 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Application } from '@/lib/types';
+import { type Application, type ApplicationStatus, statuses } from '@/lib/types';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { ExternalLink, Edit, Trash2 } from 'lucide-react';
+import { ExternalLink, Trash2 } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Textarea } from '@/components/ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { useToast } from '@/hooks/use-toast';
 
 interface ApplicationDetailsDialogProps {
   application: Application;
   children: React.ReactNode;
+  onApplicationUpdate: (appId: string, data: Partial<Application>) => void;
 }
 
-export function ApplicationDetailsDialog({ application, children }: ApplicationDetailsDialogProps) {
+export function ApplicationDetailsDialog({ application, children, onApplicationUpdate }: ApplicationDetailsDialogProps) {
+  const { toast } = useToast();
   const companyDomain = application.companyName.toLowerCase().replace(/[^a-z0-9]/gi, '') + '.com';
+  const [currentNotes, setCurrentNotes] = React.useState(application.notes || '');
+
+  const handleNotesBlur = () => {
+    if (currentNotes !== (application.notes || '')) {
+      onApplicationUpdate(application.id, { notes: currentNotes });
+      toast({ title: "Notes updated." });
+    }
+  };
+
+  const handleStatusChange = (newStatus: ApplicationStatus) => {
+    onApplicationUpdate(application.id, { status: newStatus });
+    toast({ title: `Status changed to ${newStatus}.` });
+  };
+
 
   return (
     <Dialog>
@@ -48,16 +68,43 @@ export function ApplicationDetailsDialog({ application, children }: ApplicationD
           </div>
         </DialogHeader>
         <div className="grid gap-4 py-4">
-          <div className="flex flex-wrap items-center gap-2">
-            <Badge variant="secondary">{application.status}</Badge>
-            <Badge variant="outline">{application.category}</Badge>
-            {application.user && <Badge variant="outline">Applied by {`${application.user.firstName} ${application.user.lastName}`.trim()}</Badge>}
+          <div className="flex flex-wrap items-center gap-4">
+             <div className="flex items-center gap-2">
+                <Badge variant="secondary">{application.status}</Badge>
+                <Badge variant="outline">{application.category}</Badge>
+             </div>
+             <div className="flex items-center gap-2">
+                <span className="text-sm font-medium">Change status:</span>
+                 <Select value={application.status} onValueChange={handleStatusChange}>
+                    <SelectTrigger className="w-[180px]">
+                        <SelectValue placeholder="Select status" />
+                    </SelectTrigger>
+                    <SelectContent>
+                        {statuses.map(s => (
+                            <SelectItem key={s} value={s}>{s}</SelectItem>
+                        ))}
+                    </SelectContent>
+                </Select>
+            </div>
           </div>
+
+          {application.user && <Badge variant="outline">Applied by {`${application.user.firstName} ${application.user.lastName}`.trim()}</Badge>}
 
           <a href={application.jobUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-primary hover:underline">
             <ExternalLink className="h-4 w-4" />
             View Original Job Posting
           </a>
+
+          <div className="space-y-2">
+            <h3 className="font-semibold">Notes</h3>
+            <Textarea
+              placeholder="Add your notes here..."
+              value={currentNotes}
+              onChange={(e) => setCurrentNotes(e.target.value)}
+              onBlur={handleNotesBlur}
+              className="min-h-[100px] text-sm"
+            />
+          </div>
 
           <div className="space-y-2">
             <h3 className="font-semibold">Job Description</h3>
@@ -67,26 +114,11 @@ export function ApplicationDetailsDialog({ application, children }: ApplicationD
                 </p>
             </ScrollArea>
           </div>
-
-          {application.notes && (
-            <div className="space-y-2">
-              <h3 className="font-semibold">Notes</h3>
-              <div className="rounded-md border p-4">
-                <p className="text-sm text-muted-foreground whitespace-pre-wrap">
-                  {application.notes}
-                </p>
-              </div>
-            </div>
-          )}
         </div>
         <DialogFooter>
           <Button variant="outline">
             <Trash2 className="mr-2 h-4 w-4" />
             Delete
-          </Button>
-          <Button>
-            <Edit className="mr-2 h-4 w-4" />
-            Edit Application
           </Button>
         </DialogFooter>
       </DialogContent>
