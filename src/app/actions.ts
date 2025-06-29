@@ -39,8 +39,8 @@ export async function updateApplication(appId: string, data: Partial<Application
 
 
 export async function deleteApplication(appId: string) {
-    await db.delete(applications).where(eq(applications.id, appId));
-    revalidatePath('/');
+  await db.delete(applications).where(eq(applications.id, appId));
+  revalidatePath('/');
 }
 
 
