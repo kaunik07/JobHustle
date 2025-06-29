@@ -45,7 +45,7 @@ export function Header({ users, selectedUser, onUserChange, onUserRemoved }: Hea
                 <TooltipTrigger asChild>
                     <Button variant="ghost" size="icon" className={`rounded-full h-10 w-10 ${selectedUser === 'all' ? 'ring-2 ring-primary ring-offset-2 ring-offset-background' : ''}`} onClick={() => onUserChange('all')}>
                         <Avatar className="h-10 w-10">
-                            <AvatarFallback>All</AvatarFallback>
+                            <AvatarFallback className="bg-foreground text-background">All</AvatarFallback>
                         </Avatar>
                     </Button>
                 </TooltipTrigger>
