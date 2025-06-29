@@ -14,7 +14,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { type Application, type ApplicationStatus, statuses, categories, type ApplicationCategory, type User } from '@/lib/types';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { ExternalLink, Trash2, CalendarIcon, Paperclip, FileText, Loader2 } from 'lucide-react';
+import { ExternalLink, Trash2, CalendarIcon } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -36,7 +36,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { updateApplication, deleteApplication, attachResume, removeResume } from '@/app/actions';
+import { updateApplication, deleteApplication } from '@/app/actions';
 
 interface ApplicationDetailsDialogProps {
   application: Application;
@@ -57,18 +57,17 @@ export function ApplicationDetailsDialog({ application, children }: ApplicationD
   const { toast } = useToast();
   const companyDomain = application.companyName.toLowerCase().replace(/[^a-z0-9]/gi, '') + '.com';
   
-  const [isUploading, setIsUploading] = React.useState(false);
   const [currentNotes, setCurrentNotes] = React.useState(application.notes || '');
   const [currentJobTitle, setCurrentJobTitle] = React.useState(application.jobTitle);
   const [currentCompanyName, setCurrentCompanyName] = React.useState(application.companyName);
-  const fileInputRef = React.useRef<HTMLInputElement>(null);
+  const [currentResumeUrl, setCurrentResumeUrl] = React.useState(application.resumeUrl || '');
 
   React.useEffect(() => {
     if (open) {
       setCurrentJobTitle(application.jobTitle);
       setCurrentCompanyName(application.companyName);
       setCurrentNotes(application.notes || '');
-      setIsUploading(false);
+      setCurrentResumeUrl(application.resumeUrl || '');
     }
   }, [application, open]);
 
@@ -81,62 +80,21 @@ export function ApplicationDetailsDialog({ application, children }: ApplicationD
       return false;
     }
   };
-  
-  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file || !application.user) {
-        toast({ variant: 'destructive', title: 'User context is required to upload a resume.' });
-        return;
-    };
 
-    setIsUploading(true);
-
-    const reader = new FileReader();
-    reader.readAsDataURL(file);
-    reader.onload = async () => {
-        try {
-            const base64Content = (reader.result as string).split(',')[1];
-            if (!base64Content) {
-                toast({ variant: 'destructive', title: 'Could not read file.' });
-                return;
-            }
-
-            await attachResume(
-                application.id,
-                { name: file.name, type: file.type, content: base64Content },
-                application.user as User,
-                application.companyName
-            );
-            toast({ title: 'Resume attached successfully.' });
-        } catch (error) {
-            console.error("Full error object:", error);
-            const errorMessage = error instanceof Error 
-                ? error.message 
-                : 'An unknown error occurred. Please check the server terminal logs for more details.';
-            toast({ 
-                variant: 'destructive', 
-                title: 'Failed to attach resume.', 
-                description: errorMessage,
-                duration: 10000,
-            });
-        } finally {
-            setIsUploading(false);
-            if (e.target) e.target.value = '';
-        }
-    };
-    reader.onerror = () => {
-        setIsUploading(false);
-        toast({ variant: 'destructive', title: 'Error reading file.' });
-    };
+  const handleResumeUrlBlur = async () => {
+    if (currentResumeUrl !== (application.resumeUrl || '')) {
+      const success = await handleUpdate({ resumeUrl: currentResumeUrl.trim() === '' ? null : currentResumeUrl });
+      if (success) {
+        toast({ title: 'Resume updated.' });
+      }
+    }
   };
 
-  const handleDeleteResume = async () => {
-    try {
-      await removeResume(application.id);
+  const handleClearResume = async () => {
+    const success = await handleUpdate({ resumeUrl: null });
+    if (success) {
+      setCurrentResumeUrl('');
       toast({ title: 'Resume removed.' });
-    } catch (error) {
-       console.error(error);
-       toast({ variant: 'destructive', title: 'Failed to remove resume.' });
     }
   };
 
@@ -362,57 +320,37 @@ export function ApplicationDetailsDialog({ application, children }: ApplicationD
             </div>
             
             <div className="space-y-2">
-                <h3 className="font-semibold">Resume</h3>
-                {application.resumeUrl ? (
-                    <div className="flex items-center justify-between rounded-md border p-2 pl-3">
-                        <a href={application.resumeUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-primary font-medium overflow-hidden">
-                            <FileText className="h-4 w-4 flex-shrink-0" />
-                            <span className="truncate" title={application.companyName + ' Resume'}>
-                                View Resume in Drive
-                            </span>
-                        </a>
-                        <div className="flex items-center gap-1">
-                             <Button variant="outline" size="sm" onClick={() => fileInputRef.current?.click()} disabled={isUploading}>
-                                {isUploading ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : null}
-                                Replace
-                            </Button>
-                             <AlertDialog>
-                                <AlertDialogTrigger asChild>
-                                  <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-destructive">
-                                    <Trash2 className="h-4 w-4" />
-                                  </Button>
-                                </AlertDialogTrigger>
-                                <AlertDialogContent>
-                                  <AlertDialogHeader>
-                                    <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-                                    <AlertDialogDescription>
-                                      This will remove the resume from your Google Drive and detach it from this application. This action cannot be undone.
-                                    </AlertDialogDescription>
-                                  </AlertDialogHeader>
-                                  <AlertDialogFooter>
-                                    <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                    <AlertDialogAction onClick={handleDeleteResume}>
-                                      Remove
-                                    </AlertDialogAction>
-                                  </AlertDialogFooter>
-                                </AlertDialogContent>
-                              </AlertDialog>
-                        </div>
-                    </div>
-                ) : (
-                    <Button variant="outline" onClick={() => fileInputRef.current?.click()} disabled={isUploading}>
-                        {isUploading ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : <Paperclip className="mr-2 h-4 w-4" />}
-                        {isUploading ? 'Uploading...' : 'Attach Resume'}
-                    </Button>
-                )}
-                 <input
-                    type="file"
-                    ref={fileInputRef}
-                    onChange={handleFileChange}
-                    className="hidden"
-                    accept=".pdf,.doc,.docx,.txt"
-                    disabled={isUploading}
+              <Label htmlFor="resumeUrl" className="font-semibold">Resume</Label>
+              <div className="flex items-center gap-2">
+                <Input
+                  id="resumeUrl"
+                  placeholder="Paste a link or note"
+                  value={currentResumeUrl}
+                  onChange={(e) => setCurrentResumeUrl(e.target.value)}
+                  onBlur={handleResumeUrlBlur}
                 />
+                {application.resumeUrl ? (
+                  <>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={handleClearResume}
+                      className="h-9 w-9 shrink-0 text-muted-foreground hover:text-destructive"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                      <span className="sr-only">Clear Resume</span>
+                    </Button>
+                    {application.resumeUrl.startsWith('http') && (
+                      <Button asChild variant="outline" size="icon" className="h-9 w-9 shrink-0">
+                        <a href={application.resumeUrl} target="_blank" rel="noopener noreferrer">
+                          <ExternalLink className="h-4 w-4" />
+                          <span className="sr-only">Open Link</span>
+                        </a>
+                      </Button>
+                    )}
+                  </>
+                ) : null}
+              </div>
             </div>
 
             <div className="space-y-2">
@@ -438,7 +376,7 @@ export function ApplicationDetailsDialog({ application, children }: ApplicationD
               <AlertDialogHeader>
                 <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
                 <AlertDialogDescription>
-                  This action cannot be undone. This will permanently delete this application and its associated resume from Google Drive.
+                  This action cannot be undone. This will permanently delete this application.
                 </AlertDialogDescription>
               </AlertDialogHeader>
               <AlertDialogFooter>
