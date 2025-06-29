@@ -1,4 +1,3 @@
-
 'use client';
 
 import * as React from 'react';
@@ -120,8 +119,8 @@ export function ApplicationDetailsDialog({ application, children, onApplicationU
   return (
     <Dialog>
       <DialogTrigger asChild>{children}</DialogTrigger>
-      <DialogContent className="sm:max-w-2xl">
-        <DialogHeader>
+      <DialogContent className="sm:max-w-2xl max-h-[90vh] flex flex-col p-0 bg-card">
+        <DialogHeader className="p-6 pb-4 flex-shrink-0 border-b">
           <div className="flex items-start gap-4">
             <Avatar className="h-16 w-16 rounded-lg">
               <AvatarImage 
@@ -139,145 +138,148 @@ export function ApplicationDetailsDialog({ application, children, onApplicationU
             </div>
           </div>
         </DialogHeader>
-        <div className="grid gap-6 py-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+        <div className="flex-1 p-6 overflow-y-auto">
+            <div className="grid gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                    <Label htmlFor="jobTitle">Job Title</Label>
+                    <Input
+                        id="jobTitle"
+                        value={currentJobTitle}
+                        onChange={(e) => setCurrentJobTitle(e.target.value)}
+                        onBlur={handleJobTitleBlur}
+                    />
+                </div>
+                <div className="space-y-2">
+                    <Label htmlFor="companyName">Company Name</Label>
+                    <Input
+                        id="companyName"
+                        value={currentCompanyName}
+                        onChange={(e) => setCurrentCompanyName(e.target.value)}
+                        onBlur={handleCompanyNameBlur}
+                    />
+                </div>
+            </div>
+            <div className="flex flex-wrap items-center gap-4">
+                <div className="flex items-center gap-2">
+                    <Badge variant="secondary">{application.status}</Badge>
+                    <Badge variant="outline" className={cn("capitalize", categoryStyles[application.category])}>{application.category}</Badge>
+                </div>
+                <div className="flex items-center gap-2">
+                    <span className="text-sm font-medium">Change status:</span>
+                    <Select value={application.status} onValueChange={handleStatusChange}>
+                        <SelectTrigger className="w-[180px]">
+                            <SelectValue placeholder="Select status" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            {statuses.map(s => (
+                                <SelectItem key={s} value={s}>{s}</SelectItem>
+                            ))}
+                        </SelectContent>
+                    </Select>
+                </div>
+                <div className="flex items-center gap-2">
+                    <span className="text-sm font-medium">Change category:</span>
+                    <Select value={application.category} onValueChange={handleCategoryChange}>
+                        <SelectTrigger className="w-[180px]">
+                            <SelectValue placeholder="Select a category" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            {categories.map(cat => (
+                                <SelectItem key={cat} value={cat}>{cat}</SelectItem>
+                            ))}
+                        </SelectContent>
+                    </Select>
+                </div>
+            </div>
+
+            <div className="flex flex-wrap items-center gap-4">
+                {application.status !== 'Yet to Apply' && (
+                <div className="space-y-1">
+                    <label className="text-sm font-medium">Applied On</label>
+                    <Popover>
+                        <PopoverTrigger asChild>
+                            <Button
+                            variant={"outline"}
+                            className={cn(
+                                "w-[200px] justify-start text-left font-normal",
+                                !application.appliedOn && "text-muted-foreground"
+                            )}
+                            >
+                            <CalendarIcon className="mr-2 h-4 w-4" />
+                            {application.appliedOn ? format(new Date(application.appliedOn), "PPP") : <span>Pick a date</span>}
+                            </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0">
+                            <Calendar
+                            mode="single"
+                            selected={application.appliedOn ? new Date(application.appliedOn) : undefined}
+                            onSelect={(date) => handleDateChange(date, 'appliedOn')}
+                            initialFocus
+                            />
+                        </PopoverContent>
+                    </Popover>
+                </div>
+                )}
+                {['OA', 'Interview'].includes(application.status) && (
+                <div className="space-y-1">
+                    <label className="text-sm font-medium">Due Date</label>
+                    <Popover>
+                        <PopoverTrigger asChild>
+                            <Button
+                            variant={"outline"}
+                            className={cn(
+                                "w-[200px] justify-start text-left font-normal",
+                                !application.dueDate && "text-muted-foreground"
+                            )}
+                            >
+                            <CalendarIcon className="mr-2 h-4 w-4" />
+                            {application.dueDate ? format(new Date(application.dueDate), "PPP") : <span>Pick a date</span>}
+                            </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0">
+                            <Calendar
+                            mode="single"
+                            selected={application.dueDate ? new Date(application.dueDate) : undefined}
+                            onSelect={(date) => handleDateChange(date, 'dueDate')}
+                            initialFocus
+                            />
+                        </PopoverContent>
+                    </Popover>
+                </div>
+                )}
+            </div>
+
+            {application.user && <Badge variant="outline">Applied by {`${application.user.firstName} ${application.user.lastName}`.trim()}</Badge>}
+
+            <a href={application.jobUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-primary hover:underline">
+                <ExternalLink className="h-4 w-4" />
+                View Original Job Posting
+            </a>
+
             <div className="space-y-2">
-                <Label htmlFor="jobTitle">Job Title</Label>
-                <Input
-                    id="jobTitle"
-                    value={currentJobTitle}
-                    onChange={(e) => setCurrentJobTitle(e.target.value)}
-                    onBlur={handleJobTitleBlur}
+                <h3 className="font-semibold">Notes</h3>
+                <Textarea
+                placeholder="Add your notes here..."
+                value={currentNotes}
+                onChange={(e) => setCurrentNotes(e.target.value)}
+                onBlur={handleNotesBlur}
+                className="min-h-[100px] text-sm"
                 />
             </div>
+
             <div className="space-y-2">
-                <Label htmlFor="companyName">Company Name</Label>
-                <Input
-                    id="companyName"
-                    value={currentCompanyName}
-                    onChange={(e) => setCurrentCompanyName(e.target.value)}
-                    onBlur={handleCompanyNameBlur}
-                />
+                <h3 className="font-semibold">Job Description</h3>
+                <ScrollArea className="h-48 rounded-md border p-4">
+                    <p className="text-sm text-muted-foreground">
+                        {application.jobDescription || 'No job description was fetched for this application.'}
+                    </p>
+                </ScrollArea>
             </div>
-          </div>
-          <div className="flex flex-wrap items-center gap-4">
-             <div className="flex items-center gap-2">
-                <Badge variant="secondary">{application.status}</Badge>
-                <Badge variant="outline" className={cn("capitalize", categoryStyles[application.category])}>{application.category}</Badge>
-             </div>
-             <div className="flex items-center gap-2">
-                <span className="text-sm font-medium">Change status:</span>
-                 <Select value={application.status} onValueChange={handleStatusChange}>
-                    <SelectTrigger className="w-[180px]">
-                        <SelectValue placeholder="Select status" />
-                    </SelectTrigger>
-                    <SelectContent>
-                        {statuses.map(s => (
-                            <SelectItem key={s} value={s}>{s}</SelectItem>
-                        ))}
-                    </SelectContent>
-                </Select>
             </div>
-            <div className="flex items-center gap-2">
-                <span className="text-sm font-medium">Change category:</span>
-                <Select value={application.category} onValueChange={handleCategoryChange}>
-                    <SelectTrigger className="w-[180px]">
-                        <SelectValue placeholder="Select a category" />
-                    </SelectTrigger>
-                    <SelectContent>
-                        {categories.map(cat => (
-                            <SelectItem key={cat} value={cat}>{cat}</SelectItem>
-                        ))}
-                    </SelectContent>
-                </Select>
-            </div>
-          </div>
-
-          <div className="flex flex-wrap items-center gap-4">
-            {application.status !== 'Yet to Apply' && (
-              <div className="space-y-1">
-                <label className="text-sm font-medium">Applied On</label>
-                 <Popover>
-                    <PopoverTrigger asChild>
-                        <Button
-                        variant={"outline"}
-                        className={cn(
-                            "w-[200px] justify-start text-left font-normal",
-                            !application.appliedOn && "text-muted-foreground"
-                        )}
-                        >
-                        <CalendarIcon className="mr-2 h-4 w-4" />
-                        {application.appliedOn ? format(new Date(application.appliedOn), "PPP") : <span>Pick a date</span>}
-                        </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0">
-                        <Calendar
-                        mode="single"
-                        selected={application.appliedOn ? new Date(application.appliedOn) : undefined}
-                        onSelect={(date) => handleDateChange(date, 'appliedOn')}
-                        initialFocus
-                        />
-                    </PopoverContent>
-                </Popover>
-              </div>
-            )}
-             {['OA', 'Interview'].includes(application.status) && (
-              <div className="space-y-1">
-                <label className="text-sm font-medium">Due Date</label>
-                 <Popover>
-                    <PopoverTrigger asChild>
-                        <Button
-                        variant={"outline"}
-                        className={cn(
-                            "w-[200px] justify-start text-left font-normal",
-                            !application.dueDate && "text-muted-foreground"
-                        )}
-                        >
-                        <CalendarIcon className="mr-2 h-4 w-4" />
-                        {application.dueDate ? format(new Date(application.dueDate), "PPP") : <span>Pick a date</span>}
-                        </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0">
-                        <Calendar
-                        mode="single"
-                        selected={application.dueDate ? new Date(application.dueDate) : undefined}
-                        onSelect={(date) => handleDateChange(date, 'dueDate')}
-                        initialFocus
-                        />
-                    </PopoverContent>
-                </Popover>
-              </div>
-            )}
-          </div>
-
-          {application.user && <Badge variant="outline">Applied by {`${application.user.firstName} ${application.user.lastName}`.trim()}</Badge>}
-
-          <a href={application.jobUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-primary hover:underline">
-            <ExternalLink className="h-4 w-4" />
-            View Original Job Posting
-          </a>
-
-          <div className="space-y-2">
-            <h3 className="font-semibold">Notes</h3>
-            <Textarea
-              placeholder="Add your notes here..."
-              value={currentNotes}
-              onChange={(e) => setCurrentNotes(e.target.value)}
-              onBlur={handleNotesBlur}
-              className="min-h-[100px] text-sm"
-            />
-          </div>
-
-          <div className="space-y-2">
-            <h3 className="font-semibold">Job Description</h3>
-            <ScrollArea className="h-48 rounded-md border p-4">
-                <p className="text-sm text-muted-foreground">
-                    {application.jobDescription || 'No job description was fetched for this application.'}
-                </p>
-            </ScrollArea>
-          </div>
         </div>
-        <DialogFooter>
+        <DialogFooter className="p-6 pt-4 flex-shrink-0 border-t">
           <AlertDialog>
             <AlertDialogTrigger asChild>
               <Button variant="outline">
