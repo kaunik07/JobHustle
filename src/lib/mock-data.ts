@@ -24,6 +24,7 @@ export const applications: Omit<Application, 'user'>[] = [
     category: 'SWE',
     status: 'Applied',
     userId: 'user-1',
+    notes: 'Reached out to John Smith on LinkedIn. He is a manager in the frontend team.',
   },
   {
     id: 'app-2',
@@ -33,6 +34,7 @@ export const applications: Omit<Application, 'user'>[] = [
     category: 'Data Scientist',
     status: 'Interview',
     userId: 'user-1',
+    notes: 'Interview scheduled for next Tuesday. Be prepared to discuss the case study.',
   },
   {
     id: 'app-3',

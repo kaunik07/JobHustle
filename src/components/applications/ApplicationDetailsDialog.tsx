@@ -67,6 +67,17 @@ export function ApplicationDetailsDialog({ application, children }: ApplicationD
                 </p>
             </ScrollArea>
           </div>
+
+          {application.notes && (
+            <div className="space-y-2">
+              <h3 className="font-semibold">Notes</h3>
+              <div className="rounded-md border p-4">
+                <p className="text-sm text-muted-foreground whitespace-pre-wrap">
+                  {application.notes}
+                </p>
+              </div>
+            </div>
+          )}
         </div>
         <DialogFooter>
           <Button variant="outline">

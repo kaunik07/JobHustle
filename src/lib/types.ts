@@ -27,4 +27,5 @@ export interface Application {
   status: ApplicationStatus;
   userId: string;
   user?: User;
+  notes?: string;
 }

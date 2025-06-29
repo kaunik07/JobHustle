@@ -35,6 +35,7 @@ import {
 import { User, categories, statuses, Application } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2 } from 'lucide-react';
+import { Textarea } from '../ui/textarea';
 
 const formSchema = z.object({
   companyName: z.string().min(2, 'Company name is required'),
@@ -44,6 +45,7 @@ const formSchema = z.object({
   status: z.enum(statuses),
   userId: z.string().min(1, 'User is required'),
   resume: z.any().optional(),
+  notes: z.string().optional(),
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -68,6 +70,7 @@ export function AddApplicationDialog({ children, users, onApplicationAdded }: Ad
       category: 'SWE',
       status: 'Yet to Apply',
       userId: 'all',
+      notes: '',
     },
   });
 
@@ -227,6 +230,22 @@ export function AddApplicationDialog({ children, users, onApplicationAdded }: Ad
                   </FormItem>
                 )}
               />
+            <FormField
+              control={form.control}
+              name="notes"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Notes</FormLabel>
+                  <FormControl>
+                    <Textarea
+                      placeholder="Add any extra details here..."
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
             <DialogFooter>
               <Button type="submit" disabled={isSubmitting}>
                 {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
