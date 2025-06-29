@@ -32,6 +32,28 @@ export default function Home() {
     setUsers(prev => [...prev, newUser]);
   };
 
+  const handleRemoveUser = (userIdToRemove: string) => {
+    const userToRemove = users.find(u => u.id === userIdToRemove);
+    if (!userToRemove) return;
+
+    const newUsers = users.filter(u => u.id !== userIdToRemove);
+    setUsers(newUsers);
+    setApplications(prev => prev.filter(app => app.userId !== userIdToRemove));
+
+    toast({
+      title: 'User Removed',
+      description: `${userToRemove.firstName} ${userToRemove.lastName} and all their applications have been removed.`,
+    });
+
+    if (selectedUser === userIdToRemove) {
+      if (newUsers.length > 0) {
+        setSelectedUser(newUsers[0].id);
+      } else {
+        setSelectedUser('all'); 
+      }
+    }
+  };
+
   const handleAddApplication = (appData: Omit<Application, 'id' | 'user'>) => {
     const usersToApplyFor = appData.userId === 'all' ? users : users.filter(u => u.id === appData.userId);
     
@@ -54,8 +76,6 @@ export default function Home() {
         if (app.id === appId) {
           const updatedApp = { ...app, ...data };
           
-          // If status is being updated to 'Applied' (or later stages) for the first time
-          // and `appliedOn` isn't already set, set it now.
           if (data.status && data.status !== 'Yet to Apply' && !app.appliedOn) {
             updatedApp.appliedOn = new Date().toISOString();
           }
@@ -86,6 +106,7 @@ export default function Home() {
         onUserChange={setSelectedUser}
         onUserAdded={handleAddUser}
         onApplicationAdded={handleAddApplication}
+        onUserRemoved={handleRemoveUser}
       />
       <main className="flex-1 p-4 md:p-6 lg:p-8 space-y-6">
         <AnalyticsOverview applications={filteredApplications} />

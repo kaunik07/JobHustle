@@ -2,13 +2,24 @@
 'use client';
 
 import * as React from 'react';
-import { Briefcase, Plus } from 'lucide-react';
+import { Briefcase, Plus, Trash2 } from 'lucide-react';
 import { AddApplicationDialog } from '@/components/kanban/AddApplicationDialog';
 import type { User, Application } from '@/lib/types';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '../ui/button';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../ui/tooltip';
 import { AddUserDialog } from '../user/AddUserDialog';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 interface HeaderProps {
   users: User[];
@@ -16,9 +27,10 @@ interface HeaderProps {
   onUserChange: (userId: string) => void;
   onUserAdded: (data: Omit<User, 'id' | 'avatarUrl'>) => void;
   onApplicationAdded: (data: Omit<Application, 'id' | 'user'>) => void;
+  onUserRemoved: (userId: string) => void;
 }
 
-export function Header({ users, selectedUser, onUserChange, onUserAdded, onApplicationAdded }: HeaderProps) {
+export function Header({ users, selectedUser, onUserChange, onUserAdded, onApplicationAdded, onUserRemoved }: HeaderProps) {
 
   return (
     <header className="sticky top-0 z-30 flex h-16 items-center gap-4 border-b bg-background/80 px-4 backdrop-blur-sm md:px-6">
@@ -53,6 +65,29 @@ export function Header({ users, selectedUser, onUserChange, onUserAdded, onAppli
             <span className="sr-only">Add User</span>
           </Button>
         </AddUserDialog>
+
+        <AlertDialog>
+          <AlertDialogTrigger asChild>
+            <Button variant="destructive" size="icon" className="rounded-full h-10 w-10" disabled={!users.some(u => u.id === selectedUser)}>
+              <Trash2 className="h-4 w-4" />
+              <span className="sr-only">Remove Selected User</span>
+            </Button>
+          </AlertDialogTrigger>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+              <AlertDialogDescription>
+                This action cannot be undone. This will permanently delete the selected user and all of their applications.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction onClick={() => onUserRemoved(selectedUser)}>
+                Delete User
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
 
       <div className="flex items-center gap-4">
