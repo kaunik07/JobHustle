@@ -77,7 +77,7 @@ export function AddApplicationDialog({ children, users }: AddApplicationDialogPr
       const formData = new FormData();
       Object.entries(values).forEach(([key, value]) => {
         if (key !== 'resume') {
-          formData.append(key, value);
+          formData.append(key, value as string);
         }
       });
       
@@ -184,7 +184,7 @@ export function AddApplicationDialog({ children, users }: AddApplicationDialogPr
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue placeholder="Select user" />
-                        </Trigger>
+                        </SelectTrigger>
                       </FormControl>
                       <SelectContent>
                         {users.map(user => (
