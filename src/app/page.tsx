@@ -76,7 +76,7 @@ export default function Home() {
     return app.status === 'Yet to Apply';
   });
 
-  const kanbanApplications = applications.filter(app => app.status !== 'Yet to Apply');
+  const kanbanApplications = filteredApplications.filter(app => app.status !== 'Yet to Apply');
 
   return (
     <div className="flex min-h-screen w-full flex-col">
@@ -96,9 +96,6 @@ export default function Home() {
         <Separator />
         <KanbanBoard 
           applications={kanbanApplications} 
-          users={users} 
-          selectedUser={selectedUser}
-          onUserChange={setSelectedUser}
           onApplicationUpdate={handleUpdateApplication}
         />
       </main>
