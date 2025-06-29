@@ -51,7 +51,7 @@ export function ApplicationDetailsDialog({ application, children }: ApplicationD
           <div className="flex flex-wrap items-center gap-2">
             <Badge variant="secondary">{application.status}</Badge>
             <Badge variant="outline">{application.category}</Badge>
-            {application.user && <Badge variant="outline">Applied by {application.user.name}</Badge>}
+            {application.user && <Badge variant="outline">Applied by {`${application.user.firstName} ${application.user.lastName}`.trim()}</Badge>}
           </div>
 
           <a href={application.jobUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-primary hover:underline">

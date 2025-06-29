@@ -1,9 +1,9 @@
 import type { Application, User } from './types';
 
 export const users: User[] = [
-  { id: 'user-1', name: 'Alex Doe', avatarUrl: 'https://placehold.co/40x40.png' },
-  { id: 'user-2', name: 'Jane Smith', avatarUrl: 'https://placehold.co/40x40.png' },
-  { id: 'user-3', name: 'U', avatarUrl: 'https://placehold.co/40x40.png' },
+  { id: 'user-1', firstName: 'Alex', lastName: 'Doe', email: 'alex.doe@example.com', avatarUrl: 'https://placehold.co/40x40.png' },
+  { id: 'user-2', firstName: 'Jane', lastName: 'Smith', email: 'jane.smith@example.com', avatarUrl: 'https://placehold.co/40x40.png' },
+  { id: 'user-3', firstName: 'U', lastName: 'Ser', email: 'u.ser@example.com', avatarUrl: 'https://placehold.co/40x40.png' },
 ];
 
 export const applications: Omit<Application, 'user'>[] = [

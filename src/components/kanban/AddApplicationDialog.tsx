@@ -190,7 +190,7 @@ export function AddApplicationDialog({ children, users }: AddApplicationDialogPr
                       <SelectContent>
                         <SelectItem value="all">All Users</SelectItem>
                         {users.map(user => (
-                          <SelectItem key={user.id} value={user.id}>{user.name}</SelectItem>
+                          <SelectItem key={user.id} value={user.id}>{`${user.firstName} ${user.lastName}`.trim()}</SelectItem>
                         ))}
                       </SelectContent>
                     </Select>

@@ -22,7 +22,7 @@ export async function addApplication(formData: FormData) {
   // We are not saving it here, but we will revalidate the path so that
   // if we were fetching from a DB, the new data would appear.
   
-  // Asynchronously fetch job description without blocking the response.
+  // Asynchronously fetch job description withoutblocking the response.
   if (jobUrl) {
     fetchJobDescription({ jobUrl })
       .then(result => {
@@ -39,8 +39,10 @@ export async function addApplication(formData: FormData) {
 }
 
 export async function addUser(formData: FormData) {
-  const name = formData.get('name') as string;
-  console.log('New user added:', name);
+  const firstName = formData.get('firstName') as string;
+  const lastName = formData.get('lastName') as string;
+  const email = formData.get('email') as string;
+  console.log('New user added:', { firstName, lastName, email });
 
   // In a real application, you would save this data to a database.
   // We are not saving it here, just revalidating the path.

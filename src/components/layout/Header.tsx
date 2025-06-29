@@ -33,12 +33,12 @@ export function Header({ users, selectedUser, onUserChange }: HeaderProps) {
                       <TooltipTrigger asChild>
                          <Button variant="ghost" size="icon" className={`rounded-full h-10 w-10 ${selectedUser === user.id ? 'ring-2 ring-primary ring-offset-2 ring-offset-background' : ''}`} onClick={() => onUserChange(user.id)}>
                             <Avatar className="h-10 w-10">
-                                <AvatarFallback>{user.name.charAt(0)}</AvatarFallback>
+                                <AvatarFallback>{user.firstName.charAt(0)}</AvatarFallback>
                             </Avatar>
                         </Button>
                       </TooltipTrigger>
                       <TooltipContent>
-                          <p>{user.name}</p>
+                          <p>{`${user.firstName} ${user.lastName}`.trim()}</p>
                       </TooltipContent>
                    </Tooltip>
               ))}

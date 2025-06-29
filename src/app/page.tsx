@@ -17,7 +17,7 @@ export default function Home() {
   }));
   const users: User[] = mockUsers;
   
-  const [selectedUser, setSelectedUser] = React.useState<string>(users.find(u => u.name === 'U')?.id || 'all');
+  const [selectedUser, setSelectedUser] = React.useState<string>(users.find(u => u.firstName === 'U')?.id || 'all');
 
   const yetToApplyApplications = applications.filter(app => {
     const userMatch = selectedUser === 'all' || app.userId === selectedUser;

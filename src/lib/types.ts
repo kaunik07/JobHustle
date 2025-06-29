@@ -10,7 +10,9 @@ export const categories: ApplicationCategory[] = ['SWE', 'SRE/Devops', 'Quant', 
 
 export interface User {
   id: string;
-  name: string;
+  firstName: string;
+  lastName: string;
+  email: string;
   avatarUrl: string;
 }
 

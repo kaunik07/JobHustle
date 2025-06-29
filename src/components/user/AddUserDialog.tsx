@@ -30,7 +30,9 @@ import { addUser } from '@/app/actions';
 import { Loader2 } from 'lucide-react';
 
 const formSchema = z.object({
-  name: z.string().min(2, 'User name is required'),
+  firstName: z.string().min(1, 'First name is required'),
+  lastName: z.string().min(1, 'Last name is required'),
+  email: z.string().email('Please enter a valid email'),
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -47,7 +49,9 @@ export function AddUserDialog({ children }: AddUserDialogProps) {
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      name: '',
+      firstName: '',
+      lastName: '',
+      email: '',
     },
   });
 
@@ -55,13 +59,15 @@ export function AddUserDialog({ children }: AddUserDialogProps) {
     setIsSubmitting(true);
     try {
       const formData = new FormData();
-      formData.append('name', values.name);
+      formData.append('firstName', values.firstName);
+      formData.append('lastName', values.lastName);
+      formData.append('email', values.email);
       
       await addUser(formData);
 
       toast({
         title: 'User Added',
-        description: `${values.name} has been added.`,
+        description: `${values.firstName} ${values.lastName} has been added.`,
       });
       setOpen(false);
       form.reset();
@@ -83,19 +89,47 @@ export function AddUserDialog({ children }: AddUserDialogProps) {
         <DialogHeader>
           <DialogTitle className="font-headline">Add New User</DialogTitle>
           <DialogDescription>
-            Enter the name of the new user.
+            Enter the details for the new user.
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+               <FormField
+                control={form.control}
+                name="firstName"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>First Name</FormLabel>
+                    <FormControl>
+                      <Input placeholder="John" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="lastName"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Last Name</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Doe" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
             <FormField
               control={form.control}
-              name="name"
+              name="email"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>User Name</FormLabel>
+                  <FormLabel>Email</FormLabel>
                   <FormControl>
-                    <Input placeholder="John Doe" {...field} />
+                    <Input type="email" placeholder="john.doe@example.com" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
