@@ -29,31 +29,6 @@ function getDriveClient(): drive_v3.Drive {
   return google.drive({ version: 'v3', auth });
 }
 
-async function findOrCreateFolder(drive: drive_v3.Drive, name: string, parentId: string): Promise<string> {
-  const query = `mimeType='application/vnd.google-apps.folder' and name='${name}' and '${parentId}' in parents and trashed=false`;
-  
-  try {
-    const { data } = await drive.files.list({ q: query, fields: 'files(id)' });
-
-    if (data.files && data.files.length > 0) {
-      return data.files[0].id!;
-    }
-
-    const { data: newFolder } = await drive.files.create({
-      requestBody: {
-        name: name,
-        mimeType: 'application/vnd.google-apps.folder',
-        parents: [parentId],
-      },
-      fields: 'id',
-    });
-
-    return newFolder.id!;
-  } catch (error) {
-    throw new Error(`Failed to find or create folder '${name}' in Google Drive. Check permissions. Original error: ${error.message}`);
-  }
-}
-
 export async function uploadResume(
   file: { name: string; type: string; content: string }, // content is base64
   user: User,
@@ -65,18 +40,15 @@ export async function uploadResume(
   // 1. Pre-flight check to ensure the root folder is accessible
   try {
     await drive.files.get({ fileId: rootFolderId, fields: 'id' });
-  } catch(e) {
+  } catch(e: any) {
     if (e.code === 404) {
         throw new Error(`Google Drive folder with ID '${rootFolderId}' not found. Please verify GOOGLE_DRIVE_FOLDER_ID in your .env file.`);
     }
     throw new Error(`Failed to access Google Drive folder with ID '${rootFolderId}'. Please verify it's shared with your service account email with 'Editor' permissions. Original error: ${e.message}`);
   }
-
-  const userFolderName = `${user.firstName}-${user.lastName}`.replace(/[^a-zA-Z0-9-]/g, '_');
-  const userFolderId = await findOrCreateFolder(drive, userFolderName, rootFolderId);
-
-  const companyFolderName = companyName.replace(/[^a-zA-Z0-9-]/g, '_');
-  const companyFolderId = await findOrCreateFolder(drive, companyFolderName, userFolderId);
+  
+  const userAndCompanyPrefix = `${user.firstName}-${user.lastName}_${companyName}`.replace(/[^a-zA-Z0-9-_]/g, '_');
+  const uniqueFileName = `${userAndCompanyPrefix}_${file.name}`;
 
   const fileBuffer = Buffer.from(file.content, 'base64');
   const media = {
@@ -87,8 +59,8 @@ export async function uploadResume(
   const { data: uploadedFile } = await drive.files.create({
     media: media,
     requestBody: {
-      name: file.name,
-      parents: [companyFolderId],
+      name: uniqueFileName,
+      parents: [rootFolderId], // Upload directly to the specified root folder
     },
     fields: 'id,webViewLink',
   });
@@ -106,7 +78,7 @@ export async function uploadResume(
         type: 'anyone',
       },
     });
-  } catch (error) {
+  } catch (error: any) {
     // If setting permissions fails, delete the file to avoid orphans
     try {
       await drive.files.delete({ fileId: uploadedFile.id });
