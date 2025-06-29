@@ -48,7 +48,7 @@ export async function uploadResume(
   // 1. Pre-flight check to ensure the root folder is accessible
   try {
     console.log('[Google Drive Log] Performing pre-flight check on folder access...');
-    await drive.files.get({ fileId: rootFolderId, fields: 'id', supportsAllDrives: true });
+    await drive.files.get({ fileId: rootFolderId, fields: 'id', supportsAllDrives: true, supportsTeamDrives: true });
     console.log('[Google Drive Log] Pre-flight check successful. Folder is accessible.');
   } catch(e: any) {
     console.error(`[Google Drive Error] Pre-flight check FAILED. Error Code: ${e.code}, Message: ${e.message}`);
@@ -79,6 +79,7 @@ export async function uploadResume(
       },
       fields: 'id,webViewLink',
       supportsAllDrives: true,
+      supportsTeamDrives: true,
     });
     uploadedFile = response.data;
     console.log(`[Google Drive Log] File created successfully with ID: ${uploadedFile.id}`);
@@ -102,6 +103,7 @@ export async function uploadResume(
         type: 'anyone',
       },
       supportsAllDrives: true,
+      supportsTeamDrives: true,
     });
     console.log('[Google Drive Log] Public permissions set successfully.');
   } catch (error: any) {
@@ -109,7 +111,7 @@ export async function uploadResume(
     // If setting permissions fails, delete the file to avoid orphans
     try {
       console.log(`[Google Drive Log] Attempting to clean up orphaned file: ${uploadedFile.id}`);
-      await drive.files.delete({ fileId: uploadedFile.id, supportsAllDrives: true });
+      await drive.files.delete({ fileId: uploadedFile.id, supportsAllDrives: true, supportsTeamDrives: true });
       console.log('[Google Drive Log] Cleanup successful.');
     } catch (cleanupError) {
       console.error(`[Google Drive Error] FAILED to cleanup file '${uploadedFile.id}' after a permission error. Please delete it manually.`, cleanupError);
@@ -134,7 +136,7 @@ export async function deleteResumeByUrl(fileUrl: string): Promise<void> {
   console.log(`[Google Drive Log] Extracted file ID for deletion: ${fileId}`);
 
   try {
-    await drive.files.delete({ fileId, supportsAllDrives: true });
+    await drive.files.delete({ fileId, supportsAllDrives: true, supportsTeamDrives: true });
     console.log(`[Google Drive Log] Successfully deleted file: ${fileId}`);
   } catch (error: any) {
     if (error.code === 404) {
