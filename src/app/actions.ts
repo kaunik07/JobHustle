@@ -49,7 +49,7 @@ export async function addUser(data: Omit<User, 'id' | 'avatarUrl'>) {
     firstName: data.firstName,
     lastName: data.lastName,
     email: data.email,
-    avatarUrl: 'https://placehold.co/40x40.png',
+    avatarUrl: null,
   });
   revalidatePath('/');
 }
