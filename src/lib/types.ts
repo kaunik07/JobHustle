@@ -1,3 +1,4 @@
+
 export type ApplicationStatus = 'Yet to Apply' | 'Applied' | 'OA' | 'Interview' | 'Offer';
 
 export const statuses: ApplicationStatus[] = ['Yet to Apply', 'Applied', 'OA', 'Interview', 'Offer'];
@@ -13,21 +14,21 @@ export interface User {
   firstName: string;
   lastName: string;
   email: string;
-  avatarUrl: string;
+  avatarUrl: string | null;
 }
 
 export interface Application {
-  id: string;
+  id:string;
   companyName: string;
   jobTitle: string;
   jobUrl: string;
-  jobDescription?: string;
+  jobDescription?: string | null;
   resumeUrl?: string;
   category: ApplicationCategory;
   status: ApplicationStatus;
   userId: string;
   user?: User;
-  notes?: string;
-  appliedOn?: string;
-  dueDate?: string;
+  notes?: string | null;
+  appliedOn?: Date | null;
+  dueDate?: Date | null;
 }

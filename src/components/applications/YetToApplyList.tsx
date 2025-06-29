@@ -7,11 +7,9 @@ import { FilePlus2 } from "lucide-react";
 
 interface YetToApplyListProps {
     applications: Application[];
-    onApplicationUpdate: (appId: string, data: Partial<Application>) => void;
-    onApplicationDelete: (appId: string) => void;
 }
 
-export function YetToApplyList({ applications, onApplicationUpdate, onApplicationDelete }: YetToApplyListProps) {
+export function YetToApplyList({ applications }: YetToApplyListProps) {
     return (
         <div className="space-y-4">
             <div className="flex items-center gap-2">
@@ -21,7 +19,7 @@ export function YetToApplyList({ applications, onApplicationUpdate, onApplicatio
             {applications.length > 0 ? (
                  <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                     {applications.map(app => (
-                        <KanbanCard key={app.id} application={app} onApplicationUpdate={onApplicationUpdate} onApplicationDelete={onApplicationDelete} />
+                        <KanbanCard key={app.id} application={app} />
                     ))}
                 </div>
             ) : (

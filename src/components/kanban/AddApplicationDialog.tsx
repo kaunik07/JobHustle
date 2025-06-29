@@ -36,6 +36,7 @@ import { User, categories, statuses, Application } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2 } from 'lucide-react';
 import { Textarea } from '../ui/textarea';
+import { addApplication as addApplicationAction } from '@/app/actions';
 
 const formSchema = z.object({
   companyName: z.string().min(2, 'Company name is required'),
@@ -44,19 +45,18 @@ const formSchema = z.object({
   category: z.enum(categories),
   status: z.enum(statuses),
   userId: z.string().min(1, 'User is required'),
-  resume: z.any().optional(),
   notes: z.string().optional(),
 });
 
 type FormValues = z.infer<typeof formSchema>;
 
 interface AddApplicationDialogProps {
-  children: React.ReactNode;
+  children?: React.ReactNode;
   users: User[];
-  onApplicationAdded: (data: Omit<Application, 'id' | 'user'>) => void;
+  selectedUserId: string;
 }
 
-export function AddApplicationDialog({ children, users, onApplicationAdded }: AddApplicationDialogProps) {
+export function AddApplicationDialog({ children, users, selectedUserId }: AddApplicationDialogProps) {
   const [open, setOpen] = React.useState(false);
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const { toast } = useToast();
@@ -69,16 +69,19 @@ export function AddApplicationDialog({ children, users, onApplicationAdded }: Ad
       jobUrl: '',
       category: 'SWE',
       status: 'Yet to Apply',
-      userId: 'all',
+      userId: selectedUserId,
       notes: '',
     },
   });
 
+  React.useEffect(() => {
+    form.setValue('userId', selectedUserId);
+  }, [selectedUserId, form]);
+
   async function onSubmit(values: FormValues) {
     setIsSubmitting(true);
     try {
-      const { resume, ...appData } = values;
-      onApplicationAdded(appData);
+      await addApplicationAction(values);
 
       toast({
         title: 'Application Added',
@@ -99,12 +102,14 @@ export function AddApplicationDialog({ children, users, onApplicationAdded }: Ad
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>{children}</DialogTrigger>
+      <DialogTrigger asChild>
+        {children || <Button>+ Add Application</Button>}
+      </DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle className="font-headline">Add New Application</DialogTitle>
           <DialogDescription>
-            Enter the details of your job application. The job description will be fetched automatically.
+            Enter the details of your job application.
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
@@ -213,19 +218,6 @@ export function AddApplicationDialog({ children, users, onApplicationAdded }: Ad
                         ))}
                       </SelectContent>
                     </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-             <FormField
-                control={form.control}
-                name="resume"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Resume (Optional)</FormLabel>
-                    <FormControl>
-                      <Input type="file" {...form.register('resume')} />
-                    </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}

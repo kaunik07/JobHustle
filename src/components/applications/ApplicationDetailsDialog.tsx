@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -32,16 +33,14 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-  AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { updateApplication, deleteApplication } from '@/app/actions';
 
 interface ApplicationDetailsDialogProps {
   application: Application;
   children: React.ReactNode;
-  onApplicationUpdate: (appId: string, data: Partial<Application>) => void;
-  onApplicationDelete: (appId: string) => void;
 }
 
 const categoryStyles: Record<ApplicationCategory, string> = {
@@ -53,7 +52,8 @@ const categoryStyles: Record<ApplicationCategory, string> = {
 };
 
 
-export function ApplicationDetailsDialog({ application, children, onApplicationUpdate, onApplicationDelete }: ApplicationDetailsDialogProps) {
+export function ApplicationDetailsDialog({ application, children }: ApplicationDetailsDialogProps) {
+  const [open, setOpen] = React.useState(false);
   const { toast } = useToast();
   const companyDomain = application.companyName.toLowerCase().replace(/[^a-z0-9]/gi, '') + '.com';
   
@@ -62,62 +62,93 @@ export function ApplicationDetailsDialog({ application, children, onApplicationU
   const [currentCompanyName, setCurrentCompanyName] = React.useState(application.companyName);
 
   React.useEffect(() => {
-    setCurrentJobTitle(application.jobTitle);
-    setCurrentCompanyName(application.companyName);
-    setCurrentNotes(application.notes || '');
-  }, [application]);
+    if (open) {
+      setCurrentJobTitle(application.jobTitle);
+      setCurrentCompanyName(application.companyName);
+      setCurrentNotes(application.notes || '');
+    }
+  }, [application, open]);
 
-  const handleJobTitleBlur = () => {
+  const handleUpdate = async (data: Partial<Application>) => {
+    try {
+      await updateApplication(application.id, data);
+      return true;
+    } catch (error) {
+      toast({ variant: 'destructive', title: 'Update failed. Please try again.' });
+      return false;
+    }
+  };
+
+  const handleJobTitleBlur = async () => {
     if (currentJobTitle.trim() === '') {
         setCurrentJobTitle(application.jobTitle);
         toast({ variant: "destructive", title: "Job title cannot be empty." });
         return;
     }
     if (currentJobTitle !== application.jobTitle) {
-      onApplicationUpdate(application.id, { jobTitle: currentJobTitle });
-      toast({ title: "Job title updated." });
+      if (await handleUpdate({ jobTitle: currentJobTitle })) {
+        toast({ title: "Job title updated." });
+      }
     }
   };
 
-  const handleCompanyNameBlur = () => {
+  const handleCompanyNameBlur = async () => {
     if (currentCompanyName.trim() === '') {
         setCurrentCompanyName(application.companyName);
         toast({ variant: "destructive", title: "Company name cannot be empty." });
         return;
     }
     if (currentCompanyName !== application.companyName) {
-      onApplicationUpdate(application.id, { companyName: currentCompanyName });
-      toast({ title: "Company name updated." });
+      if (await handleUpdate({ companyName: currentCompanyName })) {
+        toast({ title: "Company name updated." });
+      }
     }
   };
 
-  const handleNotesBlur = () => {
+  const handleNotesBlur = async () => {
     if (currentNotes !== (application.notes || '')) {
-      onApplicationUpdate(application.id, { notes: currentNotes });
-      toast({ title: "Notes updated." });
+      if (await handleUpdate({ notes: currentNotes })) {
+        toast({ title: "Notes updated." });
+      }
     }
   };
 
-  const handleStatusChange = (newStatus: ApplicationStatus) => {
-    onApplicationUpdate(application.id, { status: newStatus });
-    toast({ title: `Status changed to ${newStatus}.` });
+  const handleStatusChange = async (newStatus: ApplicationStatus) => {
+    const data: Partial<Application> = { status: newStatus };
+    if (newStatus !== 'Yet to Apply' && !application.appliedOn) {
+      data.appliedOn = new Date();
+    }
+    if (await handleUpdate(data)) {
+      toast({ title: `Status changed to ${newStatus}.` });
+    }
   };
   
-  const handleCategoryChange = (newCategory: ApplicationCategory) => {
-    onApplicationUpdate(application.id, { category: newCategory });
-    toast({ title: `Category changed to ${newCategory}.` });
-  };
-
-  const handleDateChange = (date: Date | undefined, field: 'appliedOn' | 'dueDate') => {
-    if (date) {
-        onApplicationUpdate(application.id, { [field]: date.toISOString() });
-        toast({ title: `${field === 'appliedOn' ? 'Applied date' : 'Due date'} updated.` });
+  const handleCategoryChange = async (newCategory: ApplicationCategory) => {
+    if (await handleUpdate({ category: newCategory })) {
+      toast({ title: `Category changed to ${newCategory}.` });
     }
   };
 
+  const handleDateChange = async (date: Date | undefined, field: 'appliedOn' | 'dueDate') => {
+    if (date) {
+      if (await handleUpdate({ [field]: date })) {
+        toast({ title: `${field === 'appliedOn' ? 'Applied date' : 'Due date'} updated.` });
+      }
+    }
+  };
+
+  const handleDelete = async () => {
+    try {
+      await deleteApplication(application.id);
+      toast({ title: 'Application deleted.' });
+      setOpen(false);
+    } catch (error) {
+      toast({ variant: 'destructive', title: 'Failed to delete application.' });
+    }
+  };
 
   return (
-    <Dialog>
+    <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>{children}</DialogTrigger>
       <DialogContent className="sm:max-w-2xl max-h-[90vh] flex flex-col p-0 bg-card">
         <DialogHeader className="p-6 pb-4 flex-shrink-0 border-b">
@@ -139,8 +170,8 @@ export function ApplicationDetailsDialog({ application, children, onApplicationU
           </div>
         </DialogHeader>
 
-        <div className="flex-1 p-6 overflow-y-auto">
-            <div className="grid gap-6">
+        <ScrollArea className="flex-1 min-h-0">
+          <div className="p-6 grid gap-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                     <Label htmlFor="jobTitle">Job Title</Label>
@@ -277,12 +308,13 @@ export function ApplicationDetailsDialog({ application, children, onApplicationU
                     </p>
                 </ScrollArea>
             </div>
-            </div>
-        </div>
+          </div>
+        </ScrollArea>
+
         <DialogFooter className="p-6 pt-4 flex-shrink-0 border-t">
           <AlertDialog>
             <AlertDialogTrigger asChild>
-              <Button variant="outline">
+              <Button variant="destructive" size="sm">
                 <Trash2 className="mr-2 h-4 w-4" />
                 Delete
               </Button>
@@ -296,7 +328,7 @@ export function ApplicationDetailsDialog({ application, children, onApplicationU
               </AlertDialogHeader>
               <AlertDialogFooter>
                 <AlertDialogCancel>Cancel</AlertDialogCancel>
-                <AlertDialogAction onClick={() => onApplicationDelete(application.id)}>
+                <AlertDialogAction onClick={handleDelete}>
                   Delete
                 </AlertDialogAction>
               </AlertDialogFooter>

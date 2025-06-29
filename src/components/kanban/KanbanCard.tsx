@@ -12,8 +12,6 @@ import { cn } from '@/lib/utils';
 
 interface KanbanCardProps {
   application: Application;
-  onApplicationUpdate: (appId: string, data: Partial<Application>) => void;
-  onApplicationDelete: (appId: string) => void;
 }
 
 const categoryStyles: Record<ApplicationCategory, string> = {
@@ -24,7 +22,7 @@ const categoryStyles: Record<ApplicationCategory, string> = {
   'Data Scientist': 'bg-chart-5/20 text-chart-5 border-chart-5/30',
 };
 
-export function KanbanCard({ application, onApplicationUpdate, onApplicationDelete }: KanbanCardProps) {
+export function KanbanCard({ application }: KanbanCardProps) {
   const companyDomain = application.companyName.toLowerCase().replace(/[^a-z0-9]/gi, '') + '.com';
 
   const renderDate = () => {
@@ -38,7 +36,7 @@ export function KanbanCard({ application, onApplicationUpdate, onApplicationDele
   }
 
   return (
-    <ApplicationDetailsDialog application={application} onApplicationUpdate={onApplicationUpdate} onApplicationDelete={onApplicationDelete}>
+    <ApplicationDetailsDialog application={application}>
       <Card className="cursor-pointer transition-shadow hover:shadow-lg">
         <CardContent className="p-4 space-y-3">
           <div className="flex items-center gap-4">

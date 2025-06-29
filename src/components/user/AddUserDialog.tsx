@@ -5,7 +5,6 @@ import * as React from 'react';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
-
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -26,8 +25,8 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2 } from 'lucide-react';
-import { User } from '@/lib/types';
+import { Loader2, Plus } from 'lucide-react';
+import { addUser as addUserAction } from '@/app/actions';
 
 const formSchema = z.object({
   firstName: z.string().min(1, 'First name is required'),
@@ -38,11 +37,10 @@ const formSchema = z.object({
 type FormValues = z.infer<typeof formSchema>;
 
 interface AddUserDialogProps {
-  children: React.ReactNode;
-  onUserAdded: (data: Omit<User, 'id' | 'avatarUrl'>) => void;
+  children?: React.ReactNode;
 }
 
-export function AddUserDialog({ children, onUserAdded }: AddUserDialogProps) {
+export function AddUserDialog({ children }: AddUserDialogProps) {
   const [open, setOpen] = React.useState(false);
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const { toast } = useToast();
@@ -59,8 +57,7 @@ export function AddUserDialog({ children, onUserAdded }: AddUserDialogProps) {
   async function onSubmit(values: FormValues) {
     setIsSubmitting(true);
     try {
-      onUserAdded(values);
-
+      await addUserAction(values);
       toast({
         title: 'User Added',
         description: `${values.firstName} ${values.lastName} has been added.`,
@@ -68,10 +65,11 @@ export function AddUserDialog({ children, onUserAdded }: AddUserDialogProps) {
       setOpen(false);
       form.reset();
     } catch (error) {
+      console.error(error);
       toast({
         variant: 'destructive',
         title: 'Error',
-        description: 'Failed to add user.',
+        description: 'Failed to add user. They may already exist.',
       });
     } finally {
       setIsSubmitting(false);
@@ -80,7 +78,14 @@ export function AddUserDialog({ children, onUserAdded }: AddUserDialogProps) {
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>{children}</DialogTrigger>
+      <DialogTrigger asChild>
+        {children || (
+          <Button variant="outline" size="icon" className="rounded-full h-10 w-10">
+            <Plus className="h-4 w-4" />
+            <span className="sr-only">Add User</span>
+          </Button>
+        )}
+      </DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle className="font-headline">Add New User</DialogTitle>
