@@ -36,7 +36,7 @@ import { Loader2, ChevronsUpDown, Check, X, Plus } from 'lucide-react';
 import { Textarea } from '@/components/ui/textarea';
 import { addApplication as addApplicationAction } from '@/app/actions';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandList } from '@/components/ui/command';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 
@@ -120,8 +120,8 @@ export function AddApplicationDialog({ children, users, selectedUserId, allLocat
   }
   
   const allUniqueLocations = React.useMemo(() => {
-    const dbOnlyLocations = allLocations.filter(loc => !suggestedLocations.includes(loc));
-    return [...suggestedLocations, ...dbOnlyLocations];
+    const otherLocations = allLocations.filter(loc => !suggestedLocations.includes(loc));
+    return [...suggestedLocations, ...otherLocations];
   }, [allLocations]);
 
   const locationsToShow = React.useMemo(() => {
@@ -184,7 +184,7 @@ export function AddApplicationDialog({ children, users, selectedUserId, allLocat
                       <Popover open={locationsPopoverOpen} onOpenChange={(isOpen) => {
                         setLocationsPopoverOpen(isOpen);
                         if (!isOpen) {
-                            setLocationSearch(''); // Reset search on close
+                            setLocationSearch('');
                         }
                       }}>
                         <PopoverTrigger asChild>
@@ -225,19 +225,30 @@ export function AddApplicationDialog({ children, users, selectedUserId, allLocat
                           </FormControl>
                         </PopoverTrigger>
                         <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
-                          <Command shouldFilter={false}>
+                          <Command
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter' && e.currentTarget.contains(e.target as HTMLElement)) {
+                                e.preventDefault();
+                              }
+                            }}
+                          >
                             <CommandInput 
                               placeholder="Search location..."
                               value={locationSearch}
                               onValueChange={setLocationSearch}
                             />
                             <CommandList>
-                               {locationsToShow.length === 0 && locationSearch ? (
+                               {locationsToShow.length === 0 && locationSearch && !field.value.includes(locationSearch) ? (
                                 <CommandItem
+                                  onPointerDown={(e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                  }}
                                   onSelect={() => {
                                     field.onChange([...(field.value || []), locationSearch]);
                                     setLocationSearch('');
                                   }}
+                                  value={locationSearch}
                                 >
                                   <Plus className="mr-2 h-4 w-4" />
                                   Add "{locationSearch}"
@@ -252,13 +263,16 @@ export function AddApplicationDialog({ children, users, selectedUserId, allLocat
                                     <CommandItem
                                       key={location}
                                       value={location}
+                                      onPointerDown={(e) => {
+                                        e.preventDefault();
+                                        e.stopPropagation();
+                                      }}
                                       onSelect={() => {
                                         if (isSelected) {
                                           field.onChange(field.value.filter(l => l !== location));
                                         } else {
                                           field.onChange([...(field.value || []), location]);
                                         }
-                                        setLocationsPopoverOpen(true);
                                       }}
                                     >
                                       <Check
