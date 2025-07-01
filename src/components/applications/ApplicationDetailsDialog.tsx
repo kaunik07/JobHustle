@@ -75,9 +75,16 @@ export function ApplicationDetailsDialog({ application, children }: ApplicationD
   const [currentCompanyName, setCurrentCompanyName] = React.useState(application.companyName);
   const [currentLocation, setCurrentLocation] = React.useState(application.location);
   const [currentResumeUrl, setCurrentResumeUrl] = React.useState(application.resumeUrl || '');
-  const [oaDueTime, setOaDueTime] = React.useState('23:59');
 
+  const [oaDueTime, setOaDueTime] = React.useState('23:59');
+  const [oaDueDateTimezone, setOaDueDateTimezone] = React.useState<string | null>(null);
+  const [timezones, setTimezones] = React.useState<string[]>([]);
   const isInterviewStage = application.status === 'Interview';
+
+  React.useEffect(() => {
+    // This runs on client only and avoids hydration errors
+    setTimezones(Intl.supportedValuesOf('timeZone'));
+  }, []);
 
   React.useEffect(() => {
     if (open) {
@@ -87,6 +94,7 @@ export function ApplicationDetailsDialog({ application, children }: ApplicationD
       setCurrentNotes(application.notes || '');
       setCurrentResumeUrl(application.resumeUrl || '');
       setOaDueTime(application.oaDueDate ? format(new Date(application.oaDueDate), 'HH:mm') : '23:59');
+      setOaDueDateTimezone(application.oaDueDateTimezone || Intl.DateTimeFormat().resolvedOptions().timeZone);
     }
   }, [application, open]);
 
@@ -197,45 +205,45 @@ export function ApplicationDetailsDialog({ application, children }: ApplicationD
     }
   };
 
-  const handleDateChange = async (date: Date | undefined, field: 'appliedOn' | 'oaDueDate') => {
-    const fieldNameMap = {
-      appliedOn: 'Applied date',
-      oaDueDate: 'OA Due Date',
+  const handleAppliedOnChange = async (date: Date | undefined) => {
+    if (await handleUpdate({ appliedOn: date })) {
+      toast({ title: `Applied date updated.` });
     }
-    if (field === 'oaDueDate') {
-        if (date) {
-            const [hours, minutes] = oaDueTime.split(':').map(Number);
-            if (!isNaN(hours) && !isNaN(minutes)) {
-                date.setHours(hours);
-                date.setMinutes(minutes);
-            }
-        }
-        if (await handleUpdate({ [field]: date })) {
-            toast({ title: `${fieldNameMap[field]} updated.` });
-        }
-        return;
+  };
+  
+  const handleOADueDateChange = React.useCallback(async (
+    newDate?: Date,
+    newTime?: string,
+    newTimezone?: string
+  ) => {
+    const dateToUse = newDate || (application.oaDueDate ? new Date(application.oaDueDate) : null);
+    const timeToUse = newTime ?? oaDueTime;
+    const timezoneToUse = newTimezone ?? oaDueDateTimezone;
+  
+    if (!dateToUse || !timeToUse || !timezoneToUse) {
+      return; 
     }
+  
+    // Reconstruct date parts to avoid local timezone assumptions of JS Date
+    const year = dateToUse.getFullYear();
+    const month = (dateToUse.getMonth() + 1).toString().padStart(2, '0');
+    const day = dateToUse.getDate().toString().padStart(2, '0');
+    const [hours, minutes] = timeToUse.split(':');
+  
+    // This is a reliable way to get an offset for a given date in a given timezone, which helps to create a correct UTC timestamp.
+    const tempDate = new Date(`${year}-${month}-${day}T${hours}:${minutes}:00`);
+    const utcDate = new Date(tempDate.toLocaleString('en-US', { timeZone: 'UTC' }));
+    const tzDate = new Date(tempDate.toLocaleString('en-US', { timeZone: timezoneToUse }));
+    const offset = tzDate.getTime() - utcDate.getTime();
     
-    if (await handleUpdate({ [field]: date })) {
-      toast({ title: `${fieldNameMap[field]} updated.` });
+    const finalTimestamp = tempDate.getTime() - offset;
+    const finalDate = new Date(finalTimestamp);
+  
+    if (await handleUpdate({ oaDueDate: finalDate, oaDueDateTimezone: timezoneToUse })) {
+      toast({ title: 'OA Due Date updated.' });
     }
-  };
-
-  const handleDueTimeBlur = async () => {
-    if (application.oaDueDate) {
-      const newDate = new Date(application.oaDueDate);
-      const [hours, minutes] = oaDueTime.split(':').map(Number);
-      if (!isNaN(hours) && !isNaN(minutes)) {
-        newDate.setHours(hours);
-        newDate.setMinutes(minutes);
-      }
-      if (newDate.getTime() !== new Date(application.oaDueDate).getTime()) {
-        if (await handleUpdate({ oaDueDate: newDate })) {
-          toast({ title: `OA Due Date updated.` });
-        }
-      }
-    }
-  };
+  }, [application.oaDueDate, oaDueTime, oaDueDateTimezone, handleUpdate, toast]);
+  
 
   const handleMarkOACompleted = async () => {
     const success = await handleUpdate({ oaCompletedOn: new Date() });
@@ -267,7 +275,7 @@ export function ApplicationDetailsDialog({ application, children }: ApplicationD
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>{children}</DialogTrigger>
-      <DialogContent className="sm:max-w-2xl max-h-[90vh] flex flex-col p-0 bg-card">
+      <DialogContent className="sm:max-w-3xl max-h-[90vh] flex flex-col p-0 bg-card">
         <DialogHeader className="p-6 pb-4 flex-shrink-0 border-b">
           <div className="flex items-start gap-4">
             <Avatar className="h-16 w-16 rounded-lg">
@@ -494,7 +502,7 @@ export function ApplicationDetailsDialog({ application, children }: ApplicationD
                               <Calendar
                               mode="single"
                               selected={application.appliedOn ? new Date(application.appliedOn) : undefined}
-                              onSelect={(date) => handleDateChange(date, 'appliedOn')}
+                              onSelect={handleAppliedOnChange}
                               initialFocus
                               />
                           </PopoverContent>
@@ -505,13 +513,13 @@ export function ApplicationDetailsDialog({ application, children }: ApplicationD
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-end">
                     <div className="space-y-1">
                       <label className="text-sm font-medium">OA Due Date</label>
-                      <div className="flex gap-2">
+                      <div className="flex gap-2 items-center">
                         <Popover>
                           <PopoverTrigger asChild>
                             <Button
                               variant={"outline"}
                               className={cn(
-                                "w-[65%] justify-start text-left font-normal",
+                                "w-full justify-start text-left font-normal",
                                 !application.oaDueDate && "text-muted-foreground"
                               )}
                             >
@@ -523,7 +531,7 @@ export function ApplicationDetailsDialog({ application, children }: ApplicationD
                             <Calendar
                               mode="single"
                               selected={application.oaDueDate ? new Date(application.oaDueDate) : undefined}
-                              onSelect={(date) => handleDateChange(date, 'oaDueDate')}
+                              onSelect={(date) => handleOADueDateChange(date)}
                               initialFocus
                             />
                           </PopoverContent>
@@ -531,10 +539,30 @@ export function ApplicationDetailsDialog({ application, children }: ApplicationD
                         <Input
                             type="time"
                             value={oaDueTime}
-                            onChange={(e) => setOaDueTime(e.target.value)}
-                            onBlur={handleDueTimeBlur}
-                            className="w-[35%]"
+                            onChange={(e) => {
+                              setOaDueTime(e.target.value);
+                              handleOADueDateChange(undefined, e.target.value);
+                            }}
+                            className="w-[120px]"
                         />
+                      </div>
+                      <div className="pt-2">
+                        <Select 
+                          value={oaDueDateTimezone || ''}
+                          onValueChange={(tz) => {
+                            setOaDueDateTimezone(tz);
+                            handleOADueDateChange(undefined, undefined, tz);
+                          }}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select timezone" />
+                          </SelectTrigger>
+                          <SelectContent className="max-h-60">
+                            {timezones.map(tz => (
+                              <SelectItem key={tz} value={tz}>{tz}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
                       </div>
                     </div>
                     <div className="space-y-1">
