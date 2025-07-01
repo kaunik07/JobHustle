@@ -9,7 +9,7 @@ import {
 import { createId } from '@paralleldrive/cuid2';
 
 export const categoriesEnum = pgEnum('category', ['SWE', 'SRE/Devops', 'Quant', 'Systems', 'Data Scientist']);
-export const statusesEnum = pgEnum('status', ['Yet to Apply', 'Applied', 'OA', 'Interview', 'Offer']);
+export const statusesEnum = pgEnum('status', ['Yet to Apply', 'Applied', 'OA', 'Interview', 'Offer', 'Rejected']);
 
 export const users = pgTable('users', {
   id: text('id').$defaultFn(() => createId()).primaryKey(),

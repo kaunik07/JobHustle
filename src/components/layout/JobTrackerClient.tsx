@@ -11,6 +11,8 @@ import { Separator } from '@/components/ui/separator';
 import { AnalyticsOverview } from '@/components/analytics/AnalyticsOverview';
 import { deleteUser as deleteUserAction } from '@/app/actions';
 import { useToast } from '@/hooks/use-toast';
+import { kanbanStatuses } from '@/lib/types';
+import { RejectedList } from '../applications/RejectedList';
 
 interface JobTrackerClientProps {
     users: User[];
@@ -47,8 +49,10 @@ export function JobTrackerClient({ users, applications, selectedUserId }: JobTra
     return app.status === 'Yet to Apply';
   });
 
-  const kanbanApplications = applications.filter(app => app.status !== 'Yet to Apply');
+  const kanbanApplications = applications.filter(app => kanbanStatuses.includes(app.status));
   
+  const rejectedApplications = applications.filter(app => app.status === 'Rejected');
+
   return (
     <div className="flex min-h-screen w-full flex-col">
       <Header 
@@ -62,6 +66,8 @@ export function JobTrackerClient({ users, applications, selectedUserId }: JobTra
         <YetToApplyList applications={yetToApplyApplications} />
         <Separator />
         <KanbanBoard applications={kanbanApplications} />
+        <Separator />
+        <RejectedList applications={rejectedApplications} />
       </main>
     </div>
   );

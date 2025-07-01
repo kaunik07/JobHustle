@@ -2,7 +2,7 @@
 
 import type { Application } from '@/lib/types';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Briefcase, Clock, FileText, BarChart, Users, Award } from 'lucide-react';
+import { Briefcase, Clock, FileText, BarChart, Users, Award, XCircle } from 'lucide-react';
 
 interface AnalyticsOverviewProps {
   applications: Application[];
@@ -16,6 +16,7 @@ export function AnalyticsOverview({ applications }: AnalyticsOverviewProps) {
     OA: applications.filter(a => a.status === 'OA').length,
     Interview: applications.filter(a => a.status === 'Interview').length,
     Offer: applications.filter(a => a.status === 'Offer').length,
+    Rejected: applications.filter(a => a.status === 'Rejected').length,
   };
 
   const statItems = [
@@ -25,10 +26,11 @@ export function AnalyticsOverview({ applications }: AnalyticsOverviewProps) {
     { title: 'OA', value: stats.OA, icon: BarChart, color: 'text-chart-4' },
     { title: 'Interview', value: stats.Interview, icon: Users, color: 'text-chart-1' },
     { title: 'Offers', value: stats.Offer, icon: Award, color: 'text-chart-2' },
+    { title: 'Rejected', value: stats.Rejected, icon: XCircle, color: 'text-destructive' },
   ];
 
   return (
-    <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6">
+    <div className="grid gap-4 grid-cols-2 md:grid-cols-4 xl:grid-cols-7">
       {statItems.map(item => (
         <Card key={item.title}>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
