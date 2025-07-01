@@ -94,8 +94,13 @@ export function KanbanCard({ application, selectedUserId }: KanbanCardProps) {
       }
     }
     
-    if (application.status === 'OA' && application.oaDueDate) {
-        return `Due ${formatDistanceToNow(new Date(application.oaDueDate), { addSuffix: true })}`;
+    if (application.status === 'OA') {
+        if (application.oaCompletedOn) {
+            return `Completed ${formatDistanceToNow(new Date(application.oaCompletedOn), { addSuffix: true })}`;
+        }
+        if (application.oaDueDate) {
+            return `Due ${formatDistanceToNow(new Date(application.oaDueDate), { addSuffix: true })}`;
+        }
     }
     if (application.appliedOn) {
         return `Applied ${formatDistanceToNow(new Date(application.appliedOn), { addSuffix: true })}`;
