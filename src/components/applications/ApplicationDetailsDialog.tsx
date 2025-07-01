@@ -53,8 +53,8 @@ const categoryStyles: Record<ApplicationCategory, string> = {
 };
 
 const applicationTypeStyles: Record<ApplicationType, string> = {
-  'Full-Time': 'bg-primary/20 text-primary border-primary/30',
-  'Internship': 'bg-accent/20 text-accent border-accent/30',
+  'Full-Time': 'bg-chart-2/20 text-chart-2 border-chart-2/30',
+  'Internship': 'bg-chart-4/20 text-chart-4 border-chart-4/30',
 };
 
 
