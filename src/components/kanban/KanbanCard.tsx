@@ -6,7 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import type { Application, ApplicationCategory } from '@/lib/types';
 import { ApplicationDetailsDialog } from '@/components/applications/ApplicationDetailsDialog';
-import { format } from 'date-fns';
+import { format, formatDistanceToNow } from 'date-fns';
 import { Clock } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -33,7 +33,12 @@ export function KanbanCard({ application }: KanbanCardProps) {
         return `Applied ${format(new Date(application.appliedOn), "MMM d")}`;
     }
     if (application.createdAt) {
-      return `Added ${format(new Date(application.createdAt), "MMM d")}`;
+      const formattedDate = format(new Date(application.createdAt), "MMM d");
+      if (application.status === 'Yet to Apply') {
+        const timeAgo = formatDistanceToNow(new Date(application.createdAt), { addSuffix: true });
+        return `Added ${formattedDate} (${timeAgo})`;
+      }
+      return `Added ${formattedDate}`;
     }
     return 'Added recently';
   }
