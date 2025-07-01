@@ -26,6 +26,7 @@ export async function addApplication(data: Omit<Application, 'id' | 'user' | 'jo
       companyName: data.companyName,
       jobTitle: data.jobTitle,
       jobUrl: data.jobUrl,
+      type: data.type,
       category: data.category,
       status: data.status,
       notes: data.notes,

@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -31,7 +32,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { User, categories, statuses, Application } from '@/lib/types';
+import { User, categories, statuses, applicationTypes } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2 } from 'lucide-react';
 import { Textarea } from '../ui/textarea';
@@ -41,6 +42,7 @@ const formSchema = z.object({
   companyName: z.string().min(2, 'Company name is required'),
   jobTitle: z.string().min(2, 'Job title is required'),
   jobUrl: z.string().url('Please enter a valid URL'),
+  type: z.enum(applicationTypes),
   category: z.enum(categories),
   status: z.enum(statuses),
   userId: z.string().min(1, 'User is required'),
@@ -65,6 +67,7 @@ export function AddApplicationDialog({ children, users }: AddApplicationDialogPr
       companyName: '',
       jobTitle: '',
       jobUrl: '',
+      type: 'Full-Time',
       category: 'SWE',
       status: 'Yet to Apply',
       userId: 'all',
@@ -90,6 +93,7 @@ export function AddApplicationDialog({ children, users }: AddApplicationDialogPr
         notes: '',
         userId: 'all',
         status: 'Yet to Apply',
+        type: 'Full-Time',
       });
     } catch (error) {
       toast({
@@ -159,6 +163,28 @@ export function AddApplicationDialog({ children, users }: AddApplicationDialogPr
               <div className="grid grid-cols-2 gap-4">
                 <FormField
                   control={form.control}
+                  name="type"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Type</FormLabel>
+                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select a type" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {applicationTypes.map(type => (
+                            <SelectItem key={type} value={type}>{type}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
                   name="category"
                   render={({ field }) => (
                     <FormItem>
@@ -179,7 +205,9 @@ export function AddApplicationDialog({ children, users }: AddApplicationDialogPr
                     </FormItem>
                   )}
                 />
-                <FormField
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                 <FormField
                   control={form.control}
                   name="userId"
                   render={({ field }) => (
@@ -202,29 +230,29 @@ export function AddApplicationDialog({ children, users }: AddApplicationDialogPr
                     </FormItem>
                   )}
                 />
+                <FormField
+                    control={form.control}
+                    name="status"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Status</FormLabel>
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select a status" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {statuses.map(s => (
+                              <SelectItem key={s} value={s}>{s}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
               </div>
-              <FormField
-                  control={form.control}
-                  name="status"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Status</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select a status" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {statuses.map(s => (
-                            <SelectItem key={s} value={s}>{s}</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
               <FormField
                 control={form.control}
                 name="notes"

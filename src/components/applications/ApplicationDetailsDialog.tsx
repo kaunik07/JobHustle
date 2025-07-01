@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -12,7 +13,7 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { type Application, type ApplicationStatus, statuses, categories, type ApplicationCategory, type User } from '@/lib/types';
+import { type Application, type ApplicationStatus, statuses, categories, type ApplicationCategory, type User, applicationTypes, type ApplicationType } from '@/lib/types';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { ExternalLink, Trash2, CalendarIcon } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -141,6 +142,12 @@ export function ApplicationDetailsDialog({ application, children }: ApplicationD
       toast({ title: `Status changed to ${newStatus}.` });
     }
   };
+
+  const handleTypeChange = async (newType: ApplicationType) => {
+    if (await handleUpdate({ type: newType })) {
+      toast({ title: `Type changed to ${newType}.` });
+    }
+  };
   
   const handleCategoryChange = async (newCategory: ApplicationCategory) => {
     if (await handleUpdate({ category: newCategory })) {
@@ -215,8 +222,9 @@ export function ApplicationDetailsDialog({ application, children }: ApplicationD
                 <div className="flex items-center gap-2">
                     <Badge variant="secondary">{application.status}</Badge>
                     <Badge variant="outline" className={cn("capitalize", categoryStyles[application.category])}>{application.category}</Badge>
+                    <Badge variant="outline">{application.type}</Badge>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex flex-wrap items-center gap-2">
                     <span className="text-sm font-medium">Change status:</span>
                     <Select value={application.status} onValueChange={handleStatusChange}>
                         <SelectTrigger className="w-[180px]">
@@ -229,7 +237,20 @@ export function ApplicationDetailsDialog({ application, children }: ApplicationD
                         </SelectContent>
                     </Select>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="text-sm font-medium">Change type:</span>
+                  <Select value={application.type} onValueChange={handleTypeChange}>
+                      <SelectTrigger className="w-[180px]">
+                          <SelectValue placeholder="Select a type" />
+                      </SelectTrigger>
+                      <SelectContent>
+                          {applicationTypes.map(type => (
+                              <SelectItem key={type} value={type}>{type}</SelectItem>
+                          ))}
+                      </SelectContent>
+                  </Select>
+                </div>
+                <div className="flex flex-wrap items-center gap-2">
                     <span className="text-sm font-medium">Change category:</span>
                     <Select value={application.category} onValueChange={handleCategoryChange}>
                         <SelectTrigger className="w-[180px]">

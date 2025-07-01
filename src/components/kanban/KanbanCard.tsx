@@ -84,9 +84,12 @@ export function KanbanCard({ application, selectedUserId }: KanbanCardProps) {
             </div>
           </div>
           
-          <Badge variant="outline" className={cn("capitalize", categoryStyles[application.category])}>
-            {application.category}
-          </Badge>
+          <div className="flex items-center gap-2 flex-wrap">
+            <Badge variant="outline" className={cn("capitalize", categoryStyles[application.category])}>
+              {application.category}
+            </Badge>
+            <Badge variant="outline">{application.type}</Badge>
+          </div>
           
           <div className="flex justify-between items-center pt-2">
             <p className="text-xs text-muted-foreground flex items-center gap-1">

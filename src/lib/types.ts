@@ -9,6 +9,10 @@ export type ApplicationCategory = 'SWE' | 'SRE/Devops' | 'Quant' | 'Systems' | '
 
 export const categories: ApplicationCategory[] = ['SWE', 'SRE/Devops', 'Quant', 'Systems', 'Data Scientist'];
 
+export type ApplicationType = 'Internship' | 'Full-Time';
+
+export const applicationTypes: ApplicationType[] = ['Internship', 'Full-Time'];
+
 export interface User {
   id: string;
   firstName: string;
@@ -24,6 +28,7 @@ export interface Application {
   jobUrl: string;
   jobDescription?: string | null;
   resumeUrl?: string | null;
+  type: ApplicationType;
   category: ApplicationCategory;
   status: ApplicationStatus;
   userId: string;
