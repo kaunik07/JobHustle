@@ -76,8 +76,13 @@ export function ApplicationDetailsDialog({ application, children }: ApplicationD
   const [currentLocation, setCurrentLocation] = React.useState(application.location);
   const [currentResumeUrl, setCurrentResumeUrl] = React.useState(application.resumeUrl || '');
 
+  // State for OA date/time
   const [oaDueTime, setOaDueTime] = React.useState('23:59');
   const [oaDueDateTimezone, setOaDueDateTimezone] = React.useState<string | null>(null);
+
+  // State for Interview dates/times
+  const [interviewDetails, setInterviewDetails] = React.useState<Record<number, { time: string; timezone: string | null }>>({});
+  
   const [timezones, setTimezones] = React.useState<string[]>([]);
   const isInterviewStage = application.status === 'Interview';
 
@@ -99,7 +104,6 @@ export function ApplicationDetailsDialog({ application, children }: ApplicationD
 
       if (application.oaDueDate) {
           try {
-              // This formats the stored UTC date into the wall-clock time of the stored timezone
               const timeFormatter = new Intl.DateTimeFormat('en-GB', {
                   timeZone: initialTimezone,
                   hour: '2-digit',
@@ -115,6 +119,30 @@ export function ApplicationDetailsDialog({ application, children }: ApplicationD
       } else {
           setOaDueTime('23:59');
       }
+
+      const initialInterviewDetails: Record<number, { time: string; timezone: string | null }> = {};
+      for (let i = 1; i <= 10; i++) {
+        const date = application[`interviewDate${i}` as keyof Application] as Date | null;
+        const timezone = application[`interviewDateTimezone${i}` as keyof Application] as string | null;
+        if (date) {
+            const tz = timezone || Intl.DateTimeFormat().resolvedOptions().timeZone;
+            let time = '12:00';
+            try {
+                const timeFormatter = new Intl.DateTimeFormat('en-GB', {
+                    timeZone: tz,
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    hour12: false,
+                });
+                time = timeFormatter.format(new Date(date));
+            } catch (e) {
+                console.error("Invalid timezone, falling back", e);
+                time = format(new Date(date), 'HH:mm');
+            }
+            initialInterviewDetails[i] = { time, timezone: tz };
+        }
+      }
+      setInterviewDetails(initialInterviewDetails);
     }
   }, [application, open]);
 
@@ -249,18 +277,13 @@ export function ApplicationDetailsDialog({ application, children }: ApplicationD
     const day = dateToUse.getDate().toString().padStart(2, '0');
     const [hours, minutes] = timeToUse.split(':');
   
-    // Create the date by parsing it as UTC, which prevents the local browser timezone from interfering.
     const tempDate = new Date(`${year}-${month}-${day}T${hours}:${minutes}:00Z`);
     
-    // Create date strings for the same moment in time in both UTC and the target timezone.
     const utcDateString = tempDate.toLocaleString('en-US', { timeZone: 'UTC' });
     const tzDateString = tempDate.toLocaleString('en-US', { timeZone: timezoneToUse });
     
-    // The difference in milliseconds between these two representations is the timezone offset.
     const offset = (new Date(utcDateString)).getTime() - (new Date(tzDateString)).getTime();
     
-    // We add the offset to our initial UTC time to get the correct final timestamp.
-    // e.g., for 14:00 NY (UTC-4), offset is -4h. final = 14:00Z + (-4h) = 18:00Z.
     const finalTimestamp = tempDate.getTime() + offset;
     const finalDate = new Date(finalTimestamp);
   
@@ -277,14 +300,39 @@ export function ApplicationDetailsDialog({ application, children }: ApplicationD
     }
   };
 
-  const handleInterviewDateChange = async (date: Date | undefined, roundNumber: number) => {
-    if (date) {
-        const fieldName = `interviewDate${roundNumber}` as keyof Application;
-        const success = await handleUpdate({ [fieldName]: date });
-        if (success) {
-            toast({ title: `Round ${roundNumber} date updated.` });
-        }
-    }
+  const handleInterviewDateChange = async (
+      roundNumber: number,
+      update: { date?: Date; time?: string; timezone?: string }
+  ) => {
+      const fieldNameDate = `interviewDate${roundNumber}` as keyof Application;
+      const fieldNameTimezone = `interviewDateTimezone${roundNumber}` as keyof Application;
+      const existingDate = application[fieldNameDate] as Date | null;
+      if (!existingDate && !update.date) return; // Can't update without a date
+
+      const dateToUse = update.date || new Date(existingDate!);
+      const currentRoundDetails = interviewDetails[roundNumber] || { time: '12:00', timezone: Intl.DateTimeFormat().resolvedOptions().timeZone };
+      const timeToUse = update.time ?? currentRoundDetails.time;
+      const timezoneToUse = update.timezone ?? currentRoundDetails.timezone!;
+      if (!dateToUse || !timeToUse || !timezoneToUse) return;
+
+      const year = dateToUse.getFullYear();
+      const month = (dateToUse.getMonth() + 1).toString().padStart(2, '0');
+      const day = dateToUse.getDate().toString().padStart(2, '0');
+      const [hours, minutes] = timeToUse.split(':');
+      const tempDate = new Date(`${year}-${month}-${day}T${hours}:${minutes}:00Z`);
+      const utcDateString = tempDate.toLocaleString('en-US', { timeZone: 'UTC' });
+      const tzDateString = tempDate.toLocaleString('en-US', { timeZone: timezoneToUse });
+      const offset = (new Date(utcDateString)).getTime() - (new Date(tzDateString)).getTime();
+      const finalDate = new Date(tempDate.getTime() + offset);
+
+      const success = await handleUpdate({
+          [fieldNameDate]: finalDate,
+          [fieldNameTimezone]: timezoneToUse,
+      } as Partial<Application>);
+      
+      if (success) {
+          toast({ title: `Round ${roundNumber} updated.` });
+      }
   };
 
   const handleDelete = async () => {
@@ -296,6 +344,26 @@ export function ApplicationDetailsDialog({ application, children }: ApplicationD
       toast({ variant: 'destructive', title: 'Failed to delete application.' });
     }
   };
+
+  const formatDateTime = (date: Date | null | undefined, timezone: string | null | undefined) => {
+    if (!date) return 'N/A';
+    const tz = timezone || Intl.DateTimeFormat().resolvedOptions().timeZone;
+    try {
+        const formatted = new Date(date).toLocaleString('en-US', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric',
+            hour: 'numeric',
+            minute: '2-digit',
+            timeZone: tz,
+            timeZoneName: 'short'
+        });
+        return `${formatted} (${formatDistanceToNow(new Date(date), { addSuffix: true })})`;
+    } catch {
+        return `${format(new Date(date), "PPP, p")} (${formatDistanceToNow(new Date(date), { addSuffix: true })})`;
+    }
+  }
+
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -439,17 +507,20 @@ export function ApplicationDetailsDialog({ application, children }: ApplicationD
                 <h3 className="font-semibold">Interview Dates</h3>
                 <div className="space-y-3">
                   {Array.from({ length: 10 }).map((_, index) => {
-                    const fieldName = `interviewDate${index + 1}` as keyof Application;
+                    const roundNumber = index + 1;
+                    const fieldName = `interviewDate${roundNumber}` as keyof Application;
                     const interviewDate = application[fieldName] as Date | null | undefined;
-                    if (interviewDate) {
+                    const roundDetails = interviewDetails[roundNumber];
+
+                    if (interviewDate && roundDetails) {
                       return (
-                        <div key={index} className="flex items-center gap-4">
-                          <span className="font-medium w-24">Round {index + 1}:</span>
+                        <div key={index} className="grid grid-cols-[auto_1fr_auto_auto] items-center gap-2">
+                          <span className="font-medium w-24">Round {roundNumber}:</span>
                            <Popover>
                               <PopoverTrigger asChild>
                                 <Button
                                   variant={"outline"}
-                                  className={cn("w-[240px] justify-start text-left font-normal")}
+                                  className={cn("justify-start text-left font-normal")}
                                 >
                                   <CalendarIcon className="mr-2 h-4 w-4" />
                                   {format(new Date(interviewDate), "PPP")}
@@ -459,11 +530,36 @@ export function ApplicationDetailsDialog({ application, children }: ApplicationD
                                 <Calendar
                                   mode="single"
                                   selected={new Date(interviewDate)}
-                                  onSelect={(date) => handleInterviewDateChange(date, index + 1)}
+                                  onSelect={(date) => handleInterviewDateChange(roundNumber, { date })}
                                   initialFocus
                                 />
                               </PopoverContent>
                             </Popover>
+                            <Input
+                                type="time"
+                                value={roundDetails.time}
+                                onChange={(e) => {
+                                    setInterviewDetails(prev => ({...prev, [roundNumber]: {...prev[roundNumber], time: e.target.value}}));
+                                    handleInterviewDateChange(roundNumber, { time: e.target.value });
+                                }}
+                                className="w-[120px]"
+                            />
+                            <Select 
+                              value={roundDetails.timezone || ''}
+                              onValueChange={(tz) => {
+                                setInterviewDetails(prev => ({...prev, [roundNumber]: {...prev[roundNumber], timezone: tz}}));
+                                handleInterviewDateChange(roundNumber, { timezone: tz });
+                              }}
+                            >
+                              <SelectTrigger className="w-[200px]">
+                                <SelectValue placeholder="Select timezone" />
+                              </SelectTrigger>
+                              <SelectContent className="max-h-60">
+                                {timezones.map(tz => (
+                                  <SelectItem key={tz} value={tz}>{tz}</SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
                         </div>
                       );
                     }
@@ -489,9 +585,11 @@ export function ApplicationDetailsDialog({ application, children }: ApplicationD
                           <Calendar
                             mode="single"
                             onSelect={(date) => {
-                                handleInterviewDateChange(date, nextRoundIndex + 1)
-                                const trigger = document.activeElement as HTMLElement;
-                                if(trigger) trigger.blur();
+                                if (date) {
+                                    handleInterviewDateChange(nextRoundIndex + 1, { date: date, time: '12:00', timezone: Intl.DateTimeFormat().resolvedOptions().timeZone });
+                                    const trigger = document.activeElement as HTMLElement;
+                                    if(trigger) trigger.blur();
+                                }
                               }
                             }
                             initialFocus
@@ -678,7 +776,7 @@ export function ApplicationDetailsDialog({ application, children }: ApplicationD
                   {application.oaDueDate && (
                       <div className="space-y-1">
                           <label className="text-sm font-medium">OA Due Date</label>
-                          <p className="text-sm text-muted-foreground">{format(new Date(application.oaDueDate), "PPP")} ({formatDistanceToNow(new Date(application.oaDueDate), { addSuffix: true })})</p>
+                          <p className="text-sm text-muted-foreground">{formatDateTime(application.oaDueDate, application.oaDueDateTimezone)}</p>
                       </div>
                   )}
               </div>

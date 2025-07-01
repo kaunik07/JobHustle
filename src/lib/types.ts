@@ -99,13 +99,23 @@ export interface Application {
   oaCompletedOn?: Date | null;
   createdAt: Date;
   interviewDate1?: Date | null;
+  interviewDateTimezone1?: string | null;
   interviewDate2?: Date | null;
+  interviewDateTimezone2?: string | null;
   interviewDate3?: Date | null;
+  interviewDateTimezone3?: string | null;
   interviewDate4?: Date | null;
+  interviewDateTimezone4?: string | null;
   interviewDate5?: Date | null;
+  interviewDateTimezone5?: string | null;
   interviewDate6?: Date | null;
+  interviewDateTimezone6?: string | null;
   interviewDate7?: Date | null;
+  interviewDateTimezone7?: string | null;
   interviewDate8?: Date | null;
+  interviewDateTimezone8?: string | null;
   interviewDate9?: Date | null;
+  interviewDateTimezone9?: string | null;
   interviewDate10?: Date | null;
+  interviewDateTimezone10?: string | null;
 }
