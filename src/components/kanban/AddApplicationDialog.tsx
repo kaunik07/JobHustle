@@ -36,7 +36,7 @@ import { Loader2, ChevronsUpDown, Check, X, Plus } from 'lucide-react';
 import { Textarea } from '@/components/ui/textarea';
 import { addApplication as addApplicationAction } from '@/app/actions';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Command, CommandEmpty, CommandGroup, CommandInput, CommandList } from '@/components/ui/command';
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 
@@ -120,8 +120,10 @@ export function AddApplicationDialog({ children, users, selectedUserId, allLocat
   }
   
   const allUniqueLocations = React.useMemo(() => {
-    const otherLocations = allLocations.filter(loc => !suggestedLocations.includes(loc));
-    return [...suggestedLocations, ...otherLocations];
+    const combined = [...suggestedLocations, ...allLocations];
+    const unique = Array.from(new Set(combined));
+    const finalOrder = [...suggestedLocations.filter(l => unique.includes(l)), ...unique.filter(l => !suggestedLocations.includes(l))];
+    return finalOrder;
   }, [allLocations]);
 
   const locationsToShow = React.useMemo(() => {
