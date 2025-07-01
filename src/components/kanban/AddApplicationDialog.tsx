@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -120,12 +121,18 @@ export function AddApplicationDialog({ children, users, selectedUserId, allLocat
   }
   
   const allUniqueLocations = React.useMemo(() => {
-    const combined = [...suggestedLocations, ...allLocations];
-    const unique = Array.from(new Set(combined));
-    const finalOrder = [...suggestedLocations.filter(l => unique.includes(l)), ...unique.filter(l => !suggestedLocations.includes(l))];
-    return Array.from(new Set(finalOrder));
+    return [...new Set([...suggestedLocations, ...allLocations])];
   }, [allLocations]);
-  
+
+  const displayLocations = React.useMemo(() => {
+    if (!inputValue) {
+      return allUniqueLocations.slice(0, 5);
+    }
+    return allUniqueLocations.filter(loc => 
+      loc.toLowerCase().includes(inputValue.toLowerCase())
+    );
+  }, [inputValue, allUniqueLocations]);
+
   const handleLocationSelect = (location: string) => {
     const currentLocations = form.getValues('locations') || [];
     const newLocations = currentLocations.includes(location)
@@ -134,8 +141,16 @@ export function AddApplicationDialog({ children, users, selectedUserId, allLocat
     form.setValue('locations', newLocations, { shouldValidate: true });
     setInputValue('');
   };
+  
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
+    if (e.key === 'Enter') {
+      if (inputValue && !allUniqueLocations.find(loc => loc.toLowerCase() === inputValue.toLowerCase())) {
+        e.preventDefault();
+        handleLocationSelect(inputValue);
+      }
+    }
+  };
 
-  const filteredLocations = allUniqueLocations.filter(loc => loc.toLowerCase().includes(inputValue.toLowerCase()));
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -222,7 +237,7 @@ export function AddApplicationDialog({ children, users, selectedUserId, allLocat
                           </FormControl>
                         </PopoverTrigger>
                         <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
-                           <Command>
+                           <Command onKeyDown={handleKeyDown}>
                             <CommandInput 
                               placeholder="Search location..."
                               value={inputValue}
@@ -231,7 +246,7 @@ export function AddApplicationDialog({ children, users, selectedUserId, allLocat
                             <CommandList>
                               <CommandEmpty>No location found.</CommandEmpty>
                               <CommandGroup>
-                                {filteredLocations.map((location) => {
+                                {displayLocations.map((location) => {
                                   const isSelected = field.value?.includes(location);
                                    return (
                                     <CommandItem
@@ -249,8 +264,9 @@ export function AddApplicationDialog({ children, users, selectedUserId, allLocat
                                     </CommandItem>
                                   );
                                 })}
-                                {inputValue && !filteredLocations.some(loc => loc.toLowerCase() === inputValue.toLowerCase()) && (
+                                {inputValue && !displayLocations.some(loc => loc.toLowerCase() === inputValue.toLowerCase()) && (
                                     <CommandItem
+                                        key={inputValue}
                                         value={inputValue}
                                         onSelect={handleLocationSelect}
                                     >
