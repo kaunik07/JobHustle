@@ -2,9 +2,9 @@
 'use client';
 
 import * as React from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { Header } from '@/components/layout/Header';
-import type { Application, User } from '@/lib/types';
+import type { Application, User, ApplicationType, ApplicationCategory } from '@/lib/types';
 import { KanbanBoard } from '@/components/kanban/KanbanBoard';
 import { YetToApplyList } from '@/components/applications/YetToApplyList';
 import { Separator } from '@/components/ui/separator';
@@ -13,19 +13,43 @@ import { deleteUser as deleteUserAction } from '@/app/actions';
 import { useToast } from '@/hooks/use-toast';
 import { kanbanStatuses } from '@/lib/types';
 import { RejectedList } from '../applications/RejectedList';
+import { FilterSidebar } from './FilterSidebar';
 
 interface JobTrackerClientProps {
     users: User[];
     applications: Application[];
     selectedUserId: string;
+    selectedType: string;
+    selectedCategory: string;
 }
 
-export function JobTrackerClient({ users, applications, selectedUserId }: JobTrackerClientProps) {
+export function JobTrackerClient({ users, applications, selectedUserId, selectedType, selectedCategory }: JobTrackerClientProps) {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { toast } = useToast();
   
+  const updateQuery = (key: string, value: string) => {
+    const current = new URLSearchParams(Array.from(searchParams.entries()));
+    if (value === 'all') {
+      current.delete(key);
+    } else {
+      current.set(key, value);
+    }
+    const search = current.toString();
+    const query = search ? `?${search}` : "";
+    router.push(`/${query}`);
+  }
+
   const handleUserChange = (userId: string) => {
-    router.push(`/?user=${userId}`);
+    updateQuery('user', userId);
+  };
+  
+  const handleTypeChange = (type: string) => {
+    updateQuery('type', type);
+  };
+  
+  const handleCategoryChange = (category: string) => {
+    updateQuery('category', category);
   };
 
   const handleRemoveUser = async (userIdToRemove: string) => {
@@ -39,36 +63,46 @@ export function JobTrackerClient({ users, applications, selectedUserId }: JobTra
       description: `${userToRemove.firstName} ${userToRemove.lastName} and all their applications have been removed.`,
     });
     
-    // If the deleted user was selected, navigate to 'all'
     if (selectedUserId === userIdToRemove) {
       router.push('/?user=all');
     }
   };
 
-  const yetToApplyApplications = applications.filter(app => {
-    return app.status === 'Yet to Apply';
+  const filteredApplications = applications.filter(app => {
+    const userMatch = selectedUserId === 'all' || app.userId === selectedUserId;
+    const typeMatch = selectedType === 'all' || app.type === selectedType;
+    const categoryMatch = selectedCategory === 'all' || app.category === selectedCategory;
+    return userMatch && typeMatch && categoryMatch;
   });
 
-  const kanbanApplications = applications.filter(app => kanbanStatuses.includes(app.status));
-  
-  const rejectedApplications = applications.filter(app => app.status === 'Rejected');
+  const yetToApplyApplications = filteredApplications.filter(app => app.status === 'Yet to Apply');
+  const kanbanApplications = filteredApplications.filter(app => kanbanStatuses.includes(app.status));
+  const rejectedApplications = filteredApplications.filter(app => app.status === 'Rejected');
 
   return (
     <div className="flex min-h-screen w-full flex-col">
-      <Header 
-        users={users} 
-        selectedUser={selectedUserId} 
-        onUserChange={handleUserChange}
-        onUserRemoved={handleRemoveUser}
+       <FilterSidebar 
+        selectedType={selectedType}
+        onTypeChange={handleTypeChange}
+        selectedCategory={selectedCategory}
+        onCategoryChange={handleCategoryChange}
       />
-      <main className="flex-1 p-4 md:p-6 lg:p-8 space-y-6">
-        <AnalyticsOverview applications={applications} />
-        <YetToApplyList applications={yetToApplyApplications} selectedUserId={selectedUserId} />
-        <Separator />
-        <KanbanBoard applications={kanbanApplications} selectedUserId={selectedUserId} />
-        <Separator />
-        <RejectedList applications={rejectedApplications} selectedUserId={selectedUserId} />
-      </main>
+      <div className="pl-16">
+        <Header 
+          users={users} 
+          selectedUser={selectedUserId} 
+          onUserChange={handleUserChange}
+          onUserRemoved={handleRemoveUser}
+        />
+        <main className="flex-1 p-4 md:p-6 lg:p-8 space-y-6">
+          <AnalyticsOverview applications={filteredApplications} />
+          <YetToApplyList applications={yetToApplyApplications} selectedUserId={selectedUserId} />
+          <Separator />
+          <KanbanBoard applications={kanbanApplications} selectedUserId={selectedUserId} />
+          <Separator />
+          <RejectedList applications={rejectedApplications} selectedUserId={selectedUserId} />
+        </main>
+      </div>
     </div>
   );
 }

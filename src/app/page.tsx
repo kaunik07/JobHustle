@@ -10,14 +10,14 @@ import { AlertCircle } from 'lucide-react';
 export default async function Home({
   searchParams,
 }: {
-  searchParams: { user?: string };
+  searchParams: { user?: string; type?: string; category?: string };
 }) {
   try {
     const allUsers: User[] = await db.select().from(usersSchema);
 
     if (allUsers.length === 0) {
       // If there are no users, we can show the main screen with a prompt to add one.
-      return <JobTrackerClient users={[]} applications={[]} selectedUserId="all" />;
+      return <JobTrackerClient users={[]} applications={[]} selectedUserId="all" selectedType="all" selectedCategory="all" />;
     }
     
     // Determine the selected user ID
@@ -26,22 +26,18 @@ export default async function Home({
       selectedUser = allUsers.find(u => u.firstName === 'U') || allUsers[0];
     }
     const selectedUserId = searchParams.user === 'all' ? 'all' : selectedUser?.id || 'all';
+    const selectedType = searchParams.type || 'all';
+    const selectedCategory = searchParams.category || 'all';
     
-    // Fetch applications for the selected user
-    const query = db
+    // Fetch all applications and let the client component handle filtering
+    const results = await db
       .select({
         application: applicationsSchema,
         user: usersSchema,
       })
       .from(applicationsSchema)
       .leftJoin(usersSchema, eq(applicationsSchema.userId, usersSchema.id))
-      .orderBy(desc(applicationsSchema.appliedOn));
-
-    if (selectedUserId !== 'all') {
-      query.where(eq(applicationsSchema.userId, selectedUserId));
-    }
-    
-    const results = await query;
+      .orderBy(desc(applicationsSchema.createdAt));
     
     const applicationsForClient = results.map(r => ({
       ...(r.application as Omit<Application, 'user'>),
@@ -53,6 +49,8 @@ export default async function Home({
         users={allUsers}
         applications={applicationsForClient}
         selectedUserId={selectedUserId}
+        selectedType={selectedType}
+        selectedCategory={selectedCategory}
       />
     );
 
