@@ -13,6 +13,24 @@ export type ApplicationType = 'Internship' | 'Full-Time';
 
 export const applicationTypes: ApplicationType[] = ['Internship', 'Full-Time'];
 
+export const suggestedLocations: string[] = [
+    'New York, NY',
+    'San Francisco, CA',
+    'Seattle, WA',
+    'Austin, TX',
+    'Boston, MA',
+    'Chicago, IL',
+    'Los Angeles, CA',
+    'Remote',
+    'London, UK',
+    'Toronto, ON, Canada',
+    'Vancouver, BC, Canada',
+    'Berlin, Germany',
+    'Singapore',
+    'Tokyo, Japan',
+    'Sydney, Australia',
+];
+
 export interface User {
   id: string;
   firstName: string;
@@ -25,6 +43,7 @@ export interface Application {
   id:string;
   companyName: string;
   jobTitle: string;
+  location: string;
   jobUrl: string;
   jobDescription?: string | null;
   resumeUrl?: string | null;

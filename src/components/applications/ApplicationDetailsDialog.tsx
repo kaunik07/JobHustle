@@ -66,12 +66,14 @@ export function ApplicationDetailsDialog({ application, children }: ApplicationD
   const [currentNotes, setCurrentNotes] = React.useState(application.notes || '');
   const [currentJobTitle, setCurrentJobTitle] = React.useState(application.jobTitle);
   const [currentCompanyName, setCurrentCompanyName] = React.useState(application.companyName);
+  const [currentLocation, setCurrentLocation] = React.useState(application.location);
   const [currentResumeUrl, setCurrentResumeUrl] = React.useState(application.resumeUrl || '');
 
   React.useEffect(() => {
     if (open) {
       setCurrentJobTitle(application.jobTitle);
       setCurrentCompanyName(application.companyName);
+      setCurrentLocation(application.location);
       setCurrentNotes(application.notes || '');
       setCurrentResumeUrl(application.resumeUrl || '');
     }
@@ -126,6 +128,19 @@ export function ApplicationDetailsDialog({ application, children }: ApplicationD
     if (currentCompanyName !== application.companyName) {
       if (await handleUpdate({ companyName: currentCompanyName })) {
         toast({ title: "Company name updated." });
+      }
+    }
+  };
+
+  const handleLocationBlur = async () => {
+    if (currentLocation.trim() === '') {
+        setCurrentLocation(application.location);
+        toast({ variant: "destructive", title: "Location cannot be empty." });
+        return;
+    }
+    if (currentLocation !== application.location) {
+      if (await handleUpdate({ location: currentLocation })) {
+        toast({ title: "Location updated." });
       }
     }
   };
@@ -222,6 +237,15 @@ export function ApplicationDetailsDialog({ application, children }: ApplicationD
                         onBlur={handleCompanyNameBlur}
                     />
                 </div>
+            </div>
+             <div className="space-y-2">
+                <Label htmlFor="location">Location</Label>
+                <Input
+                    id="location"
+                    value={currentLocation}
+                    onChange={(e) => setCurrentLocation(e.target.value)}
+                    onBlur={handleLocationBlur}
+                />
             </div>
             <div className="flex flex-wrap items-center gap-4">
                 <div className="flex items-center gap-2">

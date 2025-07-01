@@ -32,15 +32,20 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { User, categories, statuses, applicationTypes } from '@/lib/types';
+import { User, categories, statuses, applicationTypes, suggestedLocations } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2 } from 'lucide-react';
-import { Textarea } from '../ui/textarea';
+import { Loader2, ChevronsUpDown, Check, X } from 'lucide-react';
+import { Textarea } from '@/components/ui/textarea';
 import { addApplication as addApplicationAction } from '@/app/actions';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
+import { cn } from '@/lib/utils';
+import { Badge } from '@/components/ui/badge';
 
 const formSchema = z.object({
   companyName: z.string().min(2, 'Company name is required'),
   jobTitle: z.string().min(2, 'Job title is required'),
+  locations: z.array(z.string()).min(1, 'At least one location is required'),
   jobUrl: z.string().url('Please enter a valid URL'),
   type: z.enum(applicationTypes),
   category: z.enum(categories),
@@ -67,6 +72,7 @@ export function AddApplicationDialog({ children, users }: AddApplicationDialogPr
       companyName: '',
       jobTitle: '',
       jobUrl: '',
+      locations: [],
       type: 'Full-Time',
       category: 'SWE',
       status: 'Yet to Apply',
@@ -82,7 +88,7 @@ export function AddApplicationDialog({ children, users }: AddApplicationDialogPr
 
       toast({
         title: 'Application Added',
-        description: `${values.jobTitle} at ${values.companyName} has been added.`,
+        description: `${values.jobTitle} at ${values.companyName} has been added for ${values.locations.length} location(s).`,
       });
       setOpen(false);
       form.reset({
@@ -90,6 +96,7 @@ export function AddApplicationDialog({ children, users }: AddApplicationDialogPr
         companyName: '',
         jobTitle: '',
         jobUrl: '',
+        locations: [],
         notes: '',
         userId: 'all',
         status: 'Yet to Apply',
@@ -143,6 +150,87 @@ export function AddApplicationDialog({ children, users }: AddApplicationDialogPr
                     <FormControl>
                       <Input placeholder="Frontend Engineer" {...field} />
                     </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="locations"
+                render={({ field }) => (
+                  <FormItem className="flex flex-col">
+                    <FormLabel>Location(s)</FormLabel>
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <FormControl>
+                            <Button
+                              variant="outline"
+                              role="combobox"
+                              className={cn(
+                                "w-full justify-between h-auto min-h-10",
+                                !field.value?.length && "text-muted-foreground"
+                              )}
+                            >
+                              <div className="flex gap-1 flex-wrap">
+                                {field.value?.length > 0 ? (
+                                  field.value.map((location) => (
+                                    <Badge
+                                      variant="secondary"
+                                      key={location}
+                                      className="mr-1"
+                                      onClick={(e) => {
+                                        e.preventDefault();
+                                        field.onChange(
+                                          field.value.filter((value) => value !== location)
+                                        );
+                                      }}
+                                    >
+                                      {location}
+                                      <X className="ml-1 h-3 w-3" />
+                                    </Badge>
+                                  ))
+                                ) : (
+                                  "Select locations"
+                                )}
+                              </div>
+                              <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                            </Button>
+                          </FormControl>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
+                          <Command>
+                            <CommandInput placeholder="Search locations..." />
+                            <CommandList>
+                              <CommandEmpty>No location found.</CommandEmpty>
+                              <CommandGroup>
+                                {suggestedLocations.map((location) => {
+                                  const isSelected = field.value?.includes(location);
+                                   return (
+                                    <CommandItem
+                                      key={location}
+                                      onSelect={() => {
+                                        if (isSelected) {
+                                          field.onChange(field.value.filter(l => l !== location));
+                                        } else {
+                                          field.onChange([...(field.value || []), location]);
+                                        }
+                                      }}
+                                    >
+                                      <Check
+                                        className={cn(
+                                          "mr-2 h-4 w-4",
+                                          isSelected ? "opacity-100" : "opacity-0"
+                                        )}
+                                      />
+                                      {location}
+                                    </CommandItem>
+                                  );
+                                })}
+                              </CommandGroup>
+                            </CommandList>
+                          </Command>
+                        </PopoverContent>
+                      </Popover>
                     <FormMessage />
                   </FormItem>
                 )}

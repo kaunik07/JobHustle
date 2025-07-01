@@ -7,7 +7,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import type { Application, ApplicationCategory, ApplicationType } from '@/lib/types';
 import { ApplicationDetailsDialog } from '@/components/applications/ApplicationDetailsDialog';
 import { format, formatDistanceToNow } from 'date-fns';
-import { Clock } from 'lucide-react';
+import { Clock, MapPin } from 'lucide-react';
 import { cn, getUserColor } from '@/lib/utils';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
@@ -74,7 +74,7 @@ export function KanbanCard({ application, selectedUserId }: KanbanCardProps) {
           </TooltipProvider>
         )}
         <CardContent className="p-4 space-y-3">
-          <div className="flex items-center gap-4">
+          <div className="flex items-start gap-4">
             <Avatar className="h-12 w-12 rounded-lg">
               <AvatarImage 
                 data-ai-hint={`${application.companyName} logo`} 
@@ -83,9 +83,13 @@ export function KanbanCard({ application, selectedUserId }: KanbanCardProps) {
               />
               <AvatarFallback className="rounded-lg text-lg">{application.companyName.charAt(0)}</AvatarFallback>
             </Avatar>
-            <div>
+            <div className="flex-1">
               <p className="font-semibold">{application.companyName}</p>
               <p className="text-sm text-muted-foreground">{application.jobTitle}</p>
+              <p className="text-xs text-muted-foreground flex items-center gap-1 pt-1">
+                  <MapPin className="h-3 w-3" />
+                  {application.location}
+              </p>
             </div>
           </div>
           

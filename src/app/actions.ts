@@ -8,7 +8,7 @@ import { eq } from 'drizzle-orm';
 import type { Application, User } from '@/lib/types';
 import { fetchJobDescription } from '@/ai/flows/fetch-job-description';
 
-export async function addApplication(data: Omit<Application, 'id' | 'user' | 'jobDescription' | 'resumeUrl' | 'appliedOn' | 'dueDate' | 'createdAt'>) {
+export async function addApplication(data: Omit<Application, 'id' | 'user' | 'jobDescription' | 'resumeUrl' | 'appliedOn' | 'dueDate' | 'createdAt' | 'location'> & { locations: string[] }) {
   let jobDescription = '';
   try {
     const result = await fetchJobDescription({ jobUrl: data.jobUrl });
@@ -21,19 +21,22 @@ export async function addApplication(data: Omit<Application, 'id' | 'user' | 'jo
     ? await db.select().from(users) 
     : await db.select().from(users).where(eq(users.id, data.userId));
   
-  for (const user of usersToApplyFor) {
-    await db.insert(applications).values({
-      companyName: data.companyName,
-      jobTitle: data.jobTitle,
-      jobUrl: data.jobUrl,
-      type: data.type,
-      category: data.category,
-      status: data.status,
-      notes: data.notes,
-      userId: user.id,
-      appliedOn: data.status !== 'Yet to Apply' ? new Date() : null,
-      jobDescription: jobDescription,
-    });
+  for (const location of data.locations) {
+    for (const user of usersToApplyFor) {
+      await db.insert(applications).values({
+        companyName: data.companyName,
+        jobTitle: data.jobTitle,
+        jobUrl: data.jobUrl,
+        location: location,
+        type: data.type,
+        category: data.category,
+        status: data.status,
+        notes: data.notes,
+        userId: user.id,
+        appliedOn: data.status !== 'Yet to Apply' ? new Date() : null,
+        jobDescription: jobDescription,
+      });
+    }
   }
   revalidatePath('/');
 }
