@@ -15,7 +15,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { type Application, type ApplicationStatus, statuses, categories, type ApplicationCategory, type User, applicationTypes, type ApplicationType, workArrangements, type ApplicationWorkArrangement } from '@/lib/types';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { ExternalLink, Trash2, CalendarIcon } from 'lucide-react';
+import { ExternalLink, Trash2, CalendarIcon, CheckCircle2 } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -38,6 +38,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { updateApplication, deleteApplication } from '@/app/actions';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 interface ApplicationDetailsDialogProps {
   application: Application;
@@ -169,6 +170,11 @@ export function ApplicationDetailsDialog({ application, children }: ApplicationD
     }
   };
 
+  const handleQuickApply = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    handleStatusChange('Applied');
+  };
+
   const handleTypeChange = async (newType: ApplicationType) => {
     if (await handleUpdate({ type: newType })) {
       toast({ title: `Type changed to ${newType}.` });
@@ -262,6 +268,26 @@ export function ApplicationDetailsDialog({ application, children }: ApplicationD
             <div className="flex flex-wrap items-center gap-4">
                 <div className="flex items-center gap-2">
                     <Badge variant="secondary">{application.status}</Badge>
+                    {application.status === 'Yet to Apply' && (
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-7 w-7 rounded-full text-green-500 hover:bg-green-500/10 hover:text-green-500"
+                                onClick={handleQuickApply}
+                              >
+                                <CheckCircle2 className="h-5 w-5" />
+                                <span className="sr-only">Mark as Applied</span>
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p>Mark as Applied</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                    )}
                     <Badge variant="outline" className={cn("capitalize", categoryStyles[application.category])}>{application.category}</Badge>
                     {(application.workArrangement) && (
                       <Badge variant="outline" className={cn(workArrangementStyles[application.workArrangement])}>{application.workArrangement}</Badge>

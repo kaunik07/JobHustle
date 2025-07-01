@@ -7,9 +7,12 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import type { Application, ApplicationCategory, ApplicationType, ApplicationWorkArrangement } from '@/lib/types';
 import { ApplicationDetailsDialog } from '@/components/applications/ApplicationDetailsDialog';
 import { format, formatDistanceToNow } from 'date-fns';
-import { Clock, MapPin } from 'lucide-react';
+import { Clock, MapPin, CheckCircle2 } from 'lucide-react';
 import { cn, getUserColor } from '@/lib/utils';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { Button } from '@/components/ui/button';
+import { useToast } from '@/hooks/use-toast';
+import { updateApplication } from '@/app/actions';
 
 interface KanbanCardProps {
   application: Application;
@@ -38,6 +41,27 @@ const workArrangementStyles: Record<ApplicationWorkArrangement, string> = {
 export function KanbanCard({ application, selectedUserId }: KanbanCardProps) {
   const companyDomain = application.companyName.toLowerCase().replace(/[^a-z0-9]/gi, '') + '.com';
   const { user } = application;
+  const { toast } = useToast();
+
+  const handleApply = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    try {
+      await updateApplication(application.id, {
+        status: 'Applied',
+        appliedOn: new Date(),
+      });
+      toast({
+        title: 'Application Updated',
+        description: `Moved ${application.jobTitle} at ${application.companyName} to "Applied".`,
+      });
+    } catch (error) {
+      toast({
+        variant: 'destructive',
+        title: 'Update failed',
+        description: 'Could not update the application. Please try again.',
+      });
+    }
+  };
 
   const renderDate = () => {
     if (application.dueDate && ['OA', 'Interview'].includes(application.status)) {
@@ -116,7 +140,29 @@ export function KanbanCard({ application, selectedUserId }: KanbanCardProps) {
                 <Clock className="h-3 w-3" />
                 {renderDate()}
             </p>
-            <Badge variant="outline">{application.status}</Badge>
+            <div className="flex items-center gap-1">
+              <Badge variant="outline">{application.status}</Badge>
+              {application.status === 'Yet to Apply' && (
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-7 w-7 rounded-full text-green-500 hover:bg-green-500/10 hover:text-green-500"
+                        onClick={handleApply}
+                      >
+                        <CheckCircle2 className="h-5 w-5" />
+                        <span className="sr-only">Mark as Applied</span>
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>Mark as Applied</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              )}
+            </div>
           </div>
         </CardContent>
       </Card>
