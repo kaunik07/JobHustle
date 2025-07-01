@@ -63,11 +63,11 @@ export function JobTrackerClient({ users, applications, selectedUserId }: JobTra
       />
       <main className="flex-1 p-4 md:p-6 lg:p-8 space-y-6">
         <AnalyticsOverview applications={applications} />
-        <YetToApplyList applications={yetToApplyApplications} />
+        <YetToApplyList applications={yetToApplyApplications} selectedUserId={selectedUserId} />
         <Separator />
-        <KanbanBoard applications={kanbanApplications} />
+        <KanbanBoard applications={kanbanApplications} selectedUserId={selectedUserId} />
         <Separator />
-        <RejectedList applications={rejectedApplications} />
+        <RejectedList applications={rejectedApplications} selectedUserId={selectedUserId} />
       </main>
     </div>
   );

@@ -7,9 +7,10 @@ import { XCircle } from "lucide-react";
 
 interface RejectedListProps {
     applications: Application[];
+    selectedUserId: string;
 }
 
-export function RejectedList({ applications }: RejectedListProps) {
+export function RejectedList({ applications, selectedUserId }: RejectedListProps) {
     return (
         <div className="space-y-4">
             <div className="flex items-center gap-2">
@@ -19,7 +20,7 @@ export function RejectedList({ applications }: RejectedListProps) {
             {applications.length > 0 ? (
                  <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                     {applications.map(app => (
-                        <KanbanCard key={app.id} application={app} />
+                        <KanbanCard key={app.id} application={app} selectedUserId={selectedUserId} />
                     ))}
                 </div>
             ) : (

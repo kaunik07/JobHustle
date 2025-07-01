@@ -8,10 +8,12 @@ import type { Application, ApplicationCategory } from '@/lib/types';
 import { ApplicationDetailsDialog } from '@/components/applications/ApplicationDetailsDialog';
 import { format, formatDistanceToNow } from 'date-fns';
 import { Clock } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { cn, getUserColor } from '@/lib/utils';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 interface KanbanCardProps {
   application: Application;
+  selectedUserId: string;
 }
 
 const categoryStyles: Record<ApplicationCategory, string> = {
@@ -22,8 +24,9 @@ const categoryStyles: Record<ApplicationCategory, string> = {
   'Data Scientist': 'bg-chart-5/20 text-chart-5 border-chart-5/30',
 };
 
-export function KanbanCard({ application }: KanbanCardProps) {
+export function KanbanCard({ application, selectedUserId }: KanbanCardProps) {
   const companyDomain = application.companyName.toLowerCase().replace(/[^a-z0-9]/gi, '') + '.com';
+  const { user } = application;
 
   const renderDate = () => {
     if (application.dueDate && ['OA', 'Interview'].includes(application.status)) {
@@ -45,7 +48,26 @@ export function KanbanCard({ application }: KanbanCardProps) {
 
   return (
     <ApplicationDetailsDialog application={application}>
-      <Card className="cursor-pointer transition-shadow hover:shadow-lg">
+      <Card className="cursor-pointer transition-shadow hover:shadow-lg relative">
+        {selectedUserId === 'all' && user && (
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <div className="absolute top-2 right-2 z-10">
+                  <Avatar className="h-6 w-6 border-2 border-background">
+                      <AvatarImage src={user.avatarUrl || undefined} alt={`${user.firstName} ${user.lastName}`} />
+                      <AvatarFallback className={cn('text-xs', getUserColor(user.id))}>
+                          {user.firstName?.charAt(0)}
+                      </AvatarFallback>
+                  </Avatar>
+                </div>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>{`${user.firstName} ${user.lastName}`.trim()}</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        )}
         <CardContent className="p-4 space-y-3">
           <div className="flex items-center gap-4">
             <Avatar className="h-12 w-12 rounded-lg">

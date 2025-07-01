@@ -8,9 +8,10 @@ import { Application, kanbanStatuses } from '@/lib/types';
 
 interface KanbanBoardProps {
   applications: Application[];
+  selectedUserId: string;
 }
 
-export function KanbanBoard({ applications }: KanbanBoardProps) {
+export function KanbanBoard({ applications, selectedUserId }: KanbanBoardProps) {
 
   const columns = useMemo(() => {
     return kanbanStatuses.map(status => ({
@@ -29,6 +30,7 @@ export function KanbanBoard({ applications }: KanbanBoardProps) {
               key={column.id} 
               title={column.title} 
               applications={column.applications}
+              selectedUserId={selectedUserId}
             />
           ))}
         </div>
