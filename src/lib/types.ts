@@ -94,6 +94,6 @@ export interface Application {
   user?: User;
   notes?: string | null;
   appliedOn?: Date | null;
-  dueDate?: Date | null;
+  oaDueDate?: Date | null;
   createdAt: Date;
 }

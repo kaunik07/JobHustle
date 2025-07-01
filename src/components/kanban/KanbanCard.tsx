@@ -64,8 +64,8 @@ export function KanbanCard({ application, selectedUserId }: KanbanCardProps) {
   };
 
   const renderDate = () => {
-    if (application.dueDate && ['OA', 'Interview'].includes(application.status)) {
-        return `Due ${format(new Date(application.dueDate), "MMM d")}`;
+    if (application.oaDueDate && ['OA', 'Interview'].includes(application.status)) {
+        return `Due ${format(new Date(application.oaDueDate), "MMM d")}`;
     }
     if (application.appliedOn) {
         return `Applied ${format(new Date(application.appliedOn), "MMM d")}`;

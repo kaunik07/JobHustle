@@ -193,10 +193,10 @@ export function ApplicationDetailsDialog({ application, children }: ApplicationD
     }
   };
 
-  const handleDateChange = async (date: Date | undefined, field: 'appliedOn' | 'dueDate') => {
+  const handleDateChange = async (date: Date | undefined, field: 'appliedOn' | 'oaDueDate') => {
     if (date) {
       if (await handleUpdate({ [field]: date })) {
-        toast({ title: `${field === 'appliedOn' ? 'Applied date' : 'Due date'} updated.` });
+        toast({ title: `${field === 'appliedOn' ? 'Applied date' : 'OA Due Date'} updated.` });
       }
     }
   };
@@ -378,25 +378,25 @@ export function ApplicationDetailsDialog({ application, children }: ApplicationD
                 )}
                 {['OA', 'Interview'].includes(application.status) && (
                 <div className="space-y-1">
-                    <label className="text-sm font-medium">Due Date</label>
+                    <label className="text-sm font-medium">OA Due Date</label>
                     <Popover>
                         <PopoverTrigger asChild>
                             <Button
                             variant={"outline"}
                             className={cn(
                                 "w-[200px] justify-start text-left font-normal",
-                                !application.dueDate && "text-muted-foreground"
+                                !application.oaDueDate && "text-muted-foreground"
                             )}
                             >
                             <CalendarIcon className="mr-2 h-4 w-4" />
-                            {application.dueDate ? format(new Date(application.dueDate), "PPP") : <span>Pick a date</span>}
+                            {application.oaDueDate ? format(new Date(application.oaDueDate), "PPP") : <span>Pick a date</span>}
                             </Button>
                         </PopoverTrigger>
                         <PopoverContent className="w-auto p-0">
                             <Calendar
                             mode="single"
-                            selected={application.dueDate ? new Date(application.dueDate) : undefined}
-                            onSelect={(date) => handleDateChange(date, 'dueDate')}
+                            selected={application.oaDueDate ? new Date(application.oaDueDate) : undefined}
+                            onSelect={(date) => handleDateChange(date, 'oaDueDate')}
                             initialFocus
                             />
                         </PopoverContent>

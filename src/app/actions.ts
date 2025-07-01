@@ -8,7 +8,7 @@ import { eq } from 'drizzle-orm';
 import type { Application, User } from '@/lib/types';
 import { fetchJobDescription } from '@/ai/flows/fetch-job-description';
 
-export async function addApplication(data: Omit<Application, 'id' | 'user' | 'jobDescription' | 'resumeUrl' | 'appliedOn' | 'dueDate' | 'createdAt' | 'location'> & { locations: string[] }) {
+export async function addApplication(data: Omit<Application, 'id' | 'user' | 'jobDescription' | 'resumeUrl' | 'appliedOn' | 'oaDueDate' | 'createdAt' | 'location'> & { locations: string[] }) {
   let jobDescription = '';
   try {
     const result = await fetchJobDescription({ jobUrl: data.jobUrl });

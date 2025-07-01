@@ -36,6 +36,6 @@ export const applications = pgTable('applications', {
     userId: text('user_id').references(() => users.id, { onDelete: 'cascade' }).notNull(),
     notes: text('notes'),
     appliedOn: timestamp('applied_on'),
-    dueDate: timestamp('due_date'),
+    oaDueDate: timestamp('oa_due_date'),
     createdAt: timestamp('created_at').defaultNow().notNull(),
 });
