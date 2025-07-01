@@ -6,7 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import type { Application, ApplicationCategory, ApplicationType, ApplicationWorkArrangement } from '@/lib/types';
 import { ApplicationDetailsDialog } from '@/components/applications/ApplicationDetailsDialog';
-import { formatDistanceToNow } from 'date-fns';
+import { format, formatDistance, formatDistanceToNow } from 'date-fns';
 import { Clock, MapPin, CheckCircle2 } from 'lucide-react';
 import { cn, getUserColor } from '@/lib/utils';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
@@ -96,7 +96,14 @@ export function KanbanCard({ application, selectedUserId }: KanbanCardProps) {
     
     if (application.status === 'OA') {
         if (application.oaCompletedOn) {
-            return `Completed ${formatDistanceToNow(new Date(application.oaCompletedOn), { addSuffix: true })}`;
+            const completedDate = new Date(application.oaCompletedOn);
+            const now = new Date();
+            const distance = formatDistance(completedDate, now);
+            // If the completion date is somehow in the future, it's more like a due date.
+            if (completedDate > now) {
+                return `Due in ${distance}`;
+            }
+            return `Completed ${distance} ago`;
         }
         if (application.oaDueDate) {
             return `Due ${formatDistanceToNow(new Date(application.oaDueDate), { addSuffix: true })}`;
