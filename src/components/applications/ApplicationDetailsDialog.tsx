@@ -75,6 +75,7 @@ export function ApplicationDetailsDialog({ application, children }: ApplicationD
   const [currentCompanyName, setCurrentCompanyName] = React.useState(application.companyName);
   const [currentLocation, setCurrentLocation] = React.useState(application.location);
   const [currentResumeUrl, setCurrentResumeUrl] = React.useState(application.resumeUrl || '');
+  const [oaDueTime, setOaDueTime] = React.useState('23:59');
 
   const isInterviewStage = application.status === 'Interview';
 
@@ -85,6 +86,7 @@ export function ApplicationDetailsDialog({ application, children }: ApplicationD
       setCurrentLocation(application.location);
       setCurrentNotes(application.notes || '');
       setCurrentResumeUrl(application.resumeUrl || '');
+      setOaDueTime(application.oaDueDate ? format(new Date(application.oaDueDate), 'HH:mm') : '23:59');
     }
   }, [application, open]);
 
@@ -195,16 +197,50 @@ export function ApplicationDetailsDialog({ application, children }: ApplicationD
     }
   };
 
-  const handleDateChange = async (date: Date | undefined, field: 'appliedOn' | 'oaDueDate' | 'oaCompletedOn') => {
-    if (date) {
-      const fieldNameMap = {
-        appliedOn: 'Applied date',
-        oaDueDate: 'OA Due Date',
-        oaCompletedOn: 'OA Completed Date'
+  const handleDateChange = async (date: Date | undefined, field: 'appliedOn' | 'oaDueDate') => {
+    const fieldNameMap = {
+      appliedOn: 'Applied date',
+      oaDueDate: 'OA Due Date',
+    }
+    if (field === 'oaDueDate') {
+        if (date) {
+            const [hours, minutes] = oaDueTime.split(':').map(Number);
+            if (!isNaN(hours) && !isNaN(minutes)) {
+                date.setHours(hours);
+                date.setMinutes(minutes);
+            }
+        }
+        if (await handleUpdate({ [field]: date })) {
+            toast({ title: `${fieldNameMap[field]} updated.` });
+        }
+        return;
+    }
+    
+    if (await handleUpdate({ [field]: date })) {
+      toast({ title: `${fieldNameMap[field]} updated.` });
+    }
+  };
+
+  const handleDueTimeBlur = async () => {
+    if (application.oaDueDate) {
+      const newDate = new Date(application.oaDueDate);
+      const [hours, minutes] = oaDueTime.split(':').map(Number);
+      if (!isNaN(hours) && !isNaN(minutes)) {
+        newDate.setHours(hours);
+        newDate.setMinutes(minutes);
       }
-      if (await handleUpdate({ [field]: date })) {
-        toast({ title: `${fieldNameMap[field]} updated.` });
+      if (newDate.getTime() !== new Date(application.oaDueDate).getTime()) {
+        if (await handleUpdate({ oaDueDate: newDate })) {
+          toast({ title: `OA Due Date updated.` });
+        }
       }
+    }
+  };
+
+  const handleMarkOACompleted = async () => {
+    const success = await handleUpdate({ oaCompletedOn: new Date() });
+    if (success) {
+      toast({ title: 'Online assessment marked as completed.' });
     }
   };
 
@@ -466,56 +502,55 @@ export function ApplicationDetailsDialog({ application, children }: ApplicationD
                   </div>
                 )}
                 {application.status === 'OA' && (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-end">
                     <div className="space-y-1">
-                        <label className="text-sm font-medium">OA Due Date</label>
+                      <label className="text-sm font-medium">OA Due Date</label>
+                      <div className="flex gap-2">
                         <Popover>
-                            <PopoverTrigger asChild>
-                                <Button
-                                variant={"outline"}
-                                className={cn(
-                                    "w-full justify-start text-left font-normal",
-                                    !application.oaDueDate && "text-muted-foreground"
-                                )}
-                                >
-                                <CalendarIcon className="mr-2 h-4 w-4" />
-                                {application.oaDueDate ? format(new Date(application.oaDueDate), "PPP") : <span>Pick a date</span>}
-                                </Button>
-                            </PopoverTrigger>
-                            <PopoverContent className="w-auto p-0">
-                                <Calendar
-                                mode="single"
-                                selected={application.oaDueDate ? new Date(application.oaDueDate) : undefined}
-                                onSelect={(date) => handleDateChange(date, 'oaDueDate')}
-                                initialFocus
-                                />
-                            </PopoverContent>
+                          <PopoverTrigger asChild>
+                            <Button
+                              variant={"outline"}
+                              className={cn(
+                                "w-[65%] justify-start text-left font-normal",
+                                !application.oaDueDate && "text-muted-foreground"
+                              )}
+                            >
+                              <CalendarIcon className="mr-2 h-4 w-4" />
+                              {application.oaDueDate ? format(new Date(application.oaDueDate), "PPP") : <span>Pick a date</span>}
+                            </Button>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-auto p-0">
+                            <Calendar
+                              mode="single"
+                              selected={application.oaDueDate ? new Date(application.oaDueDate) : undefined}
+                              onSelect={(date) => handleDateChange(date, 'oaDueDate')}
+                              initialFocus
+                            />
+                          </PopoverContent>
                         </Popover>
+                        <Input
+                            type="time"
+                            value={oaDueTime}
+                            onChange={(e) => setOaDueTime(e.target.value)}
+                            onBlur={handleDueTimeBlur}
+                            className="w-[35%]"
+                        />
+                      </div>
                     </div>
                     <div className="space-y-1">
-                        <label className="text-sm font-medium">OA Completed On</label>
-                        <Popover>
-                            <PopoverTrigger asChild>
-                                <Button
-                                variant={"outline"}
-                                className={cn(
-                                    "w-full justify-start text-left font-normal",
-                                    !application.oaCompletedOn && "text-muted-foreground"
-                                )}
-                                >
-                                <CalendarIcon className="mr-2 h-4 w-4" />
-                                {application.oaCompletedOn ? format(new Date(application.oaCompletedOn), "PPP") : <span>Pick a date</span>}
-                                </Button>
-                            </PopoverTrigger>
-                            <PopoverContent className="w-auto p-0">
-                                <Calendar
-                                mode="single"
-                                selected={application.oaCompletedOn ? new Date(application.oaCompletedOn) : undefined}
-                                onSelect={(date) => handleDateChange(date, 'oaCompletedOn')}
-                                initialFocus
-                                />
-                            </PopoverContent>
-                        </Popover>
+                      {application.oaCompletedOn ? (
+                        <div>
+                            <label className="text-sm font-medium">OA Completion</label>
+                            <p className="text-sm text-muted-foreground pt-2">
+                              Completed {formatDistanceToNow(new Date(application.oaCompletedOn), { addSuffix: true })}
+                            </p>
+                        </div>
+                      ) : (
+                        <Button onClick={handleMarkOACompleted} variant="outline" size="sm">
+                          <CheckCircle2 className="mr-2 h-4 w-4" />
+                          Mark as Completed
+                        </Button>
+                      )}
                     </div>
                   </div>
                 )}
