@@ -65,7 +65,7 @@ export function AddApplicationDialog({ children, users, selectedUserId, allLocat
   const [open, setOpen] = React.useState(false);
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [locationsPopoverOpen, setLocationsPopoverOpen] = React.useState(false);
-  const [locationSearch, setLocationSearch] = React.useState('');
+  const [inputValue, setInputValue] = React.useState('');
   const { toast } = useToast();
 
   const form = useForm<FormValues>({
@@ -125,16 +125,17 @@ export function AddApplicationDialog({ children, users, selectedUserId, allLocat
     const finalOrder = [...suggestedLocations.filter(l => unique.includes(l)), ...unique.filter(l => !suggestedLocations.includes(l))];
     return Array.from(new Set(finalOrder));
   }, [allLocations]);
+  
+  const handleLocationSelect = (location: string) => {
+    const currentLocations = form.getValues('locations') || [];
+    const newLocations = currentLocations.includes(location)
+      ? currentLocations.filter(l => l !== location)
+      : [...currentLocations, location];
+    form.setValue('locations', newLocations, { shouldValidate: true });
+    setInputValue('');
+  };
 
-  const locationsToShow = React.useMemo(() => {
-    if (!locationSearch) {
-        return allUniqueLocations.slice(0, 5);
-    }
-    return allUniqueLocations.filter(loc => 
-        loc.toLowerCase().includes(locationSearch.toLowerCase())
-    );
-  }, [locationSearch, allUniqueLocations]);
-
+  const filteredLocations = allUniqueLocations.filter(loc => loc.toLowerCase().includes(inputValue.toLowerCase()));
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -183,12 +184,7 @@ export function AddApplicationDialog({ children, users, selectedUserId, allLocat
                 render={({ field }) => (
                   <FormItem className="flex flex-col">
                     <FormLabel>Location(s)</FormLabel>
-                      <Popover open={locationsPopoverOpen} onOpenChange={(isOpen) => {
-                        setLocationsPopoverOpen(isOpen);
-                        if (!isOpen) {
-                            setLocationSearch('');
-                        }
-                      }}>
+                      <Popover open={locationsPopoverOpen} onOpenChange={setLocationsPopoverOpen}>
                         <PopoverTrigger asChild>
                           <FormControl>
                             <Button
@@ -210,8 +206,7 @@ export function AddApplicationDialog({ children, users, selectedUserId, allLocat
                                       onClick={(e) => {
                                         e.preventDefault();
                                         e.stopPropagation();
-                                        const newLocations = field.value.filter((value) => value !== location);
-                                        field.onChange(newLocations);
+                                        handleLocationSelect(location)
                                       }}
                                     >
                                       {location}
@@ -227,49 +222,22 @@ export function AddApplicationDialog({ children, users, selectedUserId, allLocat
                           </FormControl>
                         </PopoverTrigger>
                         <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
-                          <Command
-                            onKeyDown={(e) => {
-                              if (e.key === 'Enter' && e.currentTarget.contains(e.target as HTMLElement)) {
-                                e.preventDefault();
-                              }
-                            }}
-                          >
+                           <Command>
                             <CommandInput 
                               placeholder="Search location..."
-                              value={locationSearch}
-                              onValueChange={setLocationSearch}
+                              value={inputValue}
+                              onValueChange={setInputValue}
                             />
                             <CommandList>
-                               {locationsToShow.length === 0 && locationSearch && !field.value.includes(locationSearch) ? (
-                                <CommandItem
-                                  onSelect={() => {
-                                    field.onChange([...(field.value || []), locationSearch]);
-                                    setLocationSearch('');
-                                  }}
-                                  onPointerDown={(e) => e.preventDefault()}
-                                  value={locationSearch}
-                                >
-                                  <Plus className="mr-2 h-4 w-4" />
-                                  Add "{locationSearch}"
-                                </CommandItem>
-                              ) : (
-                                <CommandEmpty>No location found.</CommandEmpty>
-                              )}
+                              <CommandEmpty>No location found.</CommandEmpty>
                               <CommandGroup>
-                                {locationsToShow.map((location) => {
+                                {filteredLocations.map((location) => {
                                   const isSelected = field.value?.includes(location);
                                    return (
                                     <CommandItem
                                       key={location}
                                       value={location}
-                                      onPointerDown={(e) => e.preventDefault()}
-                                      onSelect={() => {
-                                        if (isSelected) {
-                                          field.onChange(field.value.filter(l => l !== location));
-                                        } else {
-                                          field.onChange([...(field.value || []), location]);
-                                        }
-                                      }}
+                                      onSelect={handleLocationSelect}
                                     >
                                       <Check
                                         className={cn(
@@ -281,6 +249,15 @@ export function AddApplicationDialog({ children, users, selectedUserId, allLocat
                                     </CommandItem>
                                   );
                                 })}
+                                {inputValue && !filteredLocations.some(loc => loc.toLowerCase() === inputValue.toLowerCase()) && (
+                                    <CommandItem
+                                        value={inputValue}
+                                        onSelect={handleLocationSelect}
+                                    >
+                                        <Plus className="mr-2 h-4 w-4" />
+                                        Add "{inputValue}"
+                                    </CommandItem>
+                                )}
                               </CommandGroup>
                             </CommandList>
                           </Command>
