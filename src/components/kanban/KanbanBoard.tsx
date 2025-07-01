@@ -22,8 +22,8 @@ export function KanbanBoard({ applications }: KanbanBoardProps) {
 
   return (
     <div className="flex h-full flex-col gap-4">
-      <div className="flex-1 overflow-x-auto overflow-y-hidden">
-        <div className="inline-grid h-full auto-cols-[280px] grid-flow-col gap-4">
+      <div className="flex-1">
+        <div className="grid h-full grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
           {columns.map(column => (
             <KanbanColumn 
               key={column.id} 

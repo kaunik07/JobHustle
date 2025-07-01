@@ -8,7 +8,7 @@ import { eq } from 'drizzle-orm';
 import type { Application, User } from '@/lib/types';
 import { fetchJobDescription } from '@/ai/flows/fetch-job-description';
 
-export async function addApplication(data: Omit<Application, 'id' | 'user' | 'jobDescription' | 'resumeUrl' | 'appliedOn' | 'dueDate'>) {
+export async function addApplication(data: Omit<Application, 'id' | 'user' | 'jobDescription' | 'resumeUrl' | 'appliedOn' | 'dueDate' | 'createdAt'>) {
   let jobDescription = '';
   try {
     const result = await fetchJobDescription({ jobUrl: data.jobUrl });
@@ -41,6 +41,10 @@ export async function updateApplication(appId: string, data: Partial<Application
   const payload: Partial<typeof applications.$inferInsert> = { ...data };
   if (data.user) {
     delete payload.user;
+  }
+  // Prevent createdAt from being updated
+  if (payload.createdAt) {
+    delete payload.createdAt;
   }
   
   await db.update(applications).set(payload).where(eq(applications.id, appId));

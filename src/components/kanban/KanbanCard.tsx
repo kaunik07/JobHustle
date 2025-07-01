@@ -32,7 +32,10 @@ export function KanbanCard({ application }: KanbanCardProps) {
     if (application.appliedOn) {
         return `Applied ${format(new Date(application.appliedOn), "MMM d")}`;
     }
-    return 'Added Today';
+    if (application.createdAt) {
+      return `Added ${format(new Date(application.createdAt), "MMM d")}`;
+    }
+    return 'Added recently';
   }
 
   return (

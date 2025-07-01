@@ -31,4 +31,5 @@ export interface Application {
   notes?: string | null;
   appliedOn?: Date | null;
   dueDate?: Date | null;
+  createdAt: Date;
 }

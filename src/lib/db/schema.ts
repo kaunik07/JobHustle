@@ -32,4 +32,5 @@ export const applications = pgTable('applications', {
     notes: text('notes'),
     appliedOn: timestamp('applied_on'),
     dueDate: timestamp('due_date'),
+    createdAt: timestamp('created_at').defaultNow().notNull(),
 });
