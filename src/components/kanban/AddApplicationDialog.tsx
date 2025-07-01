@@ -67,7 +67,6 @@ export function AddApplicationDialog({ children, users, selectedUserId, allLocat
   const [open, setOpen] = React.useState(false);
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [locationsPopoverOpen, setLocationsPopoverOpen] = React.useState(false);
-  const [locationSearch, setLocationSearch] = React.useState('');
   const { toast } = useToast();
 
   const form = useForm<FormValues>({
@@ -120,10 +119,11 @@ export function AddApplicationDialog({ children, users, selectedUserId, allLocat
       setIsSubmitting(false);
     }
   }
-
-  const allUniqueLocations = [...new Set([...suggestedLocations, ...allLocations, ...form.watch('locations')])];
-  const top5Suggestions = suggestedLocations.slice(0, 5);
-  const locationsToDisplay = locationSearch.trim() === '' ? top5Suggestions : allUniqueLocations;
+  
+  const allUniqueLocations = React.useMemo(() => {
+    const combined = [...suggestedLocations, ...allLocations];
+    return Array.from(new Set(combined));
+  }, [allLocations]);
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -178,6 +178,7 @@ export function AddApplicationDialog({ children, users, selectedUserId, allLocat
                             <Button
                               variant="outline"
                               role="combobox"
+                              aria-expanded={locationsPopoverOpen}
                               className={cn(
                                 "w-full justify-between h-auto min-h-10",
                                 !field.value?.length && "text-muted-foreground"
@@ -212,45 +213,24 @@ export function AddApplicationDialog({ children, users, selectedUserId, allLocat
                         <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
                           <Command>
                             <CommandInput 
-                              placeholder="Search or add location..."
-                              value={locationSearch}
-                              onValueChange={setLocationSearch}
+                              placeholder="Search location..."
                             />
                             <CommandList>
-                               <CommandEmpty>
-                                {locationSearch.trim().length > 0 ? (
-                                  <CommandItem
-                                    value={locationSearch}
-                                    onMouseDown={(e) => {
-                                      e.preventDefault();
-                                    }}
-                                    onSelect={() => {
-                                      field.onChange([...(field.value || []), locationSearch.trim()]);
-                                      setLocationSearch("");
-                                    }}
-                                  >
-                                    Add "{locationSearch.trim()}"
-                                  </CommandItem>
-                                ) : (
-                                  "No location found."
-                                )}
-                              </CommandEmpty>
+                               <CommandEmpty>No location found.</CommandEmpty>
                               <CommandGroup>
-                                {locationsToDisplay.map((location) => {
+                                {allUniqueLocations.map((location) => {
                                   const isSelected = field.value?.includes(location);
                                    return (
                                     <CommandItem
                                       key={location}
                                       value={location}
-                                      onMouseDown={(e) => {
-                                        e.preventDefault();
-                                      }}
-                                      onSelect={() => {
+                                      onSelect={(currentValue) => {
                                         if (isSelected) {
-                                          field.onChange(field.value.filter(l => l !== location));
+                                          field.onChange(field.value.filter(l => l !== currentValue));
                                         } else {
-                                          field.onChange([...(field.value || []), location]);
+                                          field.onChange([...(field.value || []), currentValue]);
                                         }
+                                        setLocationsPopoverOpen(true); // Keep open for multi-select
                                       }}
                                     >
                                       <Check
