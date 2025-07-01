@@ -1,11 +1,9 @@
-
 'use client';
 
 import * as React from 'react';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
-
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -34,7 +32,7 @@ import {
 } from '@/components/ui/select';
 import { User, categories, statuses, applicationTypes, suggestedLocations } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, ChevronsUpDown, Check, X } from 'lucide-react';
+import { Loader2, ChevronsUpDown, Check, X, Plus } from 'lucide-react';
 import { Textarea } from '@/components/ui/textarea';
 import { addApplication as addApplicationAction } from '@/app/actions';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -67,6 +65,7 @@ export function AddApplicationDialog({ children, users, selectedUserId, allLocat
   const [open, setOpen] = React.useState(false);
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [locationsPopoverOpen, setLocationsPopoverOpen] = React.useState(false);
+  const [locationSearch, setLocationSearch] = React.useState('');
   const { toast } = useToast();
 
   const form = useForm<FormValues>({
@@ -121,9 +120,19 @@ export function AddApplicationDialog({ children, users, selectedUserId, allLocat
   }
   
   const allUniqueLocations = React.useMemo(() => {
-    const combined = [...suggestedLocations, ...allLocations];
-    return Array.from(new Set(combined));
+    const dbOnlyLocations = allLocations.filter(loc => !suggestedLocations.includes(loc));
+    return [...suggestedLocations, ...dbOnlyLocations];
   }, [allLocations]);
+
+  const locationsToShow = React.useMemo(() => {
+    if (!locationSearch) {
+        return allUniqueLocations.slice(0, 5);
+    }
+    return allUniqueLocations.filter(loc => 
+        loc.toLowerCase().includes(locationSearch.toLowerCase())
+    );
+  }, [locationSearch, allUniqueLocations]);
+
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -172,7 +181,12 @@ export function AddApplicationDialog({ children, users, selectedUserId, allLocat
                 render={({ field }) => (
                   <FormItem className="flex flex-col">
                     <FormLabel>Location(s)</FormLabel>
-                      <Popover open={locationsPopoverOpen} onOpenChange={setLocationsPopoverOpen}>
+                      <Popover open={locationsPopoverOpen} onOpenChange={(isOpen) => {
+                        setLocationsPopoverOpen(isOpen);
+                        if (!isOpen) {
+                            setLocationSearch(''); // Reset search on close
+                        }
+                      }}>
                         <PopoverTrigger asChild>
                           <FormControl>
                             <Button
@@ -211,26 +225,40 @@ export function AddApplicationDialog({ children, users, selectedUserId, allLocat
                           </FormControl>
                         </PopoverTrigger>
                         <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
-                          <Command>
+                          <Command shouldFilter={false}>
                             <CommandInput 
                               placeholder="Search location..."
+                              value={locationSearch}
+                              onValueChange={setLocationSearch}
                             />
                             <CommandList>
-                               <CommandEmpty>No location found.</CommandEmpty>
+                               {locationsToShow.length === 0 && locationSearch ? (
+                                <CommandItem
+                                  onSelect={() => {
+                                    field.onChange([...(field.value || []), locationSearch]);
+                                    setLocationSearch('');
+                                  }}
+                                >
+                                  <Plus className="mr-2 h-4 w-4" />
+                                  Add "{locationSearch}"
+                                </CommandItem>
+                              ) : (
+                                <CommandEmpty>No location found.</CommandEmpty>
+                              )}
                               <CommandGroup>
-                                {allUniqueLocations.map((location) => {
+                                {locationsToShow.map((location) => {
                                   const isSelected = field.value?.includes(location);
                                    return (
                                     <CommandItem
                                       key={location}
                                       value={location}
-                                      onSelect={(currentValue) => {
+                                      onSelect={() => {
                                         if (isSelected) {
-                                          field.onChange(field.value.filter(l => l !== currentValue));
+                                          field.onChange(field.value.filter(l => l !== location));
                                         } else {
-                                          field.onChange([...(field.value || []), currentValue]);
+                                          field.onChange([...(field.value || []), location]);
                                         }
-                                        setLocationsPopoverOpen(true); // Keep open for multi-select
+                                        setLocationsPopoverOpen(true);
                                       }}
                                     >
                                       <Check
