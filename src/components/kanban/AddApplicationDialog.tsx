@@ -123,7 +123,7 @@ export function AddApplicationDialog({ children, users, selectedUserId, allLocat
     const combined = [...suggestedLocations, ...allLocations];
     const unique = Array.from(new Set(combined));
     const finalOrder = [...suggestedLocations.filter(l => unique.includes(l)), ...unique.filter(l => !suggestedLocations.includes(l))];
-    return finalOrder;
+    return Array.from(new Set(finalOrder));
   }, [allLocations]);
 
   const locationsToShow = React.useMemo(() => {
@@ -242,14 +242,11 @@ export function AddApplicationDialog({ children, users, selectedUserId, allLocat
                             <CommandList>
                                {locationsToShow.length === 0 && locationSearch && !field.value.includes(locationSearch) ? (
                                 <CommandItem
-                                  onPointerDown={(e) => {
-                                    e.preventDefault();
-                                    e.stopPropagation();
-                                  }}
                                   onSelect={() => {
                                     field.onChange([...(field.value || []), locationSearch]);
                                     setLocationSearch('');
                                   }}
+                                  onPointerDown={(e) => e.preventDefault()}
                                   value={locationSearch}
                                 >
                                   <Plus className="mr-2 h-4 w-4" />
@@ -265,10 +262,7 @@ export function AddApplicationDialog({ children, users, selectedUserId, allLocat
                                     <CommandItem
                                       key={location}
                                       value={location}
-                                      onPointerDown={(e) => {
-                                        e.preventDefault();
-                                        e.stopPropagation();
-                                      }}
+                                      onPointerDown={(e) => e.preventDefault()}
                                       onSelect={() => {
                                         if (isSelected) {
                                           field.onChange(field.value.filter(l => l !== location));
