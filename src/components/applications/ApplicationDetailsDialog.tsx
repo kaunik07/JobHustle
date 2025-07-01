@@ -93,8 +93,28 @@ export function ApplicationDetailsDialog({ application, children }: ApplicationD
       setCurrentLocation(application.location);
       setCurrentNotes(application.notes || '');
       setCurrentResumeUrl(application.resumeUrl || '');
-      setOaDueTime(application.oaDueDate ? format(new Date(application.oaDueDate), 'HH:mm') : '23:59');
-      setOaDueDateTimezone(application.oaDueDateTimezone || Intl.DateTimeFormat().resolvedOptions().timeZone);
+      
+      const initialTimezone = application.oaDueDateTimezone || Intl.DateTimeFormat().resolvedOptions().timeZone;
+      setOaDueDateTimezone(initialTimezone);
+
+      if (application.oaDueDate) {
+          try {
+              // This formats the stored UTC date into the wall-clock time of the stored timezone
+              const timeFormatter = new Intl.DateTimeFormat('en-GB', {
+                  timeZone: initialTimezone,
+                  hour: '2-digit',
+                  minute: '2-digit',
+                  hour12: false,
+              });
+              const formattedTime = timeFormatter.format(new Date(application.oaDueDate));
+              setOaDueTime(formattedTime);
+          } catch (e) {
+              console.error("Invalid timezone, falling back to local format", e);
+              setOaDueTime(format(new Date(application.oaDueDate), 'HH:mm'));
+          }
+      } else {
+          setOaDueTime('23:59');
+      }
     }
   }, [application, open]);
 
@@ -224,19 +244,24 @@ export function ApplicationDetailsDialog({ application, children }: ApplicationD
       return; 
     }
   
-    // Reconstruct date parts to avoid local timezone assumptions of JS Date
     const year = dateToUse.getFullYear();
     const month = (dateToUse.getMonth() + 1).toString().padStart(2, '0');
     const day = dateToUse.getDate().toString().padStart(2, '0');
     const [hours, minutes] = timeToUse.split(':');
   
-    // This is a reliable way to get an offset for a given date in a given timezone, which helps to create a correct UTC timestamp.
-    const tempDate = new Date(`${year}-${month}-${day}T${hours}:${minutes}:00`);
-    const utcDate = new Date(tempDate.toLocaleString('en-US', { timeZone: 'UTC' }));
-    const tzDate = new Date(tempDate.toLocaleString('en-US', { timeZone: timezoneToUse }));
-    const offset = tzDate.getTime() - utcDate.getTime();
+    // Create the date by parsing it as UTC, which prevents the local browser timezone from interfering.
+    const tempDate = new Date(`${year}-${month}-${day}T${hours}:${minutes}:00Z`);
     
-    const finalTimestamp = tempDate.getTime() - offset;
+    // Create date strings for the same moment in time in both UTC and the target timezone.
+    const utcDateString = tempDate.toLocaleString('en-US', { timeZone: 'UTC' });
+    const tzDateString = tempDate.toLocaleString('en-US', { timeZone: timezoneToUse });
+    
+    // The difference in milliseconds between these two representations is the timezone offset.
+    const offset = (new Date(utcDateString)).getTime() - (new Date(tzDateString)).getTime();
+    
+    // We add the offset to our initial UTC time to get the correct final timestamp.
+    // e.g., for 14:00 NY (UTC-4), offset is -4h. final = 14:00Z + (-4h) = 18:00Z.
+    const finalTimestamp = tempDate.getTime() + offset;
     const finalDate = new Date(finalTimestamp);
   
     if (await handleUpdate({ oaDueDate: finalDate, oaDueDateTimezone: timezoneToUse })) {
