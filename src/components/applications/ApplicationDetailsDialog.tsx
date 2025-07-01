@@ -22,7 +22,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useToast } from '@/hooks/use-toast';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
-import { format } from 'date-fns';
+import { format, formatDistanceToNow } from 'date-fns';
 import { cn } from '@/lib/utils';
 import {
   AlertDialog,
@@ -362,7 +362,7 @@ export function ApplicationDetailsDialog({ application, children }: ApplicationD
 
             {isInterviewStage && (
               <div className="space-y-4 pt-4 border-t">
-                <h3 className="font-semibold">Interview Log</h3>
+                <h3 className="font-semibold">Interview Dates</h3>
                 <div className="space-y-3">
                   {Array.from({ length: 10 }).map((_, index) => {
                     const fieldName = `interviewDate${index + 1}` as keyof Application;
@@ -546,13 +546,13 @@ export function ApplicationDetailsDialog({ application, children }: ApplicationD
                   {application.appliedOn && (
                       <div className="space-y-1">
                           <label className="text-sm font-medium">Applied On</label>
-                          <p className="text-sm text-muted-foreground">{format(new Date(application.appliedOn), "PPP")}</p>
+                          <p className="text-sm text-muted-foreground">{format(new Date(application.appliedOn), "PPP")} ({formatDistanceToNow(new Date(application.appliedOn), { addSuffix: true })})</p>
                       </div>
                   )}
                   {application.oaDueDate && (
                       <div className="space-y-1">
                           <label className="text-sm font-medium">OA Due Date</label>
-                          <p className="text-sm text-muted-foreground">{format(new Date(application.oaDueDate), "PPP")}</p>
+                          <p className="text-sm text-muted-foreground">{format(new Date(application.oaDueDate), "PPP")} ({formatDistanceToNow(new Date(application.oaDueDate), { addSuffix: true })})</p>
                       </div>
                   )}
               </div>

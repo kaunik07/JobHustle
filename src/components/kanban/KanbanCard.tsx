@@ -6,7 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import type { Application, ApplicationCategory, ApplicationType, ApplicationWorkArrangement } from '@/lib/types';
 import { ApplicationDetailsDialog } from '@/components/applications/ApplicationDetailsDialog';
-import { format, formatDistanceToNow } from 'date-fns';
+import { formatDistanceToNow } from 'date-fns';
 import { Clock, MapPin, CheckCircle2 } from 'lucide-react';
 import { cn, getUserColor } from '@/lib/utils';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
@@ -64,19 +64,44 @@ export function KanbanCard({ application, selectedUserId }: KanbanCardProps) {
   };
 
   const renderDate = () => {
-    if (application.oaDueDate && ['OA', 'Interview'].includes(application.status)) {
-        return `Due ${format(new Date(application.oaDueDate), "MMM d")}`;
+    if (application.status === 'Interview') {
+      const interviewDates = [
+        application.interviewDate1,
+        application.interviewDate2,
+        application.interviewDate3,
+        application.interviewDate4,
+        application.interviewDate5,
+        application.interviewDate6,
+        application.interviewDate7,
+        application.interviewDate8,
+        application.interviewDate9,
+        application.interviewDate10,
+      ].filter((d): d is Date | string => !!d).map(d => new Date(d));
+
+      const now = new Date();
+      
+      const upcomingInterviews = interviewDates
+        .filter(d => d > now)
+        .sort((a, b) => a.getTime() - b.getTime());
+
+      if (upcomingInterviews.length > 0) {
+        return `Next interview ${formatDistanceToNow(upcomingInterviews[0], { addSuffix: true })}`;
+      }
+
+      const pastInterviews = interviewDates.sort((a, b) => b.getTime() - a.getTime());
+      if (pastInterviews.length > 0) {
+        return `Last interview ${formatDistanceToNow(pastInterviews[0], { addSuffix: true })}`;
+      }
+    }
+    
+    if (application.status === 'OA' && application.oaDueDate) {
+        return `Due ${formatDistanceToNow(new Date(application.oaDueDate), { addSuffix: true })}`;
     }
     if (application.appliedOn) {
-        return `Applied ${format(new Date(application.appliedOn), "MMM d")}`;
+        return `Applied ${formatDistanceToNow(new Date(application.appliedOn), { addSuffix: true })}`;
     }
     if (application.createdAt) {
-      const formattedDate = format(new Date(application.createdAt), "MMM d");
-      if (application.status === 'Yet to Apply') {
-        const timeAgo = formatDistanceToNow(new Date(application.createdAt), { addSuffix: true });
-        return `Added ${formattedDate} (${timeAgo})`;
-      }
-      return `Added ${formattedDate}`;
+        return `Added ${formatDistanceToNow(new Date(application.createdAt), { addSuffix: true })}`;
     }
     return 'Added recently';
   }
