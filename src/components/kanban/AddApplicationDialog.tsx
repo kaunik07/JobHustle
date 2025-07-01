@@ -65,6 +65,7 @@ interface AddApplicationDialogProps {
 export function AddApplicationDialog({ children, users, selectedUserId }: AddApplicationDialogProps) {
   const [open, setOpen] = React.useState(false);
   const [isSubmitting, setIsSubmitting] = React.useState(false);
+  const [locationsPopoverOpen, setLocationsPopoverOpen] = React.useState(false);
   const { toast } = useToast();
 
   const form = useForm<FormValues>({
@@ -165,7 +166,7 @@ export function AddApplicationDialog({ children, users, selectedUserId }: AddApp
                 render={({ field }) => (
                   <FormItem className="flex flex-col">
                     <FormLabel>Location(s)</FormLabel>
-                      <Popover>
+                      <Popover open={locationsPopoverOpen} onOpenChange={setLocationsPopoverOpen}>
                         <PopoverTrigger asChild>
                           <FormControl>
                             <Button
@@ -185,6 +186,7 @@ export function AddApplicationDialog({ children, users, selectedUserId }: AddApp
                                       className="mr-1"
                                       onClick={(e) => {
                                         e.preventDefault();
+                                        e.stopPropagation();
                                         field.onChange(
                                           field.value.filter((value) => value !== location)
                                         );
@@ -213,10 +215,6 @@ export function AddApplicationDialog({ children, users, selectedUserId }: AddApp
                                    return (
                                     <CommandItem
                                       key={location}
-                                      onMouseDown={(e) => {
-                                        e.preventDefault();
-                                        e.stopPropagation();
-                                      }}
                                       onSelect={() => {
                                         if (isSelected) {
                                           field.onChange(field.value.filter(l => l !== location));
