@@ -59,9 +59,10 @@ type FormValues = z.infer<typeof formSchema>;
 interface AddApplicationDialogProps {
   children?: React.ReactNode;
   users: User[];
+  selectedUserId: string;
 }
 
-export function AddApplicationDialog({ children, users }: AddApplicationDialogProps) {
+export function AddApplicationDialog({ children, users, selectedUserId }: AddApplicationDialogProps) {
   const [open, setOpen] = React.useState(false);
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const { toast } = useToast();
@@ -76,10 +77,14 @@ export function AddApplicationDialog({ children, users }: AddApplicationDialogPr
       type: 'Full-Time',
       category: 'SWE',
       status: 'Yet to Apply',
-      userId: 'all',
+      userId: selectedUserId,
       notes: '',
     },
   });
+
+  React.useEffect(() => {
+    form.setValue('userId', selectedUserId);
+  }, [selectedUserId, form]);
 
   async function onSubmit(values: FormValues) {
     setIsSubmitting(true);
@@ -98,7 +103,7 @@ export function AddApplicationDialog({ children, users }: AddApplicationDialogPr
         jobUrl: '',
         locations: [],
         notes: '',
-        userId: 'all',
+        userId: selectedUserId,
         status: 'Yet to Apply',
         type: 'Full-Time',
       });
@@ -208,6 +213,10 @@ export function AddApplicationDialog({ children, users }: AddApplicationDialogPr
                                    return (
                                     <CommandItem
                                       key={location}
+                                      onMouseDown={(e) => {
+                                        e.preventDefault();
+                                        e.stopPropagation();
+                                      }}
                                       onSelect={() => {
                                         if (isSelected) {
                                           field.onChange(field.value.filter(l => l !== location));
@@ -301,7 +310,7 @@ export function AddApplicationDialog({ children, users }: AddApplicationDialogPr
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>User</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue="all">
+                      <Select onValueChange={field.onChange} defaultValue={field.value}>
                         <FormControl>
                           <SelectTrigger>
                             <SelectValue placeholder="Select user" />
