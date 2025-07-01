@@ -21,17 +21,26 @@ interface JobTrackerClientProps {
     selectedUserId: string;
     selectedType: string;
     selectedCategory: string;
+    selectedLocation: string;
+    selectedCompany: string;
     allLocations: string[];
 }
 
-export function JobTrackerClient({ users, applications, selectedUserId, selectedType, selectedCategory, allLocations }: JobTrackerClientProps) {
+export function JobTrackerClient({ 
+    users, applications, 
+    selectedUserId, selectedType, selectedCategory, selectedLocation, selectedCompany,
+    allLocations 
+}: JobTrackerClientProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { toast } = useToast();
+
+  const [locationQuery, setLocationQuery] = React.useState(selectedLocation);
+  const [companyQuery, setCompanyQuery] = React.useState(selectedCompany);
   
   const updateQuery = (key: string, value: string) => {
     const current = new URLSearchParams(Array.from(searchParams.entries()));
-    if (value === 'all') {
+    if (value === 'all' || !value) {
       current.delete(key);
     } else {
       current.set(key, value);
@@ -40,6 +49,25 @@ export function JobTrackerClient({ users, applications, selectedUserId, selected
     const query = search ? `?${search}` : "";
     router.push(`/${query}`);
   }
+
+  React.useEffect(() => {
+    const handler = setTimeout(() => {
+        if (locationQuery !== selectedLocation) {
+            updateQuery('location', locationQuery);
+        }
+    }, 500);
+    return () => clearTimeout(handler);
+  }, [locationQuery, selectedLocation]);
+
+  React.useEffect(() => {
+    const handler = setTimeout(() => {
+        if (companyQuery !== selectedCompany) {
+            updateQuery('company', companyQuery);
+        }
+    }, 500);
+    return () => clearTimeout(handler);
+  }, [companyQuery, selectedCompany]);
+
 
   const handleUserChange = (userId: string) => {
     updateQuery('user', userId);
@@ -73,7 +101,9 @@ export function JobTrackerClient({ users, applications, selectedUserId, selected
     const userMatch = selectedUserId === 'all' || app.userId === selectedUserId;
     const typeMatch = selectedType === 'all' || app.type === selectedType;
     const categoryMatch = selectedCategory === 'all' || app.category === selectedCategory;
-    return userMatch && typeMatch && categoryMatch;
+    const locationMatch = !selectedLocation || (app.location && app.location.toLowerCase().includes(selectedLocation.toLowerCase()));
+    const companyMatch = !selectedCompany || (app.companyName && app.companyName.toLowerCase().includes(selectedCompany.toLowerCase()));
+    return userMatch && typeMatch && categoryMatch && locationMatch && companyMatch;
   });
 
   const yetToApplyApplications = filteredApplications.filter(app => app.status === 'Yet to Apply');
@@ -87,6 +117,10 @@ export function JobTrackerClient({ users, applications, selectedUserId, selected
         onTypeChange={handleTypeChange}
         selectedCategory={selectedCategory}
         onCategoryChange={handleCategoryChange}
+        locationQuery={locationQuery}
+        onLocationChange={setLocationQuery}
+        companyQuery={companyQuery}
+        onCompanyChange={setCompanyQuery}
       />
       <div className="pl-16">
         <Header 

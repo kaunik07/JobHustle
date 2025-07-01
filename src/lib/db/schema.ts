@@ -37,6 +37,7 @@ export const applications = pgTable('applications', {
     notes: text('notes'),
     appliedOn: timestamp('applied_on'),
     oaDueDate: timestamp('oa_due_date'),
+    oaCompletedOn: timestamp('oa_completed_on'),
     createdAt: timestamp('created_at').defaultNow().notNull(),
     interviewDate1: timestamp('interview_date_1'),
     interviewDate2: timestamp('interview_date_2'),

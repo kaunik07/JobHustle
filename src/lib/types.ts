@@ -95,6 +95,7 @@ export interface Application {
   notes?: string | null;
   appliedOn?: Date | null;
   oaDueDate?: Date | null;
+  oaCompletedOn?: Date | null;
   createdAt: Date;
   interviewDate1?: Date | null;
   interviewDate2?: Date | null;

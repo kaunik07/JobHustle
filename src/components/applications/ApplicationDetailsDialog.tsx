@@ -195,10 +195,15 @@ export function ApplicationDetailsDialog({ application, children }: ApplicationD
     }
   };
 
-  const handleDateChange = async (date: Date | undefined, field: 'appliedOn' | 'oaDueDate') => {
+  const handleDateChange = async (date: Date | undefined, field: 'appliedOn' | 'oaDueDate' | 'oaCompletedOn') => {
     if (date) {
+      const fieldNameMap = {
+        appliedOn: 'Applied date',
+        oaDueDate: 'OA Due Date',
+        oaCompletedOn: 'OA Completed Date'
+      }
       if (await handleUpdate({ [field]: date })) {
-        toast({ title: `${field === 'appliedOn' ? 'Applied date' : 'OA Due Date'} updated.` });
+        toast({ title: `${fieldNameMap[field]} updated.` });
       }
     }
   };
@@ -432,7 +437,7 @@ export function ApplicationDetailsDialog({ application, children }: ApplicationD
             )}
 
 
-            <div className="flex flex-wrap items-center gap-4">
+            <div className="space-y-4">
                 {!isInterviewStage && application.status !== 'Yet to Apply' && (
                   <div className="space-y-1">
                       <label className="text-sm font-medium">Applied On</label>
@@ -441,7 +446,7 @@ export function ApplicationDetailsDialog({ application, children }: ApplicationD
                               <Button
                               variant={"outline"}
                               className={cn(
-                                  "w-[200px] justify-start text-left font-normal",
+                                  "w-full justify-start text-left font-normal",
                                   !application.appliedOn && "text-muted-foreground"
                               )}
                               >
@@ -461,31 +466,58 @@ export function ApplicationDetailsDialog({ application, children }: ApplicationD
                   </div>
                 )}
                 {application.status === 'OA' && (
-                <div className="space-y-1">
-                    <label className="text-sm font-medium">OA Due Date</label>
-                    <Popover>
-                        <PopoverTrigger asChild>
-                            <Button
-                            variant={"outline"}
-                            className={cn(
-                                "w-[200px] justify-start text-left font-normal",
-                                !application.oaDueDate && "text-muted-foreground"
-                            )}
-                            >
-                            <CalendarIcon className="mr-2 h-4 w-4" />
-                            {application.oaDueDate ? format(new Date(application.oaDueDate), "PPP") : <span>Pick a date</span>}
-                            </Button>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-auto p-0">
-                            <Calendar
-                            mode="single"
-                            selected={application.oaDueDate ? new Date(application.oaDueDate) : undefined}
-                            onSelect={(date) => handleDateChange(date, 'oaDueDate')}
-                            initialFocus
-                            />
-                        </PopoverContent>
-                    </Popover>
-                </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-1">
+                        <label className="text-sm font-medium">OA Due Date</label>
+                        <Popover>
+                            <PopoverTrigger asChild>
+                                <Button
+                                variant={"outline"}
+                                className={cn(
+                                    "w-full justify-start text-left font-normal",
+                                    !application.oaDueDate && "text-muted-foreground"
+                                )}
+                                >
+                                <CalendarIcon className="mr-2 h-4 w-4" />
+                                {application.oaDueDate ? format(new Date(application.oaDueDate), "PPP") : <span>Pick a date</span>}
+                                </Button>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-auto p-0">
+                                <Calendar
+                                mode="single"
+                                selected={application.oaDueDate ? new Date(application.oaDueDate) : undefined}
+                                onSelect={(date) => handleDateChange(date, 'oaDueDate')}
+                                initialFocus
+                                />
+                            </PopoverContent>
+                        </Popover>
+                    </div>
+                    <div className="space-y-1">
+                        <label className="text-sm font-medium">OA Completed On</label>
+                        <Popover>
+                            <PopoverTrigger asChild>
+                                <Button
+                                variant={"outline"}
+                                className={cn(
+                                    "w-full justify-start text-left font-normal",
+                                    !application.oaCompletedOn && "text-muted-foreground"
+                                )}
+                                >
+                                <CalendarIcon className="mr-2 h-4 w-4" />
+                                {application.oaCompletedOn ? format(new Date(application.oaCompletedOn), "PPP") : <span>Pick a date</span>}
+                                </Button>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-auto p-0">
+                                <Calendar
+                                mode="single"
+                                selected={application.oaCompletedOn ? new Date(application.oaCompletedOn) : undefined}
+                                onSelect={(date) => handleDateChange(date, 'oaCompletedOn')}
+                                initialFocus
+                                />
+                            </PopoverContent>
+                        </Popover>
+                    </div>
+                  </div>
                 )}
             </div>
 
@@ -547,6 +579,12 @@ export function ApplicationDetailsDialog({ application, children }: ApplicationD
                       <div className="space-y-1">
                           <label className="text-sm font-medium">Applied On</label>
                           <p className="text-sm text-muted-foreground">{format(new Date(application.appliedOn), "PPP")} ({formatDistanceToNow(new Date(application.appliedOn), { addSuffix: true })})</p>
+                      </div>
+                  )}
+                  {application.oaCompletedOn && (
+                      <div className="space-y-1">
+                          <label className="text-sm font-medium">OA Completed On</label>
+                          <p className="text-sm text-muted-foreground">{format(new Date(application.oaCompletedOn), "PPP")} ({formatDistanceToNow(new Date(application.oaCompletedOn), { addSuffix: true })})</p>
                       </div>
                   )}
                   {application.oaDueDate && (
