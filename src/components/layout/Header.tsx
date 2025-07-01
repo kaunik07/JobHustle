@@ -27,9 +27,10 @@ interface HeaderProps {
   selectedUser: string;
   onUserChange: (userId: string) => void;
   onUserRemoved: (userId: string) => void;
+  allLocations: string[];
 }
 
-export function Header({ users, selectedUser, onUserChange, onUserRemoved }: HeaderProps) {
+export function Header({ users, selectedUser, onUserChange, onUserRemoved, allLocations }: HeaderProps) {
 
   return (
     <header className="sticky top-0 z-30 flex h-16 items-center gap-4 border-b bg-background/80 px-4 backdrop-blur-sm md:px-6">
@@ -96,7 +97,7 @@ export function Header({ users, selectedUser, onUserChange, onUserRemoved }: Hea
       </div>
 
       <div className="flex items-center gap-4">
-        <AddApplicationDialog users={users} selectedUserId={selectedUser} />
+        <AddApplicationDialog users={users} selectedUserId={selectedUser} allLocations={allLocations} />
       </div>
     </header>
   );

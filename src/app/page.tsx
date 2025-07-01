@@ -1,11 +1,12 @@
 
 import { db } from '@/lib/db';
 import { applications as applicationsSchema, users as usersSchema } from '@/lib/db/schema';
-import { eq, desc } from 'drizzle-orm';
+import { eq, desc, distinct } from 'drizzle-orm';
 import type { Application, User } from '@/lib/types';
 import { JobTrackerClient } from '@/components/layout/JobTrackerClient';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { AlertCircle } from 'lucide-react';
+import { suggestedLocations } from '@/lib/types';
 
 export default async function Home({
   searchParams,
@@ -17,7 +18,7 @@ export default async function Home({
 
     if (allUsers.length === 0) {
       // If there are no users, we can show the main screen with a prompt to add one.
-      return <JobTrackerClient users={[]} applications={[]} selectedUserId="all" selectedType="all" selectedCategory="all" />;
+      return <JobTrackerClient users={[]} applications={[]} selectedUserId="all" selectedType="all" selectedCategory="all" allLocations={suggestedLocations} />;
     }
     
     // Determine the selected user ID
@@ -49,6 +50,11 @@ export default async function Home({
       user: r.user as User,
     }));
 
+    const locationsResult = await db.selectDistinct({ location: applicationsSchema.location }).from(applicationsSchema);
+    const dbLocations = locationsResult.map(l => l.location).filter(Boolean) as string[];
+    const allLocations = [...new Set([...suggestedLocations, ...dbLocations])].sort();
+
+
     return (
       <JobTrackerClient
         users={allUsers}
@@ -56,6 +62,7 @@ export default async function Home({
         selectedUserId={selectedUserId}
         selectedType={selectedType}
         selectedCategory={selectedCategory}
+        allLocations={allLocations}
       />
     );
 

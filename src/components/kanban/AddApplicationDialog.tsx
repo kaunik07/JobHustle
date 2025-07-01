@@ -32,7 +32,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { User, categories, statuses, applicationTypes, suggestedLocations } from '@/lib/types';
+import { User, categories, statuses, applicationTypes } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2, ChevronsUpDown, Check, X } from 'lucide-react';
 import { Textarea } from '@/components/ui/textarea';
@@ -60,12 +60,14 @@ interface AddApplicationDialogProps {
   children?: React.ReactNode;
   users: User[];
   selectedUserId: string;
+  allLocations: string[];
 }
 
-export function AddApplicationDialog({ children, users, selectedUserId }: AddApplicationDialogProps) {
+export function AddApplicationDialog({ children, users, selectedUserId, allLocations }: AddApplicationDialogProps) {
   const [open, setOpen] = React.useState(false);
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [locationsPopoverOpen, setLocationsPopoverOpen] = React.useState(false);
+  const [locationSearch, setLocationSearch] = React.useState('');
   const { toast } = useToast();
 
   const form = useForm<FormValues>({
@@ -187,9 +189,8 @@ export function AddApplicationDialog({ children, users, selectedUserId }: AddApp
                                       onClick={(e) => {
                                         e.preventDefault();
                                         e.stopPropagation();
-                                        field.onChange(
-                                          field.value.filter((value) => value !== location)
-                                        );
+                                        const newLocations = field.value.filter((value) => value !== location);
+                                        field.onChange(newLocations);
                                       }}
                                     >
                                       {location}
@@ -206,15 +207,41 @@ export function AddApplicationDialog({ children, users, selectedUserId }: AddApp
                         </PopoverTrigger>
                         <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
                           <Command>
-                            <CommandInput placeholder="Search locations..." />
+                            <CommandInput 
+                              placeholder="Search or add location..."
+                              value={locationSearch}
+                              onValueChange={setLocationSearch}
+                            />
                             <CommandList>
-                              <CommandEmpty>No location found.</CommandEmpty>
+                               <CommandEmpty>
+                                {locationSearch.trim().length > 0 ? (
+                                  <CommandItem
+                                    onMouseDown={(e) => {
+                                      e.preventDefault();
+                                      e.stopPropagation();
+                                    }}
+                                    onSelect={() => {
+                                      field.onChange([...(field.value || []), locationSearch.trim()]);
+                                      setLocationSearch("");
+                                    }}
+                                  >
+                                    Add "{locationSearch.trim()}"
+                                  </CommandItem>
+                                ) : (
+                                  "No location found."
+                                )}
+                              </CommandEmpty>
                               <CommandGroup>
-                                {suggestedLocations.map((location) => {
+                                {allLocations.map((location) => {
                                   const isSelected = field.value?.includes(location);
                                    return (
                                     <CommandItem
                                       key={location}
+                                      value={location}
+                                      onMouseDown={(e) => {
+                                        e.preventDefault();
+                                        e.stopPropagation();
+                                      }}
                                       onSelect={() => {
                                         if (isSelected) {
                                           field.onChange(field.value.filter(l => l !== location));

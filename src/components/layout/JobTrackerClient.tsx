@@ -21,9 +21,10 @@ interface JobTrackerClientProps {
     selectedUserId: string;
     selectedType: string;
     selectedCategory: string;
+    allLocations: string[];
 }
 
-export function JobTrackerClient({ users, applications, selectedUserId, selectedType, selectedCategory }: JobTrackerClientProps) {
+export function JobTrackerClient({ users, applications, selectedUserId, selectedType, selectedCategory, allLocations }: JobTrackerClientProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { toast } = useToast();
@@ -93,6 +94,7 @@ export function JobTrackerClient({ users, applications, selectedUserId, selected
           selectedUser={selectedUserId} 
           onUserChange={handleUserChange}
           onUserRemoved={handleRemoveUser}
+          allLocations={allLocations}
         />
         <main className="flex-1 p-4 md:p-6 lg:p-8 space-y-6">
           <AnalyticsOverview applications={filteredApplications} />
