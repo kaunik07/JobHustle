@@ -21,11 +21,16 @@ export default async function Home({
     }
     
     // Determine the selected user ID
-    let selectedUser: User | undefined = allUsers.find(u => u.id === searchParams.user);
-    if (!selectedUser && searchParams.user !== 'all') {
-      selectedUser = allUsers.find(u => u.firstName === 'U') || allUsers[0];
+    const userParam = searchParams.user;
+    let selectedUserId: string;
+
+    if (!userParam || userParam === 'all') {
+      selectedUserId = 'all';
+    } else {
+      const userExists = allUsers.some(u => u.id === userParam);
+      selectedUserId = userExists ? userParam : 'all';
     }
-    const selectedUserId = searchParams.user === 'all' ? 'all' : selectedUser?.id || 'all';
+    
     const selectedType = searchParams.type || 'all';
     const selectedCategory = searchParams.category || 'all';
     
