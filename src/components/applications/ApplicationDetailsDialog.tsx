@@ -52,6 +52,11 @@ const categoryStyles: Record<ApplicationCategory, string> = {
   'Data Scientist': 'bg-chart-5/20 text-chart-5 border-chart-5/30',
 };
 
+const applicationTypeStyles: Record<ApplicationType, string> = {
+  'Full-Time': 'bg-primary/20 text-primary border-primary/30',
+  'Internship': 'bg-accent/20 text-accent border-accent/30',
+};
+
 
 export function ApplicationDetailsDialog({ application, children }: ApplicationDetailsDialogProps) {
   const [open, setOpen] = React.useState(false);
@@ -222,7 +227,7 @@ export function ApplicationDetailsDialog({ application, children }: ApplicationD
                 <div className="flex items-center gap-2">
                     <Badge variant="secondary">{application.status}</Badge>
                     <Badge variant="outline" className={cn("capitalize", categoryStyles[application.category])}>{application.category}</Badge>
-                    <Badge variant="outline">{application.type}</Badge>
+                    <Badge variant="outline" className={cn(applicationTypeStyles[application.type])}>{application.type}</Badge>
                 </div>
                 <div className="flex flex-wrap items-center gap-2">
                     <span className="text-sm font-medium">Change status:</span>

@@ -4,7 +4,7 @@
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import type { Application, ApplicationCategory } from '@/lib/types';
+import type { Application, ApplicationCategory, ApplicationType } from '@/lib/types';
 import { ApplicationDetailsDialog } from '@/components/applications/ApplicationDetailsDialog';
 import { format, formatDistanceToNow } from 'date-fns';
 import { Clock } from 'lucide-react';
@@ -22,6 +22,11 @@ const categoryStyles: Record<ApplicationCategory, string> = {
   'Quant': 'bg-chart-3/20 text-chart-3 border-chart-3/30',
   'Systems': 'bg-chart-4/20 text-chart-4 border-chart-4/30',
   'Data Scientist': 'bg-chart-5/20 text-chart-5 border-chart-5/30',
+};
+
+const applicationTypeStyles: Record<ApplicationType, string> = {
+  'Full-Time': 'bg-primary/20 text-primary border-primary/30',
+  'Internship': 'bg-accent/20 text-accent border-accent/30',
 };
 
 export function KanbanCard({ application, selectedUserId }: KanbanCardProps) {
@@ -88,7 +93,9 @@ export function KanbanCard({ application, selectedUserId }: KanbanCardProps) {
             <Badge variant="outline" className={cn("capitalize", categoryStyles[application.category])}>
               {application.category}
             </Badge>
-            <Badge variant="outline">{application.type}</Badge>
+            <Badge variant="outline" className={cn(applicationTypeStyles[application.type])}>
+              {application.type}
+            </Badge>
           </div>
           
           <div className="flex justify-between items-center pt-2">
