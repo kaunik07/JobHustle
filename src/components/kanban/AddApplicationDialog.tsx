@@ -31,7 +31,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { User, categories, statuses, applicationTypes, suggestedLocations } from '@/lib/types';
+import { User, categories, statuses, applicationTypes, suggestedLocations, workArrangements } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2, ChevronsUpDown, Check, X, Plus } from 'lucide-react';
 import { Textarea } from '@/components/ui/textarea';
@@ -48,6 +48,7 @@ const formSchema = z.object({
   jobUrl: z.string().url('Please enter a valid URL'),
   type: z.enum(applicationTypes),
   category: z.enum(categories),
+  workArrangement: z.enum(workArrangements),
   status: z.enum(statuses),
   userId: z.string().min(1, 'User is required'),
   notes: z.string().optional(),
@@ -78,6 +79,7 @@ export function AddApplicationDialog({ children, users, selectedUserId, allLocat
       locations: [],
       type: 'Full-Time',
       category: 'SWE',
+      workArrangement: 'On-site',
       status: 'Yet to Apply',
       userId: selectedUserId,
       notes: '',
@@ -107,6 +109,7 @@ export function AddApplicationDialog({ children, users, selectedUserId, allLocat
         notes: '',
         userId: selectedUserId,
         status: 'Yet to Apply',
+        workArrangement: 'On-site',
         type: 'Full-Time',
       });
     } catch (error) {
@@ -143,14 +146,16 @@ export function AddApplicationDialog({ children, users, selectedUserId, allLocat
   };
   
   const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
-    if (e.key === 'Enter') {
-      if (inputValue && !allUniqueLocations.find(loc => loc.toLowerCase() === inputValue.toLowerCase())) {
+    if (e.key === 'Enter' && inputValue) {
         e.preventDefault();
         handleLocationSelect(inputValue);
-      }
     }
   };
 
+  const handleItemSelect = (location: string) => {
+    handleLocationSelect(location);
+    setInputValue('');
+  };
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -218,10 +223,10 @@ export function AddApplicationDialog({ children, users, selectedUserId, allLocat
                                       variant="secondary"
                                       key={location}
                                       className="mr-1"
-                                      onClick={(e) => {
+                                      onPointerDown={(e) => {
                                         e.preventDefault();
                                         e.stopPropagation();
-                                        handleLocationSelect(location)
+                                        handleItemSelect(location)
                                       }}
                                     >
                                       {location}
@@ -252,7 +257,7 @@ export function AddApplicationDialog({ children, users, selectedUserId, allLocat
                                     <CommandItem
                                       key={location}
                                       value={location}
-                                      onSelect={handleLocationSelect}
+                                      onSelect={() => handleItemSelect(location)}
                                     >
                                       <Check
                                         className={cn(
@@ -268,7 +273,7 @@ export function AddApplicationDialog({ children, users, selectedUserId, allLocat
                                     <CommandItem
                                         key={inputValue}
                                         value={inputValue}
-                                        onSelect={handleLocationSelect}
+                                        onSelect={() => handleItemSelect(inputValue)}
                                     >
                                         <Plus className="mr-2 h-4 w-4" />
                                         Add "{inputValue}"
@@ -342,6 +347,28 @@ export function AddApplicationDialog({ children, users, selectedUserId, allLocat
                   )}
                 />
               </div>
+              <FormField
+                  control={form.control}
+                  name="workArrangement"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Work Arrangement</FormLabel>
+                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select an arrangement" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {workArrangements.map(wa => (
+                            <SelectItem key={wa} value={wa}>{wa}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
               <div className="grid grid-cols-2 gap-4">
                  <FormField
                   control={form.control}

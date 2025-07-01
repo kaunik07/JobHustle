@@ -30,6 +30,7 @@ export async function addApplication(data: Omit<Application, 'id' | 'user' | 'jo
         location: location,
         type: data.type,
         category: data.category,
+        workArrangement: data.workArrangement,
         status: data.status,
         notes: data.notes,
         userId: user.id,

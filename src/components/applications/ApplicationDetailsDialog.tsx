@@ -13,7 +13,7 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { type Application, type ApplicationStatus, statuses, categories, type ApplicationCategory, type User, applicationTypes, type ApplicationType } from '@/lib/types';
+import { type Application, type ApplicationStatus, statuses, categories, type ApplicationCategory, type User, applicationTypes, type ApplicationType, workArrangements, type ApplicationWorkArrangement } from '@/lib/types';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { ExternalLink, Trash2, CalendarIcon } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -55,6 +55,12 @@ const categoryStyles: Record<ApplicationCategory, string> = {
 const applicationTypeStyles: Record<ApplicationType, string> = {
   'Full-Time': 'bg-chart-2/20 text-chart-2 border-chart-2/30',
   'Internship': 'bg-chart-4/20 text-chart-4 border-chart-4/30',
+};
+
+const workArrangementStyles: Record<ApplicationWorkArrangement, string> = {
+  'On-site': 'bg-chart-1/20 text-chart-1 border-chart-1/30',
+  'Remote': 'bg-chart-2/20 text-chart-2 border-chart-2/30',
+  'Hybrid': 'bg-chart-4/20 text-chart-4 border-chart-4/30',
 };
 
 
@@ -175,6 +181,12 @@ export function ApplicationDetailsDialog({ application, children }: ApplicationD
     }
   };
 
+  const handleWorkArrangementChange = async (newWorkArrangement: ApplicationWorkArrangement) => {
+    if (await handleUpdate({ workArrangement: newWorkArrangement })) {
+      toast({ title: `Work arrangement changed to ${newWorkArrangement}.` });
+    }
+  };
+
   const handleDateChange = async (date: Date | undefined, field: 'appliedOn' | 'dueDate') => {
     if (date) {
       if (await handleUpdate({ [field]: date })) {
@@ -251,6 +263,9 @@ export function ApplicationDetailsDialog({ application, children }: ApplicationD
                 <div className="flex items-center gap-2">
                     <Badge variant="secondary">{application.status}</Badge>
                     <Badge variant="outline" className={cn("capitalize", categoryStyles[application.category])}>{application.category}</Badge>
+                    {(application.workArrangement) && (
+                      <Badge variant="outline" className={cn(workArrangementStyles[application.workArrangement])}>{application.workArrangement}</Badge>
+                    )}
                     <Badge variant="outline" className={cn(applicationTypeStyles[application.type])}>{application.type}</Badge>
                 </div>
                 <div className="flex flex-wrap items-center gap-2">
@@ -288,6 +303,19 @@ export function ApplicationDetailsDialog({ application, children }: ApplicationD
                         <SelectContent>
                             {categories.map(cat => (
                                 <SelectItem key={cat} value={cat}>{cat}</SelectItem>
+                            ))}
+                        </SelectContent>
+                    </Select>
+                </div>
+                <div className="flex flex-wrap items-center gap-2">
+                    <span className="text-sm font-medium">Change Arrangement:</span>
+                    <Select value={application.workArrangement || 'On-site'} onValueChange={handleWorkArrangementChange}>
+                        <SelectTrigger className="w-[180px]">
+                            <SelectValue placeholder="Select arrangement" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            {workArrangements.map(wa => (
+                                <SelectItem key={wa} value={wa}>{wa}</SelectItem>
                             ))}
                         </SelectContent>
                     </Select>

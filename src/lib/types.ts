@@ -13,6 +13,10 @@ export type ApplicationType = 'Internship' | 'Full-Time';
 
 export const applicationTypes: ApplicationType[] = ['Internship', 'Full-Time'];
 
+export type ApplicationWorkArrangement = 'On-site' | 'Remote' | 'Hybrid';
+
+export const workArrangements: ApplicationWorkArrangement[] = ['On-site', 'Remote', 'Hybrid'];
+
 export const suggestedLocations: string[] = [
     'San Francisco, CA',
     'Seattle, WA',
@@ -84,6 +88,7 @@ export interface Application {
   resumeUrl?: string | null;
   type: ApplicationType;
   category: ApplicationCategory;
+  workArrangement?: ApplicationWorkArrangement | null;
   status: ApplicationStatus;
   userId: string;
   user?: User;

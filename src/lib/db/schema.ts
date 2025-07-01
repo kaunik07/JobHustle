@@ -11,6 +11,7 @@ import { createId } from '@paralleldrive/cuid2';
 export const categoriesEnum = pgEnum('category', ['SWE', 'SRE/Devops', 'Quant', 'Systems', 'Data Scientist']);
 export const statusesEnum = pgEnum('status', ['Yet to Apply', 'Applied', 'OA', 'Interview', 'Offer', 'Rejected']);
 export const applicationTypeEnum = pgEnum('type', ['Internship', 'Full-Time']);
+export const workArrangementEnum = pgEnum('work_arrangement', ['On-site', 'Remote', 'Hybrid']);
 
 export const users = pgTable('users', {
   id: text('id').$defaultFn(() => createId()).primaryKey(),
@@ -30,6 +31,7 @@ export const applications = pgTable('applications', {
     resumeUrl: text('resume_url'),
     type: applicationTypeEnum('type').notNull(),
     category: categoriesEnum('category').notNull(),
+    workArrangement: workArrangementEnum('work_arrangement'),
     status: statusesEnum('status').notNull(),
     userId: text('user_id').references(() => users.id, { onDelete: 'cascade' }).notNull(),
     notes: text('notes'),

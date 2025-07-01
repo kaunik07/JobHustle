@@ -4,7 +4,7 @@
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import type { Application, ApplicationCategory, ApplicationType } from '@/lib/types';
+import type { Application, ApplicationCategory, ApplicationType, ApplicationWorkArrangement } from '@/lib/types';
 import { ApplicationDetailsDialog } from '@/components/applications/ApplicationDetailsDialog';
 import { format, formatDistanceToNow } from 'date-fns';
 import { Clock, MapPin } from 'lucide-react';
@@ -27,6 +27,12 @@ const categoryStyles: Record<ApplicationCategory, string> = {
 const applicationTypeStyles: Record<ApplicationType, string> = {
   'Full-Time': 'bg-chart-2/20 text-chart-2 border-chart-2/30',
   'Internship': 'bg-chart-4/20 text-chart-4 border-chart-4/30',
+};
+
+const workArrangementStyles: Record<ApplicationWorkArrangement, string> = {
+  'On-site': 'bg-chart-1/20 text-chart-1 border-chart-1/30',
+  'Remote': 'bg-chart-2/20 text-chart-2 border-chart-2/30',
+  'Hybrid': 'bg-chart-4/20 text-chart-4 border-chart-4/30',
 };
 
 export function KanbanCard({ application, selectedUserId }: KanbanCardProps) {
@@ -100,6 +106,9 @@ export function KanbanCard({ application, selectedUserId }: KanbanCardProps) {
             <Badge variant="outline" className={cn(applicationTypeStyles[application.type])}>
               {application.type}
             </Badge>
+            {application.workArrangement && (
+              <Badge variant="outline" className={cn(workArrangementStyles[application.workArrangement])}>{application.workArrangement}</Badge>
+            )}
           </div>
           
           <div className="flex justify-between items-center pt-2">
