@@ -32,7 +32,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { User, categories, statuses, applicationTypes } from '@/lib/types';
+import { User, categories, statuses, applicationTypes, suggestedLocations } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2, ChevronsUpDown, Check, X } from 'lucide-react';
 import { Textarea } from '@/components/ui/textarea';
@@ -120,6 +120,10 @@ export function AddApplicationDialog({ children, users, selectedUserId, allLocat
       setIsSubmitting(false);
     }
   }
+
+  const allUniqueLocations = [...new Set([...suggestedLocations, ...allLocations, ...form.watch('locations')])];
+  const top5Suggestions = suggestedLocations.slice(0, 5);
+  const locationsToDisplay = locationSearch.trim() === '' ? top5Suggestions : allUniqueLocations;
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -216,9 +220,9 @@ export function AddApplicationDialog({ children, users, selectedUserId, allLocat
                                <CommandEmpty>
                                 {locationSearch.trim().length > 0 ? (
                                   <CommandItem
+                                    value={locationSearch}
                                     onMouseDown={(e) => {
                                       e.preventDefault();
-                                      e.stopPropagation();
                                     }}
                                     onSelect={() => {
                                       field.onChange([...(field.value || []), locationSearch.trim()]);
@@ -232,7 +236,7 @@ export function AddApplicationDialog({ children, users, selectedUserId, allLocat
                                 )}
                               </CommandEmpty>
                               <CommandGroup>
-                                {allLocations.map((location) => {
+                                {locationsToDisplay.map((location) => {
                                   const isSelected = field.value?.includes(location);
                                    return (
                                     <CommandItem
@@ -240,7 +244,6 @@ export function AddApplicationDialog({ children, users, selectedUserId, allLocat
                                       value={location}
                                       onMouseDown={(e) => {
                                         e.preventDefault();
-                                        e.stopPropagation();
                                       }}
                                       onSelect={() => {
                                         if (isSelected) {
