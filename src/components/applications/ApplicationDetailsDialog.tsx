@@ -15,7 +15,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { type Application, type ApplicationStatus, statuses, categories, type ApplicationCategory, type User, applicationTypes, type ApplicationType, workArrangements, type ApplicationWorkArrangement } from '@/lib/types';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { ExternalLink, Trash2, CalendarIcon, CheckCircle2 } from 'lucide-react';
+import { ExternalLink, Trash2, CalendarIcon, CheckCircle2, Plus } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -75,6 +75,8 @@ export function ApplicationDetailsDialog({ application, children }: ApplicationD
   const [currentCompanyName, setCurrentCompanyName] = React.useState(application.companyName);
   const [currentLocation, setCurrentLocation] = React.useState(application.location);
   const [currentResumeUrl, setCurrentResumeUrl] = React.useState(application.resumeUrl || '');
+
+  const isInterviewStage = application.status === 'Interview';
 
   React.useEffect(() => {
     if (open) {
@@ -198,6 +200,16 @@ export function ApplicationDetailsDialog({ application, children }: ApplicationD
       if (await handleUpdate({ [field]: date })) {
         toast({ title: `${field === 'appliedOn' ? 'Applied date' : 'OA Due Date'} updated.` });
       }
+    }
+  };
+
+  const handleInterviewDateChange = async (date: Date | undefined, roundNumber: number) => {
+    if (date) {
+        const fieldName = `interviewDate${roundNumber}` as keyof Application;
+        const success = await handleUpdate({ [fieldName]: date });
+        if (success) {
+            toast({ title: `Round ${roundNumber} date updated.` });
+        }
     }
   };
 
@@ -348,35 +360,107 @@ export function ApplicationDetailsDialog({ application, children }: ApplicationD
                 </div>
             </div>
 
-            <div className="flex flex-wrap items-center gap-4">
-                {application.status !== 'Yet to Apply' && (
-                <div className="space-y-1">
-                    <label className="text-sm font-medium">Applied On</label>
-                    <Popover>
+            {isInterviewStage && (
+              <div className="space-y-4 pt-4 border-t">
+                <h3 className="font-semibold">Interview Log</h3>
+                <div className="space-y-3">
+                  {Array.from({ length: 10 }).map((_, index) => {
+                    const fieldName = `interviewDate${index + 1}` as keyof Application;
+                    const interviewDate = application[fieldName] as Date | null | undefined;
+                    if (interviewDate) {
+                      return (
+                        <div key={index} className="flex items-center gap-4">
+                          <span className="font-medium w-24">Round {index + 1}:</span>
+                           <Popover>
+                              <PopoverTrigger asChild>
+                                <Button
+                                  variant={"outline"}
+                                  className={cn("w-[240px] justify-start text-left font-normal")}
+                                >
+                                  <CalendarIcon className="mr-2 h-4 w-4" />
+                                  {format(new Date(interviewDate), "PPP")}
+                                </Button>
+                              </PopoverTrigger>
+                              <PopoverContent className="w-auto p-0">
+                                <Calendar
+                                  mode="single"
+                                  selected={new Date(interviewDate)}
+                                  onSelect={(date) => handleInterviewDateChange(date, index + 1)}
+                                  initialFocus
+                                />
+                              </PopoverContent>
+                            </Popover>
+                        </div>
+                      );
+                    }
+                    return null;
+                  })}
+                </div>
+                {(() => {
+                  const nextRoundIndex = Array.from({ length: 10 }).findIndex((_, index) => {
+                    const fieldName = `interviewDate${index + 1}` as keyof Application;
+                    return !application[fieldName];
+                  });
+
+                  if (nextRoundIndex !== -1) {
+                    return (
+                      <Popover>
                         <PopoverTrigger asChild>
-                            <Button
-                            variant={"outline"}
-                            className={cn(
-                                "w-[200px] justify-start text-left font-normal",
-                                !application.appliedOn && "text-muted-foreground"
-                            )}
-                            >
-                            <CalendarIcon className="mr-2 h-4 w-4" />
-                            {application.appliedOn ? format(new Date(application.appliedOn), "PPP") : <span>Pick a date</span>}
-                            </Button>
+                          <Button variant="outline" size="sm">
+                            <Plus className="mr-2 h-4 w-4" />
+                            Add Round {nextRoundIndex + 1}
+                          </Button>
                         </PopoverTrigger>
                         <PopoverContent className="w-auto p-0">
-                            <Calendar
+                          <Calendar
                             mode="single"
-                            selected={application.appliedOn ? new Date(application.appliedOn) : undefined}
-                            onSelect={(date) => handleDateChange(date, 'appliedOn')}
+                            onSelect={(date) => {
+                                handleInterviewDateChange(date, nextRoundIndex + 1)
+                                const trigger = document.activeElement as HTMLElement;
+                                if(trigger) trigger.blur();
+                              }
+                            }
                             initialFocus
-                            />
+                          />
                         </PopoverContent>
-                    </Popover>
-                </div>
+                      </Popover>
+                    );
+                  }
+                  return <p className="text-sm text-muted-foreground">Maximum of 10 interview rounds reached.</p>;
+                })()}
+              </div>
+            )}
+
+
+            <div className="flex flex-wrap items-center gap-4">
+                {!isInterviewStage && application.status !== 'Yet to Apply' && (
+                  <div className="space-y-1">
+                      <label className="text-sm font-medium">Applied On</label>
+                      <Popover>
+                          <PopoverTrigger asChild>
+                              <Button
+                              variant={"outline"}
+                              className={cn(
+                                  "w-[200px] justify-start text-left font-normal",
+                                  !application.appliedOn && "text-muted-foreground"
+                              )}
+                              >
+                              <CalendarIcon className="mr-2 h-4 w-4" />
+                              {application.appliedOn ? format(new Date(application.appliedOn), "PPP") : <span>Pick a date</span>}
+                              </Button>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-auto p-0">
+                              <Calendar
+                              mode="single"
+                              selected={application.appliedOn ? new Date(application.appliedOn) : undefined}
+                              onSelect={(date) => handleDateChange(date, 'appliedOn')}
+                              initialFocus
+                              />
+                          </PopoverContent>
+                      </Popover>
+                  </div>
                 )}
-                {['OA', 'Interview'].includes(application.status) && (
+                {application.status === 'OA' && (
                 <div className="space-y-1">
                     <label className="text-sm font-medium">OA Due Date</label>
                     <Popover>
@@ -456,6 +540,23 @@ export function ApplicationDetailsDialog({ application, children }: ApplicationD
                 ) : null}
               </div>
             </div>
+
+            {isInterviewStage && (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4 pt-4 border-t">
+                  {application.appliedOn && (
+                      <div className="space-y-1">
+                          <label className="text-sm font-medium">Applied On</label>
+                          <p className="text-sm text-muted-foreground">{format(new Date(application.appliedOn), "PPP")}</p>
+                      </div>
+                  )}
+                  {application.oaDueDate && (
+                      <div className="space-y-1">
+                          <label className="text-sm font-medium">OA Due Date</label>
+                          <p className="text-sm text-muted-foreground">{format(new Date(application.oaDueDate), "PPP")}</p>
+                      </div>
+                  )}
+              </div>
+            )}
 
             <div className="space-y-2">
                 <h3 className="font-semibold">Job Description</h3>

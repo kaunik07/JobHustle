@@ -96,4 +96,14 @@ export interface Application {
   appliedOn?: Date | null;
   oaDueDate?: Date | null;
   createdAt: Date;
+  interviewDate1?: Date | null;
+  interviewDate2?: Date | null;
+  interviewDate3?: Date | null;
+  interviewDate4?: Date | null;
+  interviewDate5?: Date | null;
+  interviewDate6?: Date | null;
+  interviewDate7?: Date | null;
+  interviewDate8?: Date | null;
+  interviewDate9?: Date | null;
+  interviewDate10?: Date | null;
 }
