@@ -1,8 +1,8 @@
 'use client';
 
 import type { Application } from '@/lib/types';
-import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
-import { Briefcase, Clock, FileText, BarChart, Users, Award, XCircle } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Package, Clock, FileText, BarChart, Users, Award, XCircle } from 'lucide-react';
 import * as React from 'react';
 
 interface AnalyticsOverviewProps {
@@ -25,6 +25,7 @@ export function AnalyticsOverview({ applications }: AnalyticsOverviewProps) {
   }, [applications]);
 
   const statItems = [
+    { title: 'Unique Applications', value: stats.unique, icon: Package, color: 'text-foreground', description: `${stats.total} Total Applications` },
     { title: 'Yet to Apply', value: stats['Yet to Apply'], icon: Clock, color: 'text-muted-foreground' },
     { title: 'Applied', value: stats.Applied, icon: FileText, color: 'text-primary' },
     { title: 'OA', value: stats.OA, icon: BarChart, color: 'text-chart-4' },
@@ -34,28 +35,20 @@ export function AnalyticsOverview({ applications }: AnalyticsOverviewProps) {
   ];
 
   return (
-    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-      <Card className="col-span-2 row-span-2 flex flex-col">
-        <CardHeader className="flex flex-row items-start justify-between">
-            <CardTitle className="text-sm font-medium">Unique Applications Added</CardTitle>
-            <Briefcase className="h-5 w-5 text-muted-foreground" />
-        </CardHeader>
-        <CardContent className="flex-1 flex items-center justify-center p-0">
-            <div className="text-8xl font-bold">{stats.unique}</div>
-        </CardContent>
-        <CardFooter className="justify-center border-t pt-4">
-            <p className="text-sm text-muted-foreground">{stats.total} Total Applications</p>
-        </CardFooter>
-      </Card>
-      
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
       {statItems.map(item => (
         <Card key={item.title}>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">{item.title}</CardTitle>
-            <item.icon className={`h-5 w-5 ${item.color}`} />
+            <item.icon className={`h-4 w-4 ${item.color}`} />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{item.value}</div>
+            {item.description && (
+              <p className="text-xs text-muted-foreground">
+                {item.description}
+              </p>
+            )}
           </CardContent>
         </Card>
       ))}
