@@ -5,6 +5,7 @@ import {
   varchar,
   timestamp,
   pgEnum,
+  boolean,
 } from 'drizzle-orm/pg-core';
 import { createId } from '@paralleldrive/cuid2';
 
@@ -39,6 +40,7 @@ export const applications = pgTable('applications', {
     oaDueDate: timestamp('oa_due_date'),
     oaDueDateTimezone: varchar('oa_due_date_timezone', { length: 255 }),
     oaCompletedOn: timestamp('oa_completed_on'),
+    oaSkipped: boolean('oa_skipped').default(false).notNull(),
     createdAt: timestamp('created_at').defaultNow().notNull(),
     interviewDate1: timestamp('interview_date_1'),
     interviewDateTimezone1: varchar('interview_date_timezone_1', { length: 255 }),

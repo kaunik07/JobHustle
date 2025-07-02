@@ -97,6 +97,7 @@ export interface Application {
   oaDueDate?: Date | null;
   oaDueDateTimezone?: string | null;
   oaCompletedOn?: Date | null;
+  oaSkipped: boolean;
   createdAt: Date;
   interviewDate1?: Date | null;
   interviewDateTimezone1?: string | null;

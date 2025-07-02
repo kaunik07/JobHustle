@@ -37,6 +37,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Switch } from '@/components/ui/switch';
 import { updateApplication, deleteApplication } from '@/app/actions';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
@@ -75,6 +76,7 @@ export function ApplicationDetailsDialog({ application, children }: ApplicationD
   const [currentCompanyName, setCurrentCompanyName] = React.useState(application.companyName);
   const [currentLocation, setCurrentLocation] = React.useState(application.location);
   const [currentResumeUrl, setCurrentResumeUrl] = React.useState(application.resumeUrl || '');
+  const [currentOaSkipped, setCurrentOaSkipped] = React.useState(application.oaSkipped);
 
   // State for OA date/time
   const [oaDueTime, setOaDueTime] = React.useState('23:59');
@@ -98,6 +100,7 @@ export function ApplicationDetailsDialog({ application, children }: ApplicationD
       setCurrentLocation(application.location);
       setCurrentNotes(application.notes || '');
       setCurrentResumeUrl(application.resumeUrl || '');
+      setCurrentOaSkipped(application.oaSkipped);
       
       const initialTimezone = application.oaDueDateTimezone || Intl.DateTimeFormat().resolvedOptions().timeZone;
       setOaDueDateTimezone(initialTimezone);
@@ -227,6 +230,14 @@ export function ApplicationDetailsDialog({ application, children }: ApplicationD
     }
     if (await handleUpdate(data)) {
       toast({ title: `Status changed to ${newStatus}.` });
+    }
+  };
+  
+  const handleOaSkippedChange = async (skipped: boolean) => {
+    const success = await handleUpdate({ oaSkipped: skipped });
+    if (success) {
+      setCurrentOaSkipped(skipped);
+      toast({ title: `OA Skipped status updated.` });
     }
   };
 
@@ -364,6 +375,8 @@ export function ApplicationDetailsDialog({ application, children }: ApplicationD
     }
   }
 
+  const showOaSkipToggle = !['Yet to Apply', 'OA'].includes(application.status);
+
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -461,6 +474,16 @@ export function ApplicationDetailsDialog({ application, children }: ApplicationD
                         </SelectContent>
                     </Select>
                 </div>
+                {showOaSkipToggle && (
+                  <div className="flex items-center space-x-2">
+                    <Switch
+                      id="oa-skipped"
+                      checked={currentOaSkipped}
+                      onCheckedChange={handleOaSkippedChange}
+                    />
+                    <Label htmlFor="oa-skipped">OA Skipped</Label>
+                  </div>
+                )}
                 <div className="flex flex-wrap items-center gap-2">
                   <span className="text-sm font-medium">Change type:</span>
                   <Select value={application.type} onValueChange={handleTypeChange}>

@@ -117,9 +117,14 @@ export function AllUsersAnalytics({ users, applications }: AllUsersAnalyticsProp
     return users.map(user => {
       const userApps = applications.filter(app => app.userId === user.id);
       
-      const denominator = userApps.filter(app => app.status !== 'Yet to Apply').length;
+      // Exclude applications where OA was not part of the process
+      const oaEligibleApps = userApps.filter(app => !app.oaSkipped);
       
-      const numerator = userApps.filter(app => 
+      // Denominator: All eligible apps that have been submitted
+      const denominator = oaEligibleApps.filter(app => app.status !== 'Yet to Apply').length;
+      
+      // Numerator: All eligible apps that got an OA (or better)
+      const numerator = oaEligibleApps.filter(app => 
         ['OA', 'Interview', 'Offer'].includes(app.status)
       ).length;
 
@@ -127,11 +132,11 @@ export function AllUsersAnalytics({ users, applications }: AllUsersAnalyticsProp
 
       return {
         user,
-        appliedCount: denominator,
-        positiveResponseCount: numerator,
+        eligibleCount: denominator,
+        oaCount: numerator,
         percentage,
       };
-    }).filter(data => data.appliedCount > 0); // Only show users who have applied to at least one job
+    }).filter(data => data.eligibleCount > 0); // Only show users who have eligible applications
   }, [users, applications]);
 
 
@@ -239,10 +244,10 @@ export function AllUsersAnalytics({ users, applications }: AllUsersAnalyticsProp
       </div>
       
       <div className="space-y-4">
-        <h3 className="text-xl font-bold tracking-tight">User Conversion Rates (Applied to Positive Response)</h3>
+        <h3 className="text-xl font-bold tracking-tight">User Conversion Rates (Applied to OA)</h3>
         {conversionRateData.length > 0 ? (
           <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-            {conversionRateData.map(({ user, appliedCount, positiveResponseCount, percentage }) => (
+            {conversionRateData.map(({ user, eligibleCount, oaCount, percentage }) => (
                 <Card key={user.id}>
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                         <CardTitle className="text-sm font-medium">{`${user.firstName} ${user.lastName}`.trim()}</CardTitle>
@@ -251,7 +256,7 @@ export function AllUsersAnalytics({ users, applications }: AllUsersAnalyticsProp
                     <CardContent>
                         <div className="text-2xl font-bold">{percentage.toFixed(1)}%</div>
                         <p className="text-xs text-muted-foreground">
-                            {positiveResponseCount} positive responses from {appliedCount} applications
+                            {oaCount} OA from {eligibleCount} eligible applications
                         </p>
                     </CardContent>
                 </Card>
