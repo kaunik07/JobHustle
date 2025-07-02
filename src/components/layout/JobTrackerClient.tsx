@@ -14,6 +14,7 @@ import { useToast } from '@/hooks/use-toast';
 import { kanbanStatuses } from '@/lib/types';
 import { RejectedList } from '../applications/RejectedList';
 import { FilterSidebar } from './FilterSidebar';
+import { AllUsersAnalytics } from '@/components/analytics/AllUsersAnalytics';
 
 interface JobTrackerClientProps {
     users: User[];
@@ -132,7 +133,11 @@ export function JobTrackerClient({
         />
         <main className="flex-1 p-4 md:p-6 lg:p-8 space-y-6">
           <AnalyticsOverview applications={filteredApplications} />
-          <YetToApplyList applications={yetToApplyApplications} selectedUserId={selectedUserId} />
+          {selectedUserId === 'all' ? (
+            <AllUsersAnalytics users={users} applications={yetToApplyApplications} />
+          ) : (
+            <YetToApplyList applications={yetToApplyApplications} selectedUserId={selectedUserId} />
+          )}
           <Separator />
           <KanbanBoard applications={kanbanApplications} selectedUserId={selectedUserId} />
           <Separator />
