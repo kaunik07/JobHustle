@@ -1,4 +1,3 @@
-
 'use client';
 
 import * as React from 'react';
@@ -24,7 +23,7 @@ import {
   ChartLegendContent,
   type ChartConfig,
 } from '@/components/ui/chart';
-import { TrendingUp } from 'lucide-react';
+import { TrendingUp, Users, Zap } from 'lucide-react';
 
 interface AllUsersAnalyticsProps {
   users: User[];
@@ -32,7 +31,7 @@ interface AllUsersAnalyticsProps {
 }
 
 export function AllUsersAnalytics({ users, applications }: AllUsersAnalyticsProps) {
-  // --- Pie Chart Logic (with internal filtering) ---
+  // --- Pie Chart Logic ---
   const yetToApplyApplications = React.useMemo(
     () => applications.filter((app) => app.status === 'Yet to Apply'),
     [applications]
@@ -112,31 +111,44 @@ export function AllUsersAnalytics({ users, applications }: AllUsersAnalyticsProp
     return config;
   }, [users]);
   
-  // --- Conversion Rate Logic ---
-  const conversionRateData = React.useMemo(() => {
+  // --- User Performance Metrics Logic ---
+  const userPerformanceData = React.useMemo(() => {
     return users.map(user => {
-      const userApps = applications.filter(app => app.userId === user.id);
-      
-      // Exclude applications where OA was not part of the process
-      const oaEligibleApps = userApps.filter(app => !app.oaSkipped);
-      
-      // Denominator: All eligible apps that have been submitted
-      const denominator = oaEligibleApps.filter(app => app.status !== 'Yet to Apply').length;
-      
-      // Numerator: All eligible apps that got an OA (or better)
-      const numerator = oaEligibleApps.filter(app => 
-        ['OA', 'Interview', 'Offer'].includes(app.status)
-      ).length;
+        const userApps = applications.filter(app => app.userId === user.id);
 
-      const percentage = denominator > 0 ? (numerator / denominator) * 100 : 0;
+        // Metric 1: OA Conversion (Applied -> OA)
+        const oaEligibleApps = userApps.filter(app => app.status !== 'Yet to Apply' && !app.oaSkipped);
+        const oasReceived = oaEligibleApps.filter(app => ['OA', 'Interview', 'Offer'].includes(app.status));
+        const oaConversionRate = oaEligibleApps.length > 0 ? (oasReceived.length / oaEligibleApps.length) * 100 : 0;
+        
+        // Metric 2: Interview Conversion (OA Completed -> Interview)
+        const oasCompleted = userApps.filter(app => !!app.oaCompletedOn);
+        const interviewsFromOa = oasCompleted.filter(app => ['Interview', 'Offer'].includes(app.status));
+        const interviewConversionRate = oasCompleted.length > 0 ? (interviewsFromOa.length / oasCompleted.length) * 100 : 0;
 
-      return {
-        user,
-        eligibleCount: denominator,
-        oaCount: numerator,
-        percentage,
-      };
-    }).filter(data => data.eligibleCount > 0); // Only show users who have eligible applications
+        // Metric 3: Direct Interviews (Applied -> Interview, OA Skipped)
+        const directInterviews = userApps.filter(app => app.oaSkipped && ['Interview', 'Offer'].includes(app.status)).length;
+        
+        return {
+            user,
+            hasData: oaEligibleApps.length > 0 || oasCompleted.length > 0 || directInterviews > 0,
+            stats: {
+                oaConversion: {
+                    rate: oaConversionRate,
+                    applied: oaEligibleApps.length,
+                    oas: oasReceived.length
+                },
+                interviewConversion: {
+                    rate: interviewConversionRate,
+                    completed: oasCompleted.length,
+                    interviews: interviewsFromOa.length
+                },
+                directInterviews: {
+                    count: directInterviews
+                }
+            }
+        };
+    }).filter(data => data.hasData); // Only include users with some data to show
   }, [users, applications]);
 
 
@@ -244,27 +256,60 @@ export function AllUsersAnalytics({ users, applications }: AllUsersAnalyticsProp
       </div>
       
       <div className="space-y-4">
-        <h3 className="text-xl font-bold tracking-tight">User Conversion Rates (Applied to OA)</h3>
-        {conversionRateData.length > 0 ? (
-          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-            {conversionRateData.map(({ user, eligibleCount, oaCount, percentage }) => (
-                <Card key={user.id}>
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium">{`${user.firstName} ${user.lastName}`.trim()}</CardTitle>
+        <h3 className="text-xl font-bold tracking-tight">User Performance Metrics</h3>
+        {userPerformanceData.length > 0 ? (
+          <div className="space-y-6">
+            {userPerformanceData.map(({ user, stats }) => (
+              <Card key={user.id} className="bg-card/50">
+                <CardHeader>
+                  <CardTitle>{`${user.firstName} ${user.lastName}`.trim()}</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                    <Card>
+                      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                        <CardTitle className="text-sm font-medium">OA Conversion</CardTitle>
                         <TrendingUp className="h-4 w-4 text-muted-foreground" />
-                    </CardHeader>
-                    <CardContent>
-                        <div className="text-2xl font-bold">{percentage.toFixed(1)}%</div>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="text-2xl font-bold">{stats.oaConversion.rate.toFixed(1)}%</div>
                         <p className="text-xs text-muted-foreground">
-                            {oaCount} OA from {eligibleCount} eligible applications
+                          {stats.oaConversion.oas} OAs from {stats.oaConversion.applied} eligible apps
                         </p>
-                    </CardContent>
-                </Card>
+                      </CardContent>
+                    </Card>
+                    <Card>
+                      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                        <CardTitle className="text-sm font-medium">Interview Conversion</CardTitle>
+                        <Users className="h-4 w-4 text-muted-foreground" />
+                      </CardHeader>
+                      <CardContent>
+                        <div className="text-2xl font-bold">{stats.interviewConversion.rate.toFixed(1)}%</div>
+                        <p className="text-xs text-muted-foreground">
+                          {stats.interviewConversion.interviews} interviews from {stats.interviewConversion.completed} completed OAs
+                        </p>
+                      </CardContent>
+                    </Card>
+                    <Card>
+                      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                        <CardTitle className="text-sm font-medium">Direct Interviews</CardTitle>
+                        <Zap className="h-4 w-4 text-muted-foreground" />
+                      </CardHeader>
+                      <CardContent>
+                        <div className="text-2xl font-bold">{stats.directInterviews.count}</div>
+                        <p className="text-xs text-muted-foreground">
+                          Applications that skipped OA stage
+                        </p>
+                      </CardContent>
+                    </Card>
+                  </div>
+                </CardContent>
+              </Card>
             ))}
           </div>
         ) : (
           <div className="flex h-24 w-full items-center justify-center rounded-lg border-2 border-dashed p-4">
-            <p className="text-sm text-muted-foreground">No submitted applications to calculate conversion rates.</p>
+            <p className="text-sm text-muted-foreground">No application data available to calculate performance metrics.</p>
           </div>
         )}
       </div>
