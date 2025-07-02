@@ -134,7 +134,7 @@ export function JobTrackerClient({
         <main className="flex-1 p-4 md:p-6 lg:p-8 space-y-6">
           <AnalyticsOverview applications={filteredApplications} />
           {selectedUserId === 'all' ? (
-            <AllUsersAnalytics users={users} applications={yetToApplyApplications} />
+            <AllUsersAnalytics users={users} applications={filteredApplications} />
           ) : (
             <YetToApplyList applications={yetToApplyApplications} selectedUserId={selectedUserId} />
           )}

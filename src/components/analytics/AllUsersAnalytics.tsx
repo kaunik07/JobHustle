@@ -1,7 +1,18 @@
 'use client';
 
 import * as React from 'react';
-import { Pie, PieChart, ResponsiveContainer, Cell } from 'recharts';
+import {
+  Pie,
+  PieChart,
+  ResponsiveContainer,
+  Cell,
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+} from 'recharts';
+import { subDays, format, eachDayOfInterval, startOfDay } from 'date-fns';
 import type { Application, User } from '@/lib/types';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import {
@@ -15,21 +26,27 @@ import {
 
 interface AllUsersAnalyticsProps {
   users: User[];
-  applications: Application[]; // These are already filtered for 'Yet to Apply'
+  applications: Application[];
 }
 
 export function AllUsersAnalytics({ users, applications }: AllUsersAnalyticsProps) {
+  // --- Pie Chart Logic (with internal filtering) ---
+  const yetToApplyApplications = React.useMemo(
+    () => applications.filter((app) => app.status === 'Yet to Apply'),
+    [applications]
+  );
+
   const dataByUser = React.useMemo(() => {
     return users.map(user => ({
       user: `${user.firstName} ${user.lastName}`.trim(),
-      count: applications.filter(app => app.userId === user.id).length,
+      count: yetToApplyApplications.filter(app => app.userId === user.id).length,
       userId: user.id
     })).filter(d => d.count > 0);
-  }, [users, applications]);
+  }, [users, yetToApplyApplications]);
 
-  const totalYetToApply = applications.length;
+  const totalYetToApply = yetToApplyApplications.length;
 
-  const chartConfig = React.useMemo(() => {
+  const pieChartConfig = React.useMemo(() => {
     const config: ChartConfig = {};
     dataByUser.forEach((data, index) => {
       config[data.userId] = {
@@ -40,15 +57,68 @@ export function AllUsersAnalytics({ users, applications }: AllUsersAnalyticsProp
     return config;
   }, [dataByUser]);
 
+  // --- Trend Chart Logic ---
+  const trendChartData = React.useMemo(() => {
+    const thirtyDaysAgo = subDays(new Date(), 29);
+    const dateRange = eachDayOfInterval({ start: thirtyDaysAgo, end: new Date() });
+
+    const addedPerDay = applications.reduce((acc, app) => {
+        if (app.createdAt) {
+            const date = format(startOfDay(new Date(app.createdAt)), 'yyyy-MM-dd');
+            acc[date] = (acc[date] || 0) + 1;
+        }
+        return acc;
+    }, {} as Record<string, number>);
+
+    const appliedPerUserPerDay = applications.reduce((acc, app) => {
+        if (app.appliedOn && app.userId) {
+            const date = format(startOfDay(new Date(app.appliedOn)), 'yyyy-MM-dd');
+            const key = `${date}_${app.userId}`;
+            acc[key] = (acc[key] || 0) + 1;
+        }
+        return acc;
+    }, {} as Record<string, number>);
+
+    return dateRange.map(date => {
+        const formattedDate = format(date, 'yyyy-MM-dd');
+        const dayData: Record<string, string | number> = {
+            date: format(date, 'MMM d'),
+            'Total Added': addedPerDay[formattedDate] || 0,
+        };
+        users.forEach(user => {
+            const key = `${formattedDate}_${user.id}`;
+            dayData[user.id] = appliedPerUserPerDay[key] || 0;
+        });
+        return dayData;
+    });
+  }, [applications, users]);
+
+  const trendChartConfig = React.useMemo(() => {
+    const config: ChartConfig = {
+      'Total Added': {
+        label: 'Total Added',
+        color: 'hsl(var(--chart-1))',
+      },
+    };
+    users.forEach((user, index) => {
+      config[user.id] = {
+        label: `${user.firstName} Applied`,
+        color: `hsl(var(--chart-${(index % 4) + 2}))`, // Use chart-2 to chart-5
+      };
+    });
+    return config;
+  }, [users]);
+
+
   return (
     <div className="space-y-4">
       <div className="flex items-center gap-2">
-        <h2 className="text-2xl font-bold tracking-tight">To Apply Analytics</h2>
+        <h2 className="text-2xl font-bold tracking-tight">All Users Analytics</h2>
       </div>
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
         <Card className="flex flex-col">
           <CardHeader>
-            <CardTitle>Applications to Apply by User</CardTitle>
+            <CardTitle>Applications to Apply</CardTitle>
             <CardDescription>
               A total of {totalYetToApply} applications are pending across {dataByUser.length} user(s).
             </CardDescription>
@@ -56,7 +126,7 @@ export function AllUsersAnalytics({ users, applications }: AllUsersAnalyticsProp
           <CardContent className="flex-1 pb-0">
             {totalYetToApply > 0 ? (
               <ChartContainer
-                config={chartConfig}
+                config={pieChartConfig}
                 className="mx-auto aspect-square max-h-[300px]"
               >
                 <ResponsiveContainer width="100%" height="100%">
@@ -75,7 +145,7 @@ export function AllUsersAnalytics({ users, applications }: AllUsersAnalyticsProp
                       {dataByUser.map((entry) => (
                         <Cell
                           key={`cell-${entry.userId}`}
-                          fill={chartConfig[entry.userId]?.color}
+                          fill={pieChartConfig[entry.userId]?.color}
                           className="stroke-background"
                         />
                       ))}
@@ -93,6 +163,53 @@ export function AllUsersAnalytics({ users, applications }: AllUsersAnalyticsProp
               </div>
             )}
           </CardContent>
+        </Card>
+        
+        <Card>
+            <CardHeader>
+                <CardTitle>Application Trends</CardTitle>
+                <CardDescription>New applications added vs. applied in the last 30 days.</CardDescription>
+            </CardHeader>
+            <CardContent>
+                <ChartContainer config={trendChartConfig} className="h-[300px] w-full">
+                    <ResponsiveContainer width="100%" height="100%">
+                        <LineChart data={trendChartData}>
+                            <CartesianGrid vertical={false} />
+                            <XAxis
+                                dataKey="date"
+                                tickLine={false}
+                                axisLine={false}
+                                tickMargin={8}
+                            />
+                            <YAxis
+                                tickLine={false}
+                                axisLine={false}
+                                tickMargin={8}
+                                allowDecimals={false}
+                            />
+                            <ChartTooltip content={<ChartTooltipContent />} />
+                            <ChartLegend content={<ChartLegendContent />} />
+                            <Line
+                                dataKey="Total Added"
+                                type="monotone"
+                                stroke="var(--color-Total Added)"
+                                strokeWidth={2}
+                                dot={false}
+                            />
+                            {users.map(user => (
+                                <Line
+                                    key={user.id}
+                                    dataKey={user.id}
+                                    type="monotone"
+                                    stroke={`var(--color-${user.id})`}
+                                    strokeWidth={2}
+                                    dot={false}
+                                />
+                            ))}
+                        </LineChart>
+                    </ResponsiveContainer>
+                </ChartContainer>
+            </CardContent>
         </Card>
       </div>
     </div>
