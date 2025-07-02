@@ -74,10 +74,9 @@ export function AnalyticsOverview({ applications }: AnalyticsOverviewProps) {
           <CardTitle className="text-sm font-medium">{firstItem.title}</CardTitle>
           <firstItem.icon className={`h-4 w-4 ${firstItem.color}`} />
         </CardHeader>
-        <CardContent className="flex flex-1 flex-row items-center justify-center gap-4">
-          <div className="text-6xl font-bold">{firstItem.value}</div>
-          
-          <div className="flex flex-col">
+        <CardContent className="flex flex-1 flex-col items-center justify-center gap-1">
+          <div className="flex items-baseline gap-4">
+            <div className="text-6xl font-bold">{firstItem.value}</div>
             {uniqueAppsAddedToday > 0 && (
               <div className="flex items-center gap-1 text-sm font-semibold text-chart-4">
                 <ArrowUp className="h-4 w-4" />
@@ -86,13 +85,13 @@ export function AnalyticsOverview({ applications }: AnalyticsOverviewProps) {
                 </span>
               </div>
             )}
-
-            {uniqueAppsAddedYesterday > 0 && (
-              <p className="text-xs text-muted-foreground mt-1">
-                {uniqueAppsAddedYesterday} yesterday
-              </p>
-            )}
           </div>
+          
+          {uniqueAppsAddedYesterday > 0 && (
+            <p className="text-xs text-muted-foreground">
+              {uniqueAppsAddedYesterday} yesterday
+            </p>
+          )}
         </CardContent>
       </Card>
       
