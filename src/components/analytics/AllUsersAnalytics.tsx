@@ -184,6 +184,25 @@ export function AllUsersAnalytics({ users, applications }: AllUsersAnalyticsProp
                       nameKey="userId"
                       innerRadius={60}
                       strokeWidth={5}
+                      labelLine={false}
+                      label={({ value, cx, cy, midAngle, innerRadius, outerRadius }) => {
+                        const RADIAN = Math.PI / 180;
+                        const radius = innerRadius + (outerRadius - innerRadius) * 0.6;
+                        const x = cx + radius * Math.cos(-midAngle * RADIAN);
+                        const y = cy + radius * Math.sin(-midAngle * RADIAN);
+                        return (
+                          <text
+                            x={x}
+                            y={y}
+                            fill="hsl(var(--primary-foreground))"
+                            textAnchor="middle"
+                            dominantBaseline="middle"
+                            className="text-base font-bold"
+                          >
+                            {value}
+                          </text>
+                        );
+                      }}
                     >
                       {dataByUser.map((entry) => (
                         <Cell
