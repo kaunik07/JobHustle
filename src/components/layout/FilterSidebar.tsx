@@ -32,8 +32,9 @@ export function FilterSidebar({
   return (
     <div 
         className={cn(
-            "group fixed left-0 top-0 z-40 h-screen overflow-hidden bg-card transition-all duration-[600ms] ease-in-out border-r border-border",
-            "w-16 hover:w-64 focus-within:w-64"
+            "group fixed left-0 top-0 z-40 h-screen overflow-hidden bg-card transition-all duration-300 ease-in-out border-r border-border",
+            "w-16 hover:w-64 focus-within:w-64",
+            (isTypeSelectOpen || isCategorySelectOpen) && "w-64"
         )}
     >
       <div className="flex h-full flex-col space-y-8 p-4">
@@ -41,14 +42,16 @@ export function FilterSidebar({
           <Filter className="h-6 w-6 flex-shrink-0 text-primary" />
           <h2 className={cn(
             "font-headline text-lg font-semibold transition-opacity duration-200",
-            "opacity-0 group-hover:opacity-100 group-focus-within:opacity-100"
+            "opacity-0 group-hover:opacity-100 group-focus-within:opacity-100",
+            (isTypeSelectOpen || isCategorySelectOpen) && "opacity-100"
           )}>
             Filters
           </h2>
         </div>
         <div className={cn(
             "flex flex-col space-y-6 transition-opacity delay-100 duration-200",
-            "opacity-0 group-hover:opacity-100 group-focus-within:opacity-100"
+            "opacity-0 group-hover:opacity-100 group-focus-within:opacity-100",
+            (isTypeSelectOpen || isCategorySelectOpen) && "opacity-100"
         )}>
           <div className="space-y-2">
             <Label>Application Type</Label>
