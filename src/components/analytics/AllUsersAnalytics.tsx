@@ -31,11 +31,14 @@ interface AllUsersAnalyticsProps {
   applications: Application[];
 }
 
-// Define a more vibrant and distinct color palette for the trend chart
-const VIBRANT_COLORS = [
+// Define specific colors for the trend chart
+const UNIQUE_JOBS_COLOR = 'hsl(280, 80%, 60%)'; // Sharp Purple
+const KAUNIK_COLOR = 'hsl(50, 95%, 55%)';      // Bright Yellow
+
+// A palette for other users to ensure distinct colors
+const OTHER_USER_COLORS = [
     'hsl(220, 80%, 60%)', // Vibrant Blue
     'hsl(140, 70%, 50%)', // Bright Green
-    'hsl(280, 80%, 60%)', // Sharp Purple
     'hsl(330, 85%, 60%)', // Hot Pink
     'hsl(190, 80%, 55%)', // Vivid Cyan
 ];
@@ -116,14 +119,24 @@ export function AllUsersAnalytics({ users, applications }: AllUsersAnalyticsProp
   const trendChartConfig = React.useMemo(() => {
     const config: ChartConfig = {
       'Total Added': {
-        label: 'Unique Jobs Added', // Updated label for clarity
-        color: VIBRANT_COLORS[0],
+        label: 'Unique Jobs Added',
+        color: UNIQUE_JOBS_COLOR,
       },
     };
-    users.forEach((user, index) => {
+    
+    let otherUserColorIndex = 0;
+    users.forEach((user) => {
+      let userColor;
+      if (user.firstName.toLowerCase() === 'kaunik') {
+        userColor = KAUNIK_COLOR;
+      } else {
+        userColor = OTHER_USER_COLORS[otherUserColorIndex % OTHER_USER_COLORS.length];
+        otherUserColorIndex++;
+      }
+
       config[user.id] = {
         label: `${user.firstName} Applied`,
-        color: VIBRANT_COLORS[(index + 1) % VIBRANT_COLORS.length],
+        color: userColor,
       };
     });
     return config;
