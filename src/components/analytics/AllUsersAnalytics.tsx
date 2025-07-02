@@ -31,16 +31,14 @@ interface AllUsersAnalyticsProps {
   applications: Application[];
 }
 
-// Define specific colors for the trend chart
-const UNIQUE_JOBS_COLOR = 'hsl(280, 80%, 60%)'; // Sharp Purple
-const KAUNIK_COLOR = 'hsl(50, 95%, 55%)';      // Bright Yellow
-
-// A palette for other users to ensure distinct colors
-const OTHER_USER_COLORS = [
+// A palette for users to ensure distinct colors
+const USER_COLORS = [
     'hsl(220, 80%, 60%)', // Vibrant Blue
     'hsl(140, 70%, 50%)', // Bright Green
     'hsl(330, 85%, 60%)', // Hot Pink
     'hsl(190, 80%, 55%)', // Vivid Cyan
+    'hsl(280, 80%, 60%)', // Sharp Purple
+    'hsl(50, 95%, 55%)',  // Bright Yellow
 ];
 
 
@@ -77,21 +75,6 @@ export function AllUsersAnalytics({ users, applications }: AllUsersAnalyticsProp
     const thirtyDaysAgo = subDays(new Date(), 29);
     const dateRange = eachDayOfInterval({ start: thirtyDaysAgo, end: new Date() });
 
-    // Corrected Logic: Count unique applications added per day based on jobUrl
-    const addedPerDay = applications.reduce((acc, app) => {
-        if (app.createdAt && app.jobUrl) {
-            const dateKey = format(startOfDay(new Date(app.createdAt)), 'yyyy-MM-dd');
-            if (!acc[dateKey]) {
-                acc[dateKey] = { count: 0, urls: new Set<string>() };
-            }
-            if (!acc[dateKey].urls.has(app.jobUrl)) {
-                acc[dateKey].urls.add(app.jobUrl);
-                acc[dateKey].count += 1;
-            }
-        }
-        return acc;
-    }, {} as Record<string, { count: number; urls: Set<string> }>);
-
     const appliedPerUserPerDay = applications.reduce((acc, app) => {
         if (app.appliedOn && app.userId) {
             const dateKey = format(startOfDay(new Date(app.appliedOn)), 'yyyy-MM-dd');
@@ -106,7 +89,6 @@ export function AllUsersAnalytics({ users, applications }: AllUsersAnalyticsProp
         const dateKey = format(date, 'yyyy-MM-dd');
         const dayData: Record<string, string | number> = {
             date: displayDate,
-            'Total Added': addedPerDay[dateKey]?.count || 0,
         };
         users.forEach(user => {
             const userDateKey = `${dateKey}_${user.id}`;
@@ -117,22 +99,10 @@ export function AllUsersAnalytics({ users, applications }: AllUsersAnalyticsProp
   }, [applications, users]);
 
   const trendChartConfig = React.useMemo(() => {
-    const config: ChartConfig = {
-      'Total Added': {
-        label: 'Unique Jobs Added',
-        color: UNIQUE_JOBS_COLOR,
-      },
-    };
+    const config: ChartConfig = {};
     
-    let otherUserColorIndex = 0;
-    users.forEach((user) => {
-      let userColor;
-      if (user.firstName.toLowerCase() === 'kaunik') {
-        userColor = KAUNIK_COLOR;
-      } else {
-        userColor = OTHER_USER_COLORS[otherUserColorIndex % OTHER_USER_COLORS.length];
-        otherUserColorIndex++;
-      }
+    users.forEach((user, index) => {
+      let userColor = USER_COLORS[index % USER_COLORS.length];
 
       config[user.id] = {
         label: `${user.firstName} Applied`,
@@ -260,7 +230,7 @@ export function AllUsersAnalytics({ users, applications }: AllUsersAnalyticsProp
         <Card>
             <CardHeader>
                 <CardTitle>Application Trends</CardTitle>
-                <CardDescription>Unique jobs added vs. applications applied in the last 30 days.</CardDescription>
+                <CardDescription>Applications moved to 'Applied' status per user in the last 30 days.</CardDescription>
             </CardHeader>
             <CardContent>
                 <ChartContainer config={trendChartConfig} className="h-[300px] w-full">
@@ -281,13 +251,6 @@ export function AllUsersAnalytics({ users, applications }: AllUsersAnalyticsProp
                             />
                             <ChartTooltip content={<ChartTooltipContent />} />
                             <ChartLegend content={<ChartLegendContent />} />
-                            <Line
-                                dataKey="Total Added"
-                                type="monotone"
-                                stroke="var(--color-Total Added)"
-                                strokeWidth={2}
-                                dot={false}
-                            />
                             {users.map(user => (
                                 <Line
                                     key={user.id}
