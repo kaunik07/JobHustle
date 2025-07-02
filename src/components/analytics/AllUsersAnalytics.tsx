@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -65,30 +66,31 @@ export function AllUsersAnalytics({ users, applications }: AllUsersAnalyticsProp
 
     const addedPerDay = applications.reduce((acc, app) => {
         if (app.createdAt) {
-            const date = format(startOfDay(new Date(app.createdAt)), 'yyyy-MM-dd');
-            acc[date] = (acc[date] || 0) + 1;
+            const dateKey = format(startOfDay(new Date(app.createdAt)), 'yyyy-MM-dd');
+            acc[dateKey] = (acc[dateKey] || 0) + 1;
         }
         return acc;
     }, {} as Record<string, number>);
 
     const appliedPerUserPerDay = applications.reduce((acc, app) => {
         if (app.appliedOn && app.userId) {
-            const date = format(startOfDay(new Date(app.appliedOn)), 'yyyy-MM-dd');
-            const key = `${date}_${app.userId}`;
-            acc[key] = (acc[key] || 0) + 1;
+            const dateKey = format(startOfDay(new Date(app.appliedOn)), 'yyyy-MM-dd');
+            const userDateKey = `${dateKey}_${app.userId}`;
+            acc[userDateKey] = (acc[userDateKey] || 0) + 1;
         }
         return acc;
     }, {} as Record<string, number>);
 
     return dateRange.map(date => {
-        const formattedDate = format(date, 'MMM d');
+        const displayDate = format(date, 'MMM d');
+        const dateKey = format(date, 'yyyy-MM-dd');
         const dayData: Record<string, string | number> = {
-            date: formattedDate,
-            'Total Added': addedPerDay[formattedDate] || 0,
+            date: displayDate,
+            'Total Added': addedPerDay[dateKey] || 0,
         };
         users.forEach(user => {
-            const key = `${formattedDate}_${user.id}`;
-            dayData[user.id] = appliedPerUserPerDay[key] || 0;
+            const userDateKey = `${dateKey}_${user.id}`;
+            dayData[user.id] = appliedPerUserPerDay[userDateKey] || 0;
         });
         return dayData;
     });
@@ -126,7 +128,7 @@ export function AllUsersAnalytics({ users, applications }: AllUsersAnalyticsProp
       return {
         user,
         appliedCount: denominator,
-        oaCount: numerator,
+        positiveResponseCount: numerator,
         percentage,
       };
     }).filter(data => data.appliedCount > 0); // Only show users who have applied to at least one job
@@ -237,10 +239,10 @@ export function AllUsersAnalytics({ users, applications }: AllUsersAnalyticsProp
       </div>
       
       <div className="space-y-4">
-        <h3 className="text-xl font-bold tracking-tight">User Conversion Rates (Applied to OA)</h3>
+        <h3 className="text-xl font-bold tracking-tight">User Conversion Rates (Applied to Positive Response)</h3>
         {conversionRateData.length > 0 ? (
           <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-            {conversionRateData.map(({ user, appliedCount, oaCount, percentage }) => (
+            {conversionRateData.map(({ user, appliedCount, positiveResponseCount, percentage }) => (
                 <Card key={user.id}>
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                         <CardTitle className="text-sm font-medium">{`${user.firstName} ${user.lastName}`.trim()}</CardTitle>
@@ -249,7 +251,7 @@ export function AllUsersAnalytics({ users, applications }: AllUsersAnalyticsProp
                     <CardContent>
                         <div className="text-2xl font-bold">{percentage.toFixed(1)}%</div>
                         <p className="text-xs text-muted-foreground">
-                            {oaCount} OAs from {appliedCount} applications
+                            {positiveResponseCount} positive responses from {appliedCount} applications
                         </p>
                     </CardContent>
                 </Card>
