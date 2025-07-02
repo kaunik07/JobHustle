@@ -87,11 +87,9 @@ export function AnalyticsOverview({ applications }: AnalyticsOverviewProps) {
             )}
           </div>
           
-          {uniqueAppsAddedYesterday > 0 && (
-            <p className="text-xs text-muted-foreground">
-              {uniqueAppsAddedYesterday} yesterday
-            </p>
-          )}
+          <p className="text-xs text-muted-foreground">
+            {uniqueAppsAddedYesterday} yesterday
+          </p>
         </CardContent>
       </Card>
       
