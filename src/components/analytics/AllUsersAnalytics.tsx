@@ -31,6 +31,16 @@ interface AllUsersAnalyticsProps {
   applications: Application[];
 }
 
+// Define a more vibrant and distinct color palette for the trend chart
+const VIBRANT_COLORS = [
+    'hsl(220, 80%, 60%)', // Vibrant Blue
+    'hsl(140, 70%, 50%)', // Bright Green
+    'hsl(280, 80%, 60%)', // Sharp Purple
+    'hsl(330, 85%, 60%)', // Hot Pink
+    'hsl(190, 80%, 55%)', // Vivid Cyan
+];
+
+
 export function AllUsersAnalytics({ users, applications }: AllUsersAnalyticsProps) {
   // --- Pie Chart Logic ---
   const yetToApplyApplications = React.useMemo(
@@ -64,13 +74,20 @@ export function AllUsersAnalytics({ users, applications }: AllUsersAnalyticsProp
     const thirtyDaysAgo = subDays(new Date(), 29);
     const dateRange = eachDayOfInterval({ start: thirtyDaysAgo, end: new Date() });
 
+    // Corrected Logic: Count unique applications added per day based on jobUrl
     const addedPerDay = applications.reduce((acc, app) => {
-        if (app.createdAt) {
+        if (app.createdAt && app.jobUrl) {
             const dateKey = format(startOfDay(new Date(app.createdAt)), 'yyyy-MM-dd');
-            acc[dateKey] = (acc[dateKey] || 0) + 1;
+            if (!acc[dateKey]) {
+                acc[dateKey] = { count: 0, urls: new Set<string>() };
+            }
+            if (!acc[dateKey].urls.has(app.jobUrl)) {
+                acc[dateKey].urls.add(app.jobUrl);
+                acc[dateKey].count += 1;
+            }
         }
         return acc;
-    }, {} as Record<string, number>);
+    }, {} as Record<string, { count: number; urls: Set<string> }>);
 
     const appliedPerUserPerDay = applications.reduce((acc, app) => {
         if (app.appliedOn && app.userId) {
@@ -86,7 +103,7 @@ export function AllUsersAnalytics({ users, applications }: AllUsersAnalyticsProp
         const dateKey = format(date, 'yyyy-MM-dd');
         const dayData: Record<string, string | number> = {
             date: displayDate,
-            'Total Added': addedPerDay[dateKey] || 0,
+            'Total Added': addedPerDay[dateKey]?.count || 0,
         };
         users.forEach(user => {
             const userDateKey = `${dateKey}_${user.id}`;
@@ -99,14 +116,14 @@ export function AllUsersAnalytics({ users, applications }: AllUsersAnalyticsProp
   const trendChartConfig = React.useMemo(() => {
     const config: ChartConfig = {
       'Total Added': {
-        label: 'Total Added',
-        color: 'hsl(var(--chart-1))',
+        label: 'Unique Jobs Added', // Updated label for clarity
+        color: VIBRANT_COLORS[0],
       },
     };
     users.forEach((user, index) => {
       config[user.id] = {
         label: `${user.firstName} Applied`,
-        color: `hsl(var(--chart-${(index % 4) + 2}))`, // Use chart-2 to chart-5
+        color: VIBRANT_COLORS[(index + 1) % VIBRANT_COLORS.length],
       };
     });
     return config;
@@ -230,7 +247,7 @@ export function AllUsersAnalytics({ users, applications }: AllUsersAnalyticsProp
         <Card>
             <CardHeader>
                 <CardTitle>Application Trends</CardTitle>
-                <CardDescription>New applications added vs. applied in the last 30 days.</CardDescription>
+                <CardDescription>Unique jobs added vs. applications applied in the last 30 days.</CardDescription>
             </CardHeader>
             <CardContent>
                 <ChartContainer config={trendChartConfig} className="h-[300px] w-full">
