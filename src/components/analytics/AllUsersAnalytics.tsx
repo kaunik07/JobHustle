@@ -14,7 +14,7 @@ import {
   CartesianGrid,
 } from 'recharts';
 import { subDays, format, eachDayOfInterval, startOfDay } from 'date-fns';
-import type { Application, User } from '@/lib/types';
+import { kanbanStatuses, type Application, type User } from '@/lib/types';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import {
   ChartContainer,
@@ -76,7 +76,7 @@ export function AllUsersAnalytics({ users, applications }: AllUsersAnalyticsProp
     const dateRange = eachDayOfInterval({ start: thirtyDaysAgo, end: new Date() });
 
     const appliedPerUserPerDay = applications.reduce((acc, app) => {
-        if (app.status === 'Applied' && app.appliedOn && app.userId) {
+        if (app.appliedOn && app.userId && kanbanStatuses.includes(app.status)) {
             const dateKey = format(startOfDay(new Date(app.appliedOn)), 'yyyy-MM-dd');
             const userDateKey = `${dateKey}_${app.userId}`;
             acc[userDateKey] = (acc[userDateKey] || 0) + 1;
@@ -233,7 +233,7 @@ export function AllUsersAnalytics({ users, applications }: AllUsersAnalyticsProp
         <Card>
             <CardHeader>
                 <CardTitle>Application Trends</CardTitle>
-                <CardDescription>Daily count of applications currently in the 'Applied' status from the last 30 days.</CardDescription>
+                <CardDescription>Daily count of applications added to the board by user over the last 30 days.</CardDescription>
             </CardHeader>
             <CardContent>
                 <ChartContainer config={trendChartConfig} className="h-[300px] w-full">
