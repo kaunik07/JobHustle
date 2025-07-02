@@ -1,3 +1,4 @@
+
 'use client';
 
 import type { Application } from '@/lib/types';
@@ -34,9 +35,29 @@ export function AnalyticsOverview({ applications }: AnalyticsOverviewProps) {
     { title: 'Rejected', value: stats.Rejected, icon: XCircle, color: 'text-destructive' },
   ];
 
+  const firstItem = statItems[0];
+  const otherItems = statItems.slice(1);
+
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-      {statItems.map(item => (
+      {/* First item spanning two rows */}
+      <Card key={firstItem.title} className="lg:row-span-2 flex flex-col">
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+          <CardTitle className="text-sm font-medium">{firstItem.title}</CardTitle>
+          <firstItem.icon className={`h-4 w-4 ${firstItem.color}`} />
+        </CardHeader>
+        <CardContent className="flex flex-1 flex-col items-center justify-center">
+          <div className="text-6xl font-bold">{firstItem.value}</div>
+          {firstItem.description && (
+            <p className="text-xs text-muted-foreground mt-2">
+              {firstItem.description}
+            </p>
+          )}
+        </CardContent>
+      </Card>
+      
+      {/* Other items */}
+      {otherItems.map(item => (
         <Card key={item.title}>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">{item.title}</CardTitle>
@@ -44,11 +65,6 @@ export function AnalyticsOverview({ applications }: AnalyticsOverviewProps) {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{item.value}</div>
-            {item.description && (
-              <p className="text-xs text-muted-foreground">
-                {item.description}
-              </p>
-            )}
           </CardContent>
         </Card>
       ))}
