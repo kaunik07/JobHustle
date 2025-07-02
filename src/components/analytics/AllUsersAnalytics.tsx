@@ -76,7 +76,7 @@ export function AllUsersAnalytics({ users, applications }: AllUsersAnalyticsProp
     const dateRange = eachDayOfInterval({ start: thirtyDaysAgo, end: new Date() });
 
     const appliedPerUserPerDay = applications.reduce((acc, app) => {
-        if (app.appliedOn && app.userId) {
+        if (app.status === 'Applied' && app.appliedOn && app.userId) {
             const dateKey = format(startOfDay(new Date(app.appliedOn)), 'yyyy-MM-dd');
             const userDateKey = `${dateKey}_${app.userId}`;
             acc[userDateKey] = (acc[userDateKey] || 0) + 1;
@@ -103,7 +103,10 @@ export function AllUsersAnalytics({ users, applications }: AllUsersAnalyticsProp
     
     users.forEach((user, index) => {
       let userColor = USER_COLORS[index % USER_COLORS.length];
-
+      if (user.firstName.toLowerCase() === 'kaunik') {
+        userColor = 'hsl(50, 95%, 55%)';
+      }
+      
       config[user.id] = {
         label: `${user.firstName} Applied`,
         color: userColor,
@@ -230,7 +233,7 @@ export function AllUsersAnalytics({ users, applications }: AllUsersAnalyticsProp
         <Card>
             <CardHeader>
                 <CardTitle>Application Trends</CardTitle>
-                <CardDescription>Applications moved to 'Applied' status per user in the last 30 days.</CardDescription>
+                <CardDescription>Daily count of applications currently in the 'Applied' status from the last 30 days.</CardDescription>
             </CardHeader>
             <CardContent>
                 <ChartContainer config={trendChartConfig} className="h-[300px] w-full">
