@@ -23,6 +23,7 @@ import {
   ChartLegendContent,
   type ChartConfig,
 } from '@/components/ui/chart';
+import { TrendingUp } from 'lucide-react';
 
 interface AllUsersAnalyticsProps {
   users: User[];
@@ -80,9 +81,9 @@ export function AllUsersAnalytics({ users, applications }: AllUsersAnalyticsProp
     }, {} as Record<string, number>);
 
     return dateRange.map(date => {
-        const formattedDate = format(date, 'yyyy-MM-dd');
+        const formattedDate = format(date, 'MMM d');
         const dayData: Record<string, string | number> = {
-            date: format(date, 'MMM d'),
+            date: formattedDate,
             'Total Added': addedPerDay[formattedDate] || 0,
         };
         users.forEach(user => {
@@ -108,10 +109,32 @@ export function AllUsersAnalytics({ users, applications }: AllUsersAnalyticsProp
     });
     return config;
   }, [users]);
+  
+  // --- Conversion Rate Logic ---
+  const conversionRateData = React.useMemo(() => {
+    return users.map(user => {
+      const userApps = applications.filter(app => app.userId === user.id);
+      
+      const denominator = userApps.filter(app => app.status !== 'Yet to Apply').length;
+      
+      const numerator = userApps.filter(app => 
+        ['OA', 'Interview', 'Offer'].includes(app.status)
+      ).length;
+
+      const percentage = denominator > 0 ? (numerator / denominator) * 100 : 0;
+
+      return {
+        user,
+        appliedCount: denominator,
+        oaCount: numerator,
+        percentage,
+      };
+    }).filter(data => data.appliedCount > 0); // Only show users who have applied to at least one job
+  }, [users, applications]);
 
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-8">
       <div className="flex items-center gap-2">
         <h2 className="text-2xl font-bold tracking-tight">All Users Analytics</h2>
       </div>
@@ -211,6 +234,32 @@ export function AllUsersAnalytics({ users, applications }: AllUsersAnalyticsProp
                 </ChartContainer>
             </CardContent>
         </Card>
+      </div>
+      
+      <div className="space-y-4">
+        <h3 className="text-xl font-bold tracking-tight">User Conversion Rates (Applied to OA)</h3>
+        {conversionRateData.length > 0 ? (
+          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+            {conversionRateData.map(({ user, appliedCount, oaCount, percentage }) => (
+                <Card key={user.id}>
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                        <CardTitle className="text-sm font-medium">{`${user.firstName} ${user.lastName}`.trim()}</CardTitle>
+                        <TrendingUp className="h-4 w-4 text-muted-foreground" />
+                    </CardHeader>
+                    <CardContent>
+                        <div className="text-2xl font-bold">{percentage.toFixed(1)}%</div>
+                        <p className="text-xs text-muted-foreground">
+                            {oaCount} OAs from {appliedCount} applications
+                        </p>
+                    </CardContent>
+                </Card>
+            ))}
+          </div>
+        ) : (
+          <div className="flex h-24 w-full items-center justify-center rounded-lg border-2 border-dashed p-4">
+            <p className="text-sm text-muted-foreground">No submitted applications to calculate conversion rates.</p>
+          </div>
+        )}
       </div>
     </div>
   );
