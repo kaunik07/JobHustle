@@ -22,6 +22,22 @@ export function AnalyticsOverview({ applications }: AnalyticsOverviewProps) {
 
     return new Set(todaysApps.map(a => a.jobUrl)).size;
   }, [applications]);
+  
+  const uniqueAppsAddedYesterday = React.useMemo(() => {
+    const today = new Date();
+    const yesterday = new Date(today);
+    yesterday.setDate(today.getDate() - 1);
+    const startOfYesterday = new Date(yesterday.getFullYear(), yesterday.getMonth(), yesterday.getDate());
+    const endOfYesterday = new Date(startOfYesterday);
+    endOfYesterday.setHours(23, 59, 59, 999);
+
+    const yesterdaysApps = applications.filter(app => {
+      const createdAtDate = new Date(app.createdAt);
+      return createdAtDate >= startOfYesterday && createdAtDate <= endOfYesterday;
+    });
+
+    return new Set(yesterdaysApps.map(a => a.jobUrl)).size;
+  }, [applications]);
 
   const stats = React.useMemo(() => {
     const uniqueApplications = new Set(applications.map(a => a.jobUrl)).size;
@@ -38,7 +54,7 @@ export function AnalyticsOverview({ applications }: AnalyticsOverviewProps) {
   }, [applications]);
 
   const statItems = [
-    { title: 'Unique Applications', value: stats.unique, icon: Package, color: 'text-foreground', description: `${stats.total} Total Applications` },
+    { title: 'Unique Applications', value: stats.unique, icon: Package, color: 'text-foreground' },
     { title: 'Yet to Apply', value: stats['Yet to Apply'], icon: Clock, color: 'text-muted-foreground' },
     { title: 'Applied', value: stats.Applied, icon: FileText, color: 'text-primary' },
     { title: 'OA', value: stats.OA, icon: BarChart, color: 'text-chart-4' },
@@ -58,23 +74,25 @@ export function AnalyticsOverview({ applications }: AnalyticsOverviewProps) {
           <CardTitle className="text-sm font-medium">{firstItem.title}</CardTitle>
           <firstItem.icon className={`h-4 w-4 ${firstItem.color}`} />
         </CardHeader>
-        <CardContent className="flex flex-1 flex-col items-center justify-center">
+        <CardContent className="flex flex-1 flex-row items-center justify-center gap-4">
           <div className="text-6xl font-bold">{firstItem.value}</div>
           
-          {uniqueAppsAddedToday > 0 && (
-            <div className="flex items-center gap-1 text-sm font-semibold text-chart-4 mt-1">
-              <ArrowUp className="h-4 w-4" />
-              <span>
-                {uniqueAppsAddedToday} today
-              </span>
-            </div>
-          )}
+          <div className="flex flex-col">
+            {uniqueAppsAddedToday > 0 && (
+              <div className="flex items-center gap-1 text-sm font-semibold text-chart-4">
+                <ArrowUp className="h-4 w-4" />
+                <span>
+                  {uniqueAppsAddedToday} today
+                </span>
+              </div>
+            )}
 
-          {firstItem.description && (
-            <p className="text-xs text-muted-foreground mt-2">
-              {firstItem.description}
-            </p>
-          )}
+            {uniqueAppsAddedYesterday > 0 && (
+              <p className="text-xs text-muted-foreground mt-1">
+                {uniqueAppsAddedYesterday} yesterday
+              </p>
+            )}
+          </div>
         </CardContent>
       </Card>
       
