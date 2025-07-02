@@ -3,7 +3,7 @@
 
 import type { Application } from '@/lib/types';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Package, Clock, FileText, BarChart, Users, Award, XCircle } from 'lucide-react';
+import { Package, Clock, FileText, BarChart, Users, Award, XCircle, ArrowUp } from 'lucide-react';
 import * as React from 'react';
 
 interface AnalyticsOverviewProps {
@@ -11,6 +11,18 @@ interface AnalyticsOverviewProps {
 }
 
 export function AnalyticsOverview({ applications }: AnalyticsOverviewProps) {
+  const uniqueAppsAddedToday = React.useMemo(() => {
+    const today = new Date();
+    const startOfToday = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+
+    const todaysApps = applications.filter(app => {
+      const createdAtDate = new Date(app.createdAt);
+      return createdAtDate >= startOfToday;
+    });
+
+    return new Set(todaysApps.map(a => a.jobUrl)).size;
+  }, [applications]);
+
   const stats = React.useMemo(() => {
     const uniqueApplications = new Set(applications.map(a => a.jobUrl)).size;
     return {
@@ -48,6 +60,16 @@ export function AnalyticsOverview({ applications }: AnalyticsOverviewProps) {
         </CardHeader>
         <CardContent className="flex flex-1 flex-col items-center justify-center">
           <div className="text-6xl font-bold">{firstItem.value}</div>
+          
+          {uniqueAppsAddedToday > 0 && (
+            <div className="flex items-center gap-1 text-sm font-semibold text-chart-4 mt-1">
+              <ArrowUp className="h-4 w-4" />
+              <span>
+                {uniqueAppsAddedToday} today
+              </span>
+            </div>
+          )}
+
           {firstItem.description && (
             <p className="text-xs text-muted-foreground mt-2">
               {firstItem.description}
