@@ -266,57 +266,59 @@ export function AllUsersAnalytics({ users, applications }: AllUsersAnalyticsProp
                   <CardTitle>{`${user.firstName} ${user.lastName}`.trim()}</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                    <Card className="group relative aspect-square overflow-hidden rounded-lg transition-all duration-300 ease-in-out hover:shadow-xl">
-                      <div className="flex h-full flex-col p-4 transition-all duration-300 group-hover:scale-105">
-                        <div className="flex items-start justify-between">
-                          <p className="text-sm font-medium">OA Conversion</p>
-                          <TrendingUp className="h-4 w-4 text-muted-foreground" />
+                  <div className="mx-auto max-w-[60%]">
+                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                      <Card className="group relative aspect-square overflow-hidden rounded-lg transition-all duration-300 ease-in-out hover:shadow-xl">
+                        <div className="flex h-full flex-col p-4 transition-all duration-300 group-hover:scale-105">
+                          <div className="flex items-start justify-between">
+                            <p className="text-sm font-medium">OA Conversion</p>
+                            <TrendingUp className="h-4 w-4 text-muted-foreground" />
+                          </div>
+                          <div className="flex flex-1 items-center justify-center">
+                            <p className="text-4xl font-bold">{stats.oaConversion.rate.toFixed(1)}%</p>
+                          </div>
                         </div>
-                        <div className="flex flex-1 items-center justify-center">
-                          <p className="text-4xl font-bold">{stats.oaConversion.rate.toFixed(1)}%</p>
+                        <div className="absolute inset-0 flex items-center justify-center bg-card/80 p-4 text-center backdrop-blur-sm transition-opacity duration-300 opacity-0 group-hover:opacity-100">
+                          <p className="text-sm text-card-foreground">
+                            {stats.oaConversion.oas} OAs from {stats.oaConversion.applied} eligible apps
+                          </p>
                         </div>
-                      </div>
-                      <div className="absolute inset-0 flex items-center justify-center bg-card/80 p-4 text-center backdrop-blur-sm transition-opacity duration-300 opacity-0 group-hover:opacity-100">
-                        <p className="text-sm text-card-foreground">
-                          {stats.oaConversion.oas} OAs from {stats.oaConversion.applied} eligible apps
-                        </p>
-                      </div>
-                    </Card>
+                      </Card>
 
-                    <Card className="group relative aspect-square overflow-hidden rounded-lg transition-all duration-300 ease-in-out hover:shadow-xl">
-                      <div className="flex h-full flex-col p-4 transition-all duration-300 group-hover:scale-105">
-                        <div className="flex items-start justify-between">
-                          <p className="text-sm font-medium">Interview Conversion</p>
-                          <Users className="h-4 w-4 text-muted-foreground" />
+                      <Card className="group relative aspect-square overflow-hidden rounded-lg transition-all duration-300 ease-in-out hover:shadow-xl">
+                        <div className="flex h-full flex-col p-4 transition-all duration-300 group-hover:scale-105">
+                          <div className="flex items-start justify-between">
+                            <p className="text-sm font-medium">Interview Conversion</p>
+                            <Users className="h-4 w-4 text-muted-foreground" />
+                          </div>
+                          <div className="flex flex-1 items-center justify-center">
+                            <p className="text-4xl font-bold">{stats.interviewConversion.rate.toFixed(1)}%</p>
+                          </div>
                         </div>
-                        <div className="flex flex-1 items-center justify-center">
-                          <p className="text-4xl font-bold">{stats.interviewConversion.rate.toFixed(1)}%</p>
+                        <div className="absolute inset-0 flex items-center justify-center bg-card/80 p-4 text-center backdrop-blur-sm transition-opacity duration-300 opacity-0 group-hover:opacity-100">
+                          <p className="text-sm text-card-foreground">
+                            {stats.interviewConversion.interviews} interviews from {stats.interviewConversion.completed} completed OAs
+                          </p>
                         </div>
-                      </div>
-                      <div className="absolute inset-0 flex items-center justify-center bg-card/80 p-4 text-center backdrop-blur-sm transition-opacity duration-300 opacity-0 group-hover:opacity-100">
-                        <p className="text-sm text-card-foreground">
-                          {stats.interviewConversion.interviews} interviews from {stats.interviewConversion.completed} completed OAs
-                        </p>
-                      </div>
-                    </Card>
-                    
-                    <Card className="group relative aspect-square overflow-hidden rounded-lg transition-all duration-300 ease-in-out hover:shadow-xl">
-                      <div className="flex h-full flex-col p-4 transition-all duration-300 group-hover:scale-105">
-                        <div className="flex items-start justify-between">
-                          <p className="text-sm font-medium">Direct Interviews</p>
-                          <Zap className="h-4 w-4 text-muted-foreground" />
+                      </Card>
+                      
+                      <Card className="group relative aspect-square overflow-hidden rounded-lg transition-all duration-300 ease-in-out hover:shadow-xl">
+                        <div className="flex h-full flex-col p-4 transition-all duration-300 group-hover:scale-105">
+                          <div className="flex items-start justify-between">
+                            <p className="text-sm font-medium">Direct Interviews</p>
+                            <Zap className="h-4 w-4 text-muted-foreground" />
+                          </div>
+                          <div className="flex flex-1 items-center justify-center">
+                            <p className="text-4xl font-bold">{stats.directInterviews.count}</p>
+                          </div>
                         </div>
-                        <div className="flex flex-1 items-center justify-center">
-                          <p className="text-4xl font-bold">{stats.directInterviews.count}</p>
+                        <div className="absolute inset-0 flex items-center justify-center bg-card/80 p-4 text-center backdrop-blur-sm transition-opacity duration-300 opacity-0 group-hover:opacity-100">
+                          <p className="text-sm text-card-foreground">
+                            Applications that skipped OA stage
+                          </p>
                         </div>
-                      </div>
-                      <div className="absolute inset-0 flex items-center justify-center bg-card/80 p-4 text-center backdrop-blur-sm transition-opacity duration-300 opacity-0 group-hover:opacity-100">
-                        <p className="text-sm text-card-foreground">
-                          Applications that skipped OA stage
-                        </p>
-                      </div>
-                    </Card>
+                      </Card>
+                    </div>
                   </div>
                 </CardContent>
               </Card>
