@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -267,36 +268,36 @@ export function AllUsersAnalytics({ users, applications }: AllUsersAnalyticsProp
                 <CardContent>
                   <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
                     <Card>
-                      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                      <CardHeader className="flex flex-row items-center justify-between space-y-0 p-3 pb-2">
                         <CardTitle className="text-sm font-medium">OA Conversion</CardTitle>
                         <TrendingUp className="h-4 w-4 text-muted-foreground" />
                       </CardHeader>
-                      <CardContent>
-                        <div className="text-2xl font-bold">{stats.oaConversion.rate.toFixed(1)}%</div>
+                      <CardContent className="p-3 pt-0">
+                        <div className="text-xl font-bold">{stats.oaConversion.rate.toFixed(1)}%</div>
                         <p className="text-xs text-muted-foreground">
                           {stats.oaConversion.oas} OAs from {stats.oaConversion.applied} eligible apps
                         </p>
                       </CardContent>
                     </Card>
                     <Card>
-                      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                      <CardHeader className="flex flex-row items-center justify-between space-y-0 p-3 pb-2">
                         <CardTitle className="text-sm font-medium">Interview Conversion</CardTitle>
                         <Users className="h-4 w-4 text-muted-foreground" />
                       </CardHeader>
-                      <CardContent>
-                        <div className="text-2xl font-bold">{stats.interviewConversion.rate.toFixed(1)}%</div>
+                      <CardContent className="p-3 pt-0">
+                        <div className="text-xl font-bold">{stats.interviewConversion.rate.toFixed(1)}%</div>
                         <p className="text-xs text-muted-foreground">
                           {stats.interviewConversion.interviews} interviews from {stats.interviewConversion.completed} completed OAs
                         </p>
                       </CardContent>
                     </Card>
                     <Card>
-                      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                      <CardHeader className="flex flex-row items-center justify-between space-y-0 p-3 pb-2">
                         <CardTitle className="text-sm font-medium">Direct Interviews</CardTitle>
                         <Zap className="h-4 w-4 text-muted-foreground" />
                       </CardHeader>
-                      <CardContent>
-                        <div className="text-2xl font-bold">{stats.directInterviews.count}</div>
+                      <CardContent className="p-3 pt-0">
+                        <div className="text-xl font-bold">{stats.directInterviews.count}</div>
                         <p className="text-xs text-muted-foreground">
                           Applications that skipped OA stage
                         </p>
