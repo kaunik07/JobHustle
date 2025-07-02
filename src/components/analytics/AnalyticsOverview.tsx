@@ -1,26 +1,30 @@
 'use client';
 
 import type { Application } from '@/lib/types';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Briefcase, Clock, FileText, BarChart, Users, Award, XCircle } from 'lucide-react';
+import * as React from 'react';
 
 interface AnalyticsOverviewProps {
   applications: Application[];
 }
 
 export function AnalyticsOverview({ applications }: AnalyticsOverviewProps) {
-  const stats = {
-    total: applications.length,
-    'Yet to Apply': applications.filter(a => a.status === 'Yet to Apply').length,
-    Applied: applications.filter(a => a.status === 'Applied').length,
-    OA: applications.filter(a => a.status === 'OA').length,
-    Interview: applications.filter(a => a.status === 'Interview').length,
-    Offer: applications.filter(a => a.status === 'Offer').length,
-    Rejected: applications.filter(a => a.status === 'Rejected').length,
-  };
+  const stats = React.useMemo(() => {
+    const uniqueApplications = new Set(applications.map(a => a.jobUrl)).size;
+    return {
+      unique: uniqueApplications,
+      total: applications.length,
+      'Yet to Apply': applications.filter(a => a.status === 'Yet to Apply').length,
+      Applied: applications.filter(a => a.status === 'Applied').length,
+      OA: applications.filter(a => a.status === 'OA').length,
+      Interview: applications.filter(a => a.status === 'Interview').length,
+      Offer: applications.filter(a => a.status === 'Offer').length,
+      Rejected: applications.filter(a => a.status === 'Rejected').length,
+    };
+  }, [applications]);
 
   const statItems = [
-    { title: 'Total', value: stats.total, icon: Briefcase, color: 'text-primary' },
     { title: 'Yet to Apply', value: stats['Yet to Apply'], icon: Clock, color: 'text-muted-foreground' },
     { title: 'Applied', value: stats.Applied, icon: FileText, color: 'text-primary' },
     { title: 'OA', value: stats.OA, icon: BarChart, color: 'text-chart-4' },
@@ -30,7 +34,20 @@ export function AnalyticsOverview({ applications }: AnalyticsOverviewProps) {
   ];
 
   return (
-    <div className="grid gap-4 grid-cols-2 md:grid-cols-4 xl:grid-cols-7">
+    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <Card className="col-span-2 row-span-2 flex flex-col">
+        <CardHeader className="flex flex-row items-start justify-between">
+            <CardTitle className="text-sm font-medium">Unique Applications Added</CardTitle>
+            <Briefcase className="h-5 w-5 text-muted-foreground" />
+        </CardHeader>
+        <CardContent className="flex-1 flex items-center justify-center p-0">
+            <div className="text-8xl font-bold">{stats.unique}</div>
+        </CardContent>
+        <CardFooter className="justify-center border-t pt-4">
+            <p className="text-sm text-muted-foreground">{stats.total} Total Applications</p>
+        </CardFooter>
+      </Card>
+      
       {statItems.map(item => (
         <Card key={item.title}>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
