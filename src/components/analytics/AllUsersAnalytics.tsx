@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -258,14 +259,14 @@ export function AllUsersAnalytics({ users, applications }: AllUsersAnalyticsProp
       <div className="space-y-4">
         <h3 className="text-xl font-bold tracking-tight">User Performance Metrics</h3>
         {userPerformanceData.length > 0 ? (
-          <div className="space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {userPerformanceData.map(({ user, stats }) => (
               <Card key={user.id} className="bg-card/50">
                 <CardHeader className="p-4">
                   <CardTitle className="text-xl">{`${user.firstName} ${user.lastName}`.trim()}</CardTitle>
                 </CardHeader>
                 <CardContent className="p-4 pt-0">
-                  <div className="mx-auto max-w-[60%]">
+                  <div>
                     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
                       <Card className="group relative aspect-square overflow-hidden rounded-lg transition-all duration-300 ease-in-out hover:shadow-xl">
                         <div className="flex h-full flex-col p-4 transition-all duration-300 group-hover:scale-105">
