@@ -1,7 +1,7 @@
 'use client';
 
 import * as React from 'react';
-import { Pie, PieChart, ResponsiveContainer } from 'recharts';
+import { Pie, PieChart, ResponsiveContainer, Cell } from 'recharts';
 import type { Application, User } from '@/lib/types';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import {
@@ -32,7 +32,7 @@ export function AllUsersAnalytics({ users, applications }: AllUsersAnalyticsProp
   const chartConfig = React.useMemo(() => {
     const config: ChartConfig = {};
     dataByUser.forEach((data, index) => {
-      config[data.user] = {
+      config[data.userId] = {
         label: data.user,
         color: `hsl(var(--chart-${(index % 5) + 1}))`,
       };
@@ -63,18 +63,25 @@ export function AllUsersAnalytics({ users, applications }: AllUsersAnalyticsProp
                   <PieChart>
                     <ChartTooltip
                       cursor={false}
-                      content={<ChartTooltipContent hideLabel />}
+                      content={<ChartTooltipContent hideLabel nameKey="userId" />}
                     />
                     <Pie
                       data={dataByUser}
                       dataKey="count"
-                      nameKey="user"
+                      nameKey="userId"
                       innerRadius={60}
                       strokeWidth={5}
                     >
+                      {dataByUser.map((entry) => (
+                        <Cell
+                          key={`cell-${entry.userId}`}
+                          fill={chartConfig[entry.userId]?.color}
+                          className="stroke-background"
+                        />
+                      ))}
                     </Pie>
                     <ChartLegend
-                      content={<ChartLegendContent nameKey="user" />}
+                      content={<ChartLegendContent nameKey="userId" />}
                       className="-translate-y-2 flex-wrap gap-2 [&>*]:basis-1/4 [&>*]:justify-center"
                     />
                   </PieChart>
