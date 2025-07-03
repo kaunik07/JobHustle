@@ -46,6 +46,7 @@ const formSchema = z.object({
   jobTitle: z.string().min(2, 'Job title is required'),
   locations: z.array(z.string()).min(1, 'At least one location is required'),
   jobUrl: z.string().url('Please enter a valid URL'),
+  jobDescription: z.string().optional(),
   type: z.enum(applicationTypes),
   category: z.enum(categories),
   workArrangement: z.enum(workArrangements),
@@ -77,6 +78,7 @@ export function AddApplicationDialog({ children, users, selectedUserId, allLocat
       jobTitle: '',
       jobUrl: '',
       locations: [],
+      jobDescription: '',
       type: 'Full-Time',
       category: 'SWE',
       workArrangement: 'On-site',
@@ -93,7 +95,7 @@ export function AddApplicationDialog({ children, users, selectedUserId, allLocat
   async function onSubmit(values: FormValues) {
     setIsSubmitting(true);
     try {
-      await addApplicationAction(values);
+      await addApplicationAction(values as any);
 
       toast({
         title: 'Application Added',
@@ -107,6 +109,7 @@ export function AddApplicationDialog({ children, users, selectedUserId, allLocat
         jobUrl: '',
         locations: [],
         notes: '',
+        jobDescription: '',
         userId: selectedUserId,
         status: 'Yet to Apply',
         workArrangement: 'On-site',
@@ -296,6 +299,23 @@ export function AddApplicationDialog({ children, users, selectedUserId, allLocat
                     <FormLabel>Job Posting URL</FormLabel>
                     <FormControl>
                       <Input placeholder="https://example.com/job/123" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="jobDescription"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Job Description</FormLabel>
+                    <FormControl>
+                      <Textarea
+                        placeholder="Paste the job description here..."
+                        className="min-h-[120px]"
+                        {...field}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
