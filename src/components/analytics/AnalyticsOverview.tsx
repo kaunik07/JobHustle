@@ -1,10 +1,10 @@
-
 'use client';
 
 import type { Application } from '@/lib/types';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Package, Clock, FileText, BarChart, Users, Award, XCircle, ArrowUp } from 'lucide-react';
 import * as React from 'react';
+import { cn } from '@/lib/utils';
 
 interface AnalyticsOverviewProps {
   applications: Application[];
@@ -77,14 +77,15 @@ export function AnalyticsOverview({ applications }: AnalyticsOverviewProps) {
         <CardContent className="flex flex-1 flex-col items-center justify-center gap-1">
           <div className="flex items-baseline gap-4">
             <div className="text-6xl font-bold">{firstItem.value}</div>
-            {uniqueAppsAddedToday > 0 && (
-              <div className="flex items-center gap-1 text-sm font-semibold text-chart-4">
-                <ArrowUp className="h-4 w-4" />
-                <span>
-                  {uniqueAppsAddedToday} today
-                </span>
-              </div>
-            )}
+            <div className={cn(
+                "flex items-center gap-1 text-sm font-semibold",
+                uniqueAppsAddedToday > 0 ? "text-chart-4" : "text-muted-foreground"
+            )}>
+              {uniqueAppsAddedToday > 0 && <ArrowUp className="h-4 w-4" />}
+              <span>
+                {uniqueAppsAddedToday} today
+              </span>
+            </div>
           </div>
           
           <p className="text-xs text-muted-foreground">
