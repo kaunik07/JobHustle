@@ -1,3 +1,4 @@
+
 'use client';
 
 import type { Application } from '@/lib/types';
@@ -40,17 +41,25 @@ export function AnalyticsOverview({ applications }: AnalyticsOverviewProps) {
   }, [applications]);
 
   const stats = React.useMemo(() => {
+    const now = new Date();
     const uniqueApplications = new Set(applications.map(a => a.jobUrl)).size;
+    
     const oaApplications = applications.filter(app => app.status === 'OA');
-    const dueOaCount = oaApplications.filter(app => !app.oaCompletedOn).length;
-    const completedOaCount = oaApplications.filter(app => !!app.oaCompletedOn).length;
+    const notCompletedOas = oaApplications.filter(app => !app.oaCompletedOn);
+
+    const missedOaCount = notCompletedOas.filter(
+      app => app.oaDueDate && new Date(app.oaDueDate) < now
+    ).length;
+    
+    const dueOaCount = notCompletedOas.length - missedOaCount;
+    const completedOaCount = oaApplications.length - notCompletedOas.length;
 
     return {
       unique: uniqueApplications,
       total: applications.length,
       'Yet to Apply': applications.filter(a => a.status === 'Yet to Apply').length,
       Applied: applications.filter(a => a.status === 'Applied').length,
-      OA: { due: dueOaCount, completed: completedOaCount },
+      OA: { due: dueOaCount, completed: completedOaCount, missed: missedOaCount },
       Interview: applications.filter(a => a.status === 'Interview').length,
       Offer: applications.filter(a => a.status === 'Offer').length,
       Rejected: applications.filter(a => a.status === 'Rejected').length,
@@ -85,7 +94,7 @@ export function AnalyticsOverview({ applications }: AnalyticsOverviewProps) {
                 "flex items-center gap-1 text-sm font-semibold",
                 uniqueAppsAddedToday > 0 ? "text-chart-4" : "text-muted-foreground"
             )}>
-              {uniqueAppsAddedToday > 0 && <ArrowUp className="h-4 w-4" />}
+              {uniqueAppsAddedToday > 0 ? <ArrowUp className="h-4 w-4" /> : null}
               <span>
                 {uniqueAppsAddedToday} added
               </span>
@@ -100,7 +109,7 @@ export function AnalyticsOverview({ applications }: AnalyticsOverviewProps) {
       
       {/* Other items */}
       {otherItems.map(item => {
-        if (item.title === 'OA' && typeof item.value === 'object' && 'due' in item.value && 'completed' in item.value) {
+        if (item.title === 'OA' && typeof item.value === 'object' && 'due' in item.value && 'completed' in item.value && 'missed' in item.value) {
             return (
                 <Card key={item.title}>
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -117,6 +126,11 @@ export function AnalyticsOverview({ applications }: AnalyticsOverviewProps) {
                             <div className="text-center">
                                 <div className="text-2xl font-bold">{item.value.completed}</div>
                                 <p className="text-xs text-muted-foreground">Completed</p>
+                            </div>
+                            <div className="text-2xl font-light text-muted-foreground">|</div>
+                            <div className="text-center">
+                                <div className="text-2xl font-bold text-destructive">{item.value.missed}</div>
+                                <p className="text-xs text-muted-foreground">Missed</p>
                             </div>
                         </div>
                     </CardContent>
