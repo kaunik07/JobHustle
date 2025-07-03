@@ -96,7 +96,7 @@ export function AnalyticsOverview({ applications }: AnalyticsOverviewProps) {
             )}>
               {uniqueAppsAddedToday > 0 ? <ArrowUp className="h-4 w-4" /> : null}
               <span>
-                {uniqueAppsAddedToday} added
+                {uniqueAppsAddedToday > 0 ? `+${uniqueAppsAddedToday}` : uniqueAppsAddedToday}
               </span>
             </div>
           </div>
