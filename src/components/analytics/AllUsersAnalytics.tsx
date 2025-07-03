@@ -295,7 +295,7 @@ export function AllUsersAnalytics({ users, applications }: AllUsersAnalyticsProp
                         </div>
                         <div className="absolute inset-0 flex items-center justify-center bg-card/80 p-4 text-center backdrop-blur-sm transition-opacity duration-300 opacity-0 group-hover:opacity-100">
                           <p className="text-sm text-card-foreground">
-                            {stats.oaConversion.oas} OA{stats.oaConversion.oas === 1 ? '' : 's'} from {stats.oaConversion.applied} applied
+                            {stats.oaConversion.oas} OA from {stats.oaConversion.applied} Applied
                           </p>
                         </div>
                       </Card>
