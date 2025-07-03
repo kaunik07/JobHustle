@@ -26,7 +26,6 @@ const requiredHeaders = [
   'jobTitle',
   'location',
   'jobUrl',
-  'userEmail',
   'type',
   'category',
   'status',
@@ -89,7 +88,7 @@ export function BulkAddDialog() {
           await bulkAddApplications(applications);
           toast({
             title: 'Upload Successful',
-            description: `${applications.length} applications have been added.`,
+            description: `${applications.length} application entries have been processed and added for all users.`,
           });
           setFile(null);
           if (fileInputRef.current) {
@@ -165,13 +164,12 @@ export function BulkAddDialog() {
 
             <div className="space-y-2 text-sm">
                 <h4 className="font-semibold">CSV Format Guide</h4>
-                <p className="text-muted-foreground">Your CSV must include the following headers:</p>
+                <p className="text-muted-foreground">Your CSV must include the following headers. Each application will be added for <strong>all users</strong> in the system.</p>
                 <ul className="pl-5 space-y-1 list-disc text-muted-foreground">
                     <li><strong>companyName</strong>: The name of the company.</li>
                     <li><strong>jobTitle</strong>: The job position.</li>
                     <li><strong>location</strong>: The job location.</li>
                     <li><strong>jobUrl</strong>: The URL to the job posting.</li>
-                    <li><strong>userEmail</strong>: The email of an existing user in the app.</li>
                     <li><strong>type</strong>: Must be one of: <code className="bg-muted px-1 rounded">{applicationTypes.join(', ')}</code>.</li>
                     <li><strong>category</strong>: Must be one of: <code className="bg-muted px-1 rounded">{categories.join(', ')}</code>.</li>
                     <li><strong>status</strong>: Must be one of: <code className="bg-muted px-1 rounded">{statuses.join(', ')}</code>.</li>
