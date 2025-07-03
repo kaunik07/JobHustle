@@ -33,7 +33,7 @@ export async function addApplication(data: Omit<Application, 'id' | 'user' | 're
   revalidatePath('/');
 }
 
-export async function bulkAddApplications(applicationsData: Array<Omit<Application, 'id' | 'user' | 'resumeUrl' | 'appliedOn' | 'oaDueDate' | 'createdAt' | 'userId'>>) {
+export async function bulkAddApplications(applicationsData: Array<Omit<Application, 'id' | 'user' | 'resumeUrl' | 'appliedOn' | 'oaDueDate' | 'createdAt' | 'userId' | 'status'>>) {
   const allUsers = await db.select().from(users);
   
   if (allUsers.length === 0) {
@@ -52,10 +52,10 @@ export async function bulkAddApplications(applicationsData: Array<Omit<Applicati
           type: data.type,
           category: data.category,
           workArrangement: data.workArrangement,
-          status: data.status,
+          status: 'Yet to Apply',
           notes: data.notes,
           userId: user.id,
-          appliedOn: data.status !== 'Yet to Apply' ? new Date() : null,
+          appliedOn: null,
           jobDescription: data.jobDescription,
         });
     }

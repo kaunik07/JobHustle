@@ -28,7 +28,6 @@ const requiredHeaders = [
   'jobUrl',
   'type',
   'category',
-  'status',
 ];
 
 export function BulkAddDialog() {
@@ -164,7 +163,7 @@ export function BulkAddDialog() {
 
             <div className="space-y-2 text-sm">
                 <h4 className="font-semibold">CSV Format Guide</h4>
-                <p className="text-muted-foreground">Your CSV must include the following headers. Each application will be added for <strong>all users</strong> in the system.</p>
+                <p className="text-muted-foreground">Your CSV must include the following headers. Each application will be added for <strong>all users</strong> in the system with its status automatically set to <strong>"Yet to Apply"</strong>.</p>
                 <ul className="pl-5 space-y-1 list-disc text-muted-foreground">
                     <li><strong>companyName</strong>: The name of the company.</li>
                     <li><strong>jobTitle</strong>: The job position.</li>
@@ -172,7 +171,6 @@ export function BulkAddDialog() {
                     <li><strong>jobUrl</strong>: The URL to the job posting.</li>
                     <li><strong>type</strong>: Must be one of: <code className="bg-muted px-1 rounded">{applicationTypes.join(', ')}</code>.</li>
                     <li><strong>category</strong>: Must be one of: <code className="bg-muted px-1 rounded">{categories.join(', ')}</code>.</li>
-                    <li><strong>status</strong>: Must be one of: <code className="bg-muted px-1 rounded">{statuses.join(', ')}</code>.</li>
                     <li><strong>workArrangement</strong> (optional): Can be one of: <code className="bg-muted px-1 rounded">{workArrangements.join(', ')}</code>.</li>
                     <li><strong>jobDescription</strong> (optional): Text of the job description.</li>
                     <li><strong>notes</strong> (optional): Any notes for the application.</li>
