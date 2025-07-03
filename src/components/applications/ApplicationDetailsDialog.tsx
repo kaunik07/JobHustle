@@ -22,7 +22,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useToast } from '@/hooks/use-toast';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
-import { format, formatDistanceToNow } from 'date-fns';
+import { format, formatDistanceToNow, startOfDay } from 'date-fns';
 import { cn } from '@/lib/utils';
 import {
   AlertDialog,
@@ -276,6 +276,16 @@ export function ApplicationDetailsDialog({ application, children }: ApplicationD
     newTimezone?: string
   ) => {
     const dateToUse = newDate || (application.oaDueDate ? new Date(application.oaDueDate) : null);
+    
+    if (application.appliedOn && dateToUse && startOfDay(dateToUse) < startOfDay(new Date(application.appliedOn))) {
+      toast({
+        variant: 'destructive',
+        title: 'Invalid Date',
+        description: 'OA due date cannot be before the application date.',
+      });
+      return;
+    }
+
     const timeToUse = newTime ?? oaDueTime;
     const timezoneToUse = newTimezone ?? oaDueDateTimezone;
   
@@ -301,7 +311,7 @@ export function ApplicationDetailsDialog({ application, children }: ApplicationD
     if (await handleUpdate({ oaDueDate: finalDate, oaDueDateTimezone: timezoneToUse })) {
       toast({ title: 'OA Due Date updated.' });
     }
-  }, [application.oaDueDate, oaDueTime, oaDueDateTimezone, handleUpdate, toast]);
+  }, [application.oaDueDate, application.appliedOn, oaDueTime, oaDueDateTimezone, handleUpdate, toast]);
   
 
   const handleMarkOACompleted = async () => {
