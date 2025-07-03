@@ -2,7 +2,7 @@
 'use client';
 
 import * as React from 'react';
-import { Briefcase, Plus, Trash2 } from 'lucide-react';
+import { Briefcase, Plus, Trash2, Paperclip } from 'lucide-react';
 import { AddApplicationDialog } from '@/components/kanban/AddApplicationDialog';
 import type { User, Application } from '@/lib/types';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -21,6 +21,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { getUserColor } from '@/lib/utils';
+import { BulkAddDialog } from '../applications/BulkAddDialog';
 
 interface HeaderProps {
   users: User[];
@@ -96,7 +97,8 @@ export function Header({ users, selectedUser, onUserChange, onUserRemoved, allLo
         </AlertDialog>
       </div>
 
-      <div className="flex items-center gap-4">
+      <div className="flex items-center gap-2">
+        <BulkAddDialog />
         <AddApplicationDialog users={users} selectedUserId={selectedUser} allLocations={allLocations} />
       </div>
     </header>
