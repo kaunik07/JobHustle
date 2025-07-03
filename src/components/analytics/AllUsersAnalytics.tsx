@@ -24,7 +24,7 @@ import {
   ChartLegendContent,
   type ChartConfig,
 } from '@/components/ui/chart';
-import { TrendingUp, Users, Zap } from 'lucide-react';
+import { TrendingUp, Users, Zap, CalendarX } from 'lucide-react';
 
 interface AllUsersAnalyticsProps {
   users: User[];
@@ -117,6 +117,7 @@ export function AllUsersAnalytics({ users, applications }: AllUsersAnalyticsProp
   
   // --- User Performance Metrics Logic ---
   const userPerformanceData = React.useMemo(() => {
+    const now = new Date();
     return users.map(user => {
         const userApps = applications.filter(app => app.userId === user.id);
 
@@ -132,10 +133,18 @@ export function AllUsersAnalytics({ users, applications }: AllUsersAnalyticsProp
 
         // Metric 3: Direct Interviews (Applied -> Interview, OA Skipped)
         const directInterviews = userApps.filter(app => app.oaSkipped && ['Interview', 'Offer'].includes(app.status)).length;
+
+        // Metric 4: Missed OAs
+        const missedOasCount = userApps.filter(app =>
+            app.status === 'OA' &&
+            !app.oaCompletedOn &&
+            app.oaDueDate &&
+            new Date(app.oaDueDate) < now
+        ).length;
         
         return {
             user,
-            hasData: oaEligibleApps.length > 0 || oasCompleted.length > 0 || directInterviews > 0,
+            hasData: oaEligibleApps.length > 0 || oasCompleted.length > 0 || directInterviews > 0 || missedOasCount > 0,
             stats: {
                 oaConversion: {
                     rate: oaConversionRate,
@@ -149,7 +158,10 @@ export function AllUsersAnalytics({ users, applications }: AllUsersAnalyticsProp
                 },
                 directInterviews: {
                     count: directInterviews
-                }
+                },
+                missedOas: {
+                    count: missedOasCount,
+                },
             }
         };
     }).filter(data => data.hasData); // Only include users with some data to show
@@ -282,7 +294,7 @@ export function AllUsersAnalytics({ users, applications }: AllUsersAnalyticsProp
                 </CardHeader>
                 <CardContent className="p-4 pt-0">
                   <div>
-                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                       <Card className="group relative aspect-square overflow-hidden rounded-lg transition-all duration-300 ease-in-out hover:shadow-xl">
                         <div className="flex h-full flex-col p-4 transition-all duration-300 group-hover:scale-105">
                           <div className="flex items-start justify-between">
@@ -330,6 +342,23 @@ export function AllUsersAnalytics({ users, applications }: AllUsersAnalyticsProp
                         <div className="absolute inset-0 flex items-center justify-center bg-card/80 p-4 text-center backdrop-blur-sm transition-opacity duration-300 opacity-0 group-hover:opacity-100">
                           <p className="text-sm text-card-foreground">
                             Applications that skipped OA stage
+                          </p>
+                        </div>
+                      </Card>
+
+                      <Card className="group relative aspect-square overflow-hidden rounded-lg transition-all duration-300 ease-in-out hover:shadow-xl">
+                        <div className="flex h-full flex-col p-4 transition-all duration-300 group-hover:scale-105">
+                          <div className="flex items-start justify-between">
+                            <p className="text-sm font-medium">Missed OAs</p>
+                            <CalendarX className="h-4 w-4 text-muted-foreground" />
+                          </div>
+                          <div className="flex flex-1 items-center justify-center">
+                            <p className="text-4xl font-bold">{stats.missedOas.count}</p>
+                          </div>
+                        </div>
+                        <div className="absolute inset-0 flex items-center justify-center bg-card/80 p-4 text-center backdrop-blur-sm transition-opacity duration-300 opacity-0 group-hover:opacity-100">
+                          <p className="text-sm text-card-foreground">
+                            OAs with a past due date that were not completed.
                           </p>
                         </div>
                       </Card>
