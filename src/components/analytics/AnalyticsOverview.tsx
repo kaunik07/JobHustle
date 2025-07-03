@@ -54,7 +54,7 @@ export function AnalyticsOverview({ applications }: AnalyticsOverviewProps) {
   }, [applications]);
 
   const statItems = [
-    { title: 'Unique Applications', value: stats.unique, icon: Package, color: 'text-foreground' },
+    { title: 'Total Applications', value: stats.unique, icon: Package, color: 'text-foreground' },
     { title: 'Yet to Apply', value: stats['Yet to Apply'], icon: Clock, color: 'text-muted-foreground' },
     { title: 'Applied', value: stats.Applied, icon: FileText, color: 'text-primary' },
     { title: 'OA', value: stats.OA, icon: BarChart, color: 'text-chart-4' },
@@ -83,7 +83,7 @@ export function AnalyticsOverview({ applications }: AnalyticsOverviewProps) {
             )}>
               {uniqueAppsAddedToday > 0 && <ArrowUp className="h-4 w-4" />}
               <span>
-                {uniqueAppsAddedToday} today
+                {uniqueAppsAddedToday} added
               </span>
             </div>
           </div>
