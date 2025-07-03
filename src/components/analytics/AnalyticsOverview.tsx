@@ -41,12 +41,16 @@ export function AnalyticsOverview({ applications }: AnalyticsOverviewProps) {
 
   const stats = React.useMemo(() => {
     const uniqueApplications = new Set(applications.map(a => a.jobUrl)).size;
+    const oaApplications = applications.filter(app => app.status === 'OA');
+    const dueOaCount = oaApplications.filter(app => !app.oaCompletedOn).length;
+    const completedOaCount = oaApplications.filter(app => !!app.oaCompletedOn).length;
+
     return {
       unique: uniqueApplications,
       total: applications.length,
       'Yet to Apply': applications.filter(a => a.status === 'Yet to Apply').length,
       Applied: applications.filter(a => a.status === 'Applied').length,
-      OA: applications.filter(a => a.status === 'OA').length,
+      OA: { due: dueOaCount, completed: completedOaCount },
       Interview: applications.filter(a => a.status === 'Interview').length,
       Offer: applications.filter(a => a.status === 'Offer').length,
       Rejected: applications.filter(a => a.status === 'Rejected').length,
@@ -95,17 +99,41 @@ export function AnalyticsOverview({ applications }: AnalyticsOverviewProps) {
       </Card>
       
       {/* Other items */}
-      {otherItems.map(item => (
+      {otherItems.map(item => {
+        if (item.title === 'OA' && typeof item.value === 'object' && 'due' in item.value && 'completed' in item.value) {
+            return (
+                <Card key={item.title}>
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                        <CardTitle className="text-sm font-medium">{item.title}</CardTitle>
+                        <item.icon className={`h-4 w-4 ${item.color}`} />
+                    </CardHeader>
+                    <CardContent className="pt-2">
+                        <div className="flex items-center justify-around">
+                            <div className="text-center">
+                                <div className="text-2xl font-bold">{item.value.due}</div>
+                                <p className="text-xs text-muted-foreground">Due</p>
+                            </div>
+                            <div className="text-2xl font-light text-muted-foreground">|</div>
+                            <div className="text-center">
+                                <div className="text-2xl font-bold">{item.value.completed}</div>
+                                <p className="text-xs text-muted-foreground">Completed</p>
+                            </div>
+                        </div>
+                    </CardContent>
+                </Card>
+            );
+        }
+        return (
         <Card key={item.title}>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">{item.title}</CardTitle>
             <item.icon className={`h-4 w-4 ${item.color}`} />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{item.value}</div>
+            <div className="text-2xl font-bold">{item.value as number}</div>
           </CardContent>
         </Card>
-      ))}
+      )})}
     </div>
   );
 }
