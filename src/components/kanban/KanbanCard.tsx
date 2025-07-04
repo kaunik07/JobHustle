@@ -183,9 +183,9 @@ export function KanbanCard({ application, selectedUserId }: KanbanCardProps) {
                 <TooltipProvider>
                   <Tooltip>
                     <TooltipTrigger asChild>
-                      <Badge variant="secondary" className="flex items-center gap-1.5 cursor-default">
-                        <Sparkles className="h-3 w-3 text-yellow-400" />
-                        <span>Suggested: {topResumeScore.resume.name} ({topResumeScore.score})</span>
+                      <Badge variant="outline" className="flex items-center gap-1.5 cursor-default bg-chart-4/20 text-chart-4 border-chart-4/30">
+                        <Sparkles className="h-3 w-3" />
+                        <span>{topResumeScore.resume.name} ({topResumeScore.score})</span>
                       </Badge>
                     </TooltipTrigger>
                     <TooltipContent>
