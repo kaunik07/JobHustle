@@ -11,14 +11,14 @@ import { suggestedLocations } from '@/lib/types';
 export default async function Home({
   searchParams,
 }: {
-  searchParams: { user?: string; type?: string; category?: string; location?: string; company?: string };
+  searchParams: { user?: string; type?: string; category?: string; location?: string; company?: string, resume?: string };
 }) {
   try {
     const allUsers: User[] = await db.select().from(usersSchema);
 
     if (allUsers.length === 0) {
       // If there are no users, we can show the main screen with a prompt to add one.
-      return <JobTrackerClient users={[]} applications={[]} resumes={[]} selectedUserId="all" selectedType="all" selectedCategory="all" selectedLocation="" selectedCompany="" allLocations={suggestedLocations} />;
+      return <JobTrackerClient users={[]} applications={[]} resumes={[]} selectedUserId="all" selectedType="all" selectedCategory="all" selectedLocation="" selectedCompany="" selectedResumeId="" allLocations={suggestedLocations} />;
     }
     
     // Determine the selected user ID
@@ -36,6 +36,7 @@ export default async function Home({
     const selectedCategory = searchParams.category || 'all';
     const selectedLocation = searchParams.location || '';
     const selectedCompany = searchParams.company || '';
+    const selectedResumeId = searchParams.resume || '';
     
     // Fetch all applications and let the client component handle filtering
     const results = await db
@@ -76,6 +77,7 @@ export default async function Home({
         selectedCategory={selectedCategory}
         selectedLocation={selectedLocation}
         selectedCompany={selectedCompany}
+        selectedResumeId={selectedResumeId}
         allLocations={allLocations}
       />
     );

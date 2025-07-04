@@ -16,6 +16,9 @@ import { FilterSidebar } from './FilterSidebar';
 import { AllUsersAnalytics } from '@/components/analytics/AllUsersAnalytics';
 import { ResumesPage } from '@/components/resumes/ResumesPage';
 import { cn } from '@/lib/utils';
+import { Button } from '../ui/button';
+import { Badge } from '../ui/badge';
+import { X } from 'lucide-react';
 
 
 interface JobTrackerClientProps {
@@ -27,12 +30,14 @@ interface JobTrackerClientProps {
     selectedCategory: string;
     selectedLocation: string;
     selectedCompany: string;
+    selectedResumeId: string;
     allLocations: string[];
 }
 
 export function JobTrackerClient({ 
     users, applications, resumes,
     selectedUserId, selectedType, selectedCategory, selectedLocation, selectedCompany,
+    selectedResumeId,
     allLocations 
 }: JobTrackerClientProps) {
   const router = useRouter();
@@ -80,6 +85,9 @@ export function JobTrackerClient({
       setView('board');
     }
     updateQuery('user', userId);
+    if (searchParams.has('resume')) {
+        updateQuery('resume', '');
+    }
   };
   
   const handleTypeChange = (type: string) => {
@@ -88,6 +96,11 @@ export function JobTrackerClient({
   
   const handleCategoryChange = (category: string) => {
     updateQuery('category', category);
+  };
+
+  const handleFilterByResume = (resumeId: string) => {
+    setView('board');
+    updateQuery('resume', resumeId);
   };
 
   const handleRemoveUser = async (userIdToRemove: string) => {
@@ -112,7 +125,8 @@ export function JobTrackerClient({
     const categoryMatch = selectedCategory === 'all' || app.category === selectedCategory;
     const locationMatch = !selectedLocation || (app.location && app.location.toLowerCase().includes(selectedLocation.toLowerCase()));
     const companyMatch = !selectedCompany || (app.companyName && app.companyName.toLowerCase().includes(selectedCompany.toLowerCase()));
-    return userMatch && typeMatch && categoryMatch && locationMatch && companyMatch;
+    const resumeMatch = !selectedResumeId || app.resumeId === selectedResumeId;
+    return userMatch && typeMatch && categoryMatch && locationMatch && companyMatch && resumeMatch;
   });
 
   const yetToApplyApplications = filteredApplications.filter(app => app.status === 'Yet to Apply');
@@ -120,6 +134,8 @@ export function JobTrackerClient({
   const rejectedApplications = filteredApplications.filter(app => app.status === 'Rejected');
   
   const selectedUser = users.find(u => u.id === selectedUserId);
+  const selectedResumeName = selectedResumeId ? resumes.find(r => r.id === selectedResumeId)?.name : null;
+
 
   const resumesWithCounts = React.useMemo(() => {
     if (!resumes || resumes.length === 0 || selectedUserId === 'all') {
@@ -167,6 +183,18 @@ export function JobTrackerClient({
           allLocations={allLocations}
         />
         <main className="flex-1 p-4 md:p-6 lg:p-8">
+            {selectedResumeId && selectedResumeName && (
+              <div className="mb-4 flex items-center gap-2 rounded-lg border bg-card p-3">
+                <span className="text-sm font-medium">Filtered by resume:</span>
+                <Badge variant="secondary" className="text-sm">
+                  {selectedResumeName}
+                </Badge>
+                <Button variant="ghost" size="sm" onClick={() => updateQuery('resume', '')} className="ml-auto -mr-2 h-8">
+                  <X className="mr-1 h-4 w-4" />
+                  Clear
+                </Button>
+              </div>
+            )}
             {view === 'board' ? (
               <div className="space-y-6">
                 <AnalyticsOverview applications={filteredApplications} />
@@ -185,6 +213,7 @@ export function JobTrackerClient({
                       <ResumesPage 
                           user={selectedUser} 
                           resumes={resumesWithCounts} 
+                          onFilterByResume={handleFilterByResume}
                       />
                   ) : (
                       <div className="flex items-center justify-center h-24 rounded-md border-2 border-dashed">

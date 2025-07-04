@@ -9,7 +9,7 @@ import { useToast } from '@/hooks/use-toast';
 import { type Resume, type User } from '@/lib/types';
 import { FileText, Trash2, Calendar } from 'lucide-react';
 import { AddResumeDialog } from './AddResumeDialog';
-import { format, formatDistanceToNow } from 'date-fns';
+import { formatDistanceToNow } from 'date-fns';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -21,14 +21,15 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { Badge } from '@/components/ui/badge';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 interface ResumesPageProps {
   user: User;
   resumes: Resume[];
+  onFilterByResume: (resumeId: string) => void;
 }
 
-export function ResumesPage({ user, resumes }: ResumesPageProps) {
+export function ResumesPage({ user, resumes, onFilterByResume }: ResumesPageProps) {
   const { toast } = useToast();
 
   const handleDelete = async (resumeId: string) => {
@@ -67,9 +68,27 @@ export function ResumesPage({ user, resumes }: ResumesPageProps) {
                     </div>
                   </div>
                   {resume.applicationCount !== undefined && resume.applicationCount > 0 ? (
-                      <Badge variant="secondary" className="shrink-0">
-                          Used in {resume.applicationCount} {resume.applicationCount === 1 ? 'app' : 'apps'}
-                      </Badge>
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              variant="secondary"
+                              size="sm"
+                              className="h-auto shrink-0 rounded-full px-2.5 py-1 text-xs"
+                              onClick={(e) => {
+                                  e.preventDefault();
+                                  e.stopPropagation();
+                                  onFilterByResume(resume.id);
+                              }}
+                            >
+                                Used in {resume.applicationCount} {resume.applicationCount === 1 ? 'app' : 'apps'}
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>Filter applications by this resume</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
                   ) : null}
                 </div>
               </CardHeader>
