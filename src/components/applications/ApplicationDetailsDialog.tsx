@@ -1,4 +1,3 @@
-
 'use client';
 
 import * as React from 'react';
@@ -15,7 +14,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { type Application, type ApplicationStatus, statuses, categories, type ApplicationCategory, type User, applicationTypes, type ApplicationType, workArrangements, type ApplicationWorkArrangement } from '@/lib/types';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { ExternalLink, Trash2, CalendarIcon, CheckCircle2, Plus, FileText, Check, Sparkles } from 'lucide-react';
+import { ExternalLink, Trash2, CalendarIcon, CheckCircle2, Plus, FileText, Check, Sparkles, Loader2 } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -86,6 +85,19 @@ export function ApplicationDetailsDialog({ application, children }: ApplicationD
   
   const [timezones, setTimezones] = React.useState<string[]>([]);
   const isInterviewStage = application.status === 'Interview';
+
+  const wasRecentlyCreated = React.useMemo(() => {
+    if (!application.createdAt) return false;
+    const now = new Date();
+    const createdAt = new Date(application.createdAt);
+    const diffInSeconds = (now.getTime() - createdAt.getTime()) / 1000;
+    return diffInSeconds < 30; // Heuristic: scoring should be done within 30 seconds.
+  }, [application.createdAt]);
+
+  const showResumeScoreLoader =
+    wasRecentlyCreated &&
+    !!application.jobDescription &&
+    (!application.resumeScores || application.resumeScores.length === 0);
 
   React.useEffect(() => {
     // This runs on client only and avoids hydration errors
@@ -748,7 +760,14 @@ export function ApplicationDetailsDialog({ application, children }: ApplicationD
             
             <div className="space-y-2">
               <h3 className="font-semibold">Resume Suggestions</h3>
-              {(application.resumeScores && application.resumeScores.length > 0) ? (
+              {showResumeScoreLoader ? (
+                <div className="flex items-center justify-center rounded-lg border-2 border-dashed p-4 text-center">
+                  <div className="flex items-center gap-2 text-muted-foreground">
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    <span>Getting scores...</span>
+                  </div>
+                </div>
+              ) : (application.resumeScores && application.resumeScores.length > 0) ? (
                 <div className="space-y-2 rounded-lg border p-2">
                   {application.resumeScores
                     .sort((a, b) => b.score - a.score) // Sort by score descending
