@@ -8,6 +8,7 @@ import { eq } from 'drizzle-orm';
 import type { Application, User } from '@/lib/types';
 import { extractResumeText } from '@/ai/flows/extract-resume-text';
 import { scoreResume } from '@/ai/flows/score-resume';
+import { fetchJobDescription } from '@/ai/flows/fetch-job-description';
 
 // This function will be called to score resumes against a job description.
 async function scoreResumesForApplication(applicationId: string, userId: string, jobDescription: string) {
@@ -108,6 +109,57 @@ export async function bulkAddApplications(applicationsData: Array<Omit<Applicati
 
   revalidatePath('/');
 }
+
+export async function bulkAddApplicationsFromUrls(urls: string[]) {
+    const allUsers = await db.select().from(users);
+
+    if (allUsers.length === 0) {
+        throw new Error("No users exist in the system. Please add a user before bulk importing.");
+    }
+
+    const fetchPromises = urls.map(jobUrl => fetchJobDescription({ jobUrl }));
+    const results = await Promise.allSettled(fetchPromises);
+
+    const applicationsToInsert: (typeof applications.$inferInsert)[] = [];
+    const failedUrls: string[] = [];
+
+    results.forEach((result, index) => {
+        if (result.status === 'fulfilled' && result.value) {
+            const data = result.value;
+            for (const user of allUsers) {
+                applicationsToInsert.push({
+                    companyName: data.companyName,
+                    jobTitle: data.jobTitle,
+                    jobUrl: urls[index],
+                    location: data.location,
+                    type: data.type,
+                    category: data.category,
+                    workArrangement: data.workArrangement,
+                    status: 'Yet to Apply',
+                    userId: user.id,
+                    jobDescription: data.jobDescription,
+                    appliedOn: null,
+                });
+            }
+        } else {
+            const reason = result.status === 'rejected' ? result.reason : 'No data returned';
+            console.error(`Failed to fetch job description for URL: ${urls[index]}`, reason);
+            failedUrls.push(urls[index]);
+        }
+    });
+
+    if (applicationsToInsert.length > 0) {
+      await db.insert(applications).values(applicationsToInsert);
+    }
+    
+    revalidatePath('/');
+    
+    return {
+        successCount: urls.length - failedUrls.length,
+        failedCount: failedUrls.length,
+    };
+}
+
 
 export async function updateApplication(appId: string, data: Partial<Application>) {
   const payload: Partial<typeof applications.$inferInsert> = { ...data };
