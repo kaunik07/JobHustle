@@ -26,7 +26,7 @@ const FetchJobDescriptionOutputSchema = z.object({
     companyName: z.string().optional().describe('The name of the company.'),
     jobTitle: z.string().optional().describe('The title of the job position.'),
     location: z.string().optional().describe('The primary location of the job. e.g., "San Francisco, CA" or "Remote".'),
-    jobDescription: z.string().optional().describe('The full job description text extracted from the page.'),
+    jobDescription: z.string().describe('The full job description text extracted from the page. If no description is found, return an empty string.'),
     type: z.enum(applicationTypes).optional().describe(`The type of employment. Must be one of: ${applicationTypes.join(', ')}`),
     category: z.enum(categories).optional().describe(`The most relevant job category. Must be one of: ${categories.join(', ')}`),
     workArrangement: z.enum(workArrangements).optional().describe(`The work arrangement. Must be one of: ${workArrangements.join(', ')}`),
@@ -50,12 +50,12 @@ const prompt = ai.definePrompt({
   - Company Name
   - Job Title
   - Location (e.g., "City, ST", "Remote")
-  - The full Job Description text. It is crucial that you extract the **entire, exact, and un-summarized** job description text from the webpage. Do not alter or shorten it.
+  - The full Job Description text. It is crucial that you extract the **entire, exact, and un-summarized** job description text from the webpage. Do not alter or shorten it. **If you cannot find a job description, you MUST return an empty string for the jobDescription field.**
   - Employment Type
   - Job Category
   - Work Arrangement
 
-  If you cannot find a specific piece of information, you may omit the field from the output. Prioritize accuracy.`,
+  If you cannot find a specific piece of information for other fields (like type, category, etc.), you may omit them, but you must always provide a value for the 'jobDescription' field. Prioritize accuracy.`,
 });
 
 const fetchJobDescriptionFlow = ai.defineFlow(
