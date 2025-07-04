@@ -14,7 +14,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { type Application, type ApplicationStatus, statuses, categories, type ApplicationCategory, type User, applicationTypes, type ApplicationType, workArrangements, type ApplicationWorkArrangement, type Resume } from '@/lib/types';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { ExternalLink, Trash2, CalendarIcon, CheckCircle2, Plus, FileText, Check, Sparkles, Loader2 } from 'lucide-react';
+import { ExternalLink, Trash2, CalendarIcon, CheckCircle2, Plus, FileText, Check, Sparkles, Loader2, RefreshCw } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -37,7 +37,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
-import { updateApplication, deleteApplication } from '@/app/actions';
+import { updateApplication, deleteApplication, reevaluateScores } from '@/app/actions';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 interface ApplicationDetailsDialogProps {
@@ -68,6 +68,7 @@ const workArrangementStyles: Record<ApplicationWorkArrangement, string> = {
 export function ApplicationDetailsDialog({ application, children }: ApplicationDetailsDialogProps) {
   const [open, setOpen] = React.useState(false);
   const { toast } = useToast();
+  const [isReevaluating, setIsReevaluating] = React.useState(false);
   const companyDomain = application.companyName.toLowerCase().replace(/[^a-z0-9]/gi, '') + '.com';
   
   const [currentNotes, setCurrentNotes] = React.useState(application.notes || '');
@@ -385,6 +386,22 @@ export function ApplicationDetailsDialog({ application, children }: ApplicationD
       setOpen(false);
     } catch (error) {
       toast({ variant: 'destructive', title: 'Failed to delete application.' });
+    }
+  };
+  
+  const handleReevaluate = async () => {
+    if (!application.jobDescription) {
+        toast({ variant: 'destructive', title: 'Cannot Re-evaluate', description: 'A job description is required to score resumes.' });
+        return;
+    }
+    setIsReevaluating(true);
+    try {
+      await reevaluateScores(application.id);
+      toast({ title: "Re-evaluation complete", description: "The resume scores have been updated based on the current job description." });
+    } catch (error) {
+      toast({ variant: 'destructive', title: 'Re-evaluation Failed', description: error instanceof Error ? error.message : 'An unknown error occurred.' });
+    } finally {
+      setIsReevaluating(false);
     }
   };
 
@@ -801,7 +818,32 @@ export function ApplicationDetailsDialog({ application, children }: ApplicationD
             </div>
             
             <div className="space-y-2">
-              <h3 className="font-semibold">Resume Suggestions</h3>
+              <div className="flex items-center justify-between">
+                <h3 className="font-semibold">Resume Suggestions</h3>
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={handleReevaluate}
+                        disabled={isReevaluating || !application.jobDescription}
+                        className="h-7 w-7"
+                      >
+                        {isReevaluating ? (
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : (
+                          <RefreshCw className="h-4 w-4" />
+                        )}
+                        <span className="sr-only">Re-evaluate Scores</span>
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>{!application.jobDescription ? "Add a job description to enable evaluation" : "Re-evaluate all resumes"}</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              </div>
               {showResumeScoreLoader ? (
                 <div className="flex items-center justify-center rounded-lg border-2 border-dashed p-4 text-center">
                   <div className="flex items-center gap-2 text-muted-foreground">

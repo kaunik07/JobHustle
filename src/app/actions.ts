@@ -189,6 +189,34 @@ export async function deleteApplication(appId: string) {
   revalidatePath('/');
 }
 
+export async function reevaluateScores(applicationId: string) {
+  try {
+    const [application] = await db
+      .select({
+        jobDescription: applications.jobDescription,
+        userId: applications.userId,
+      })
+      .from(applications)
+      .where(eq(applications.id, applicationId));
+
+    if (!application || !application.jobDescription) {
+      console.warn(`Re-evaluation skipped: Application ${applicationId} has no job description.`);
+      return;
+    }
+
+    // Delete existing scores to ensure a fresh evaluation
+    await db.delete(applicationResumeScores).where(eq(applicationResumeScores.applicationId, applicationId));
+
+    // Reuse the existing scoring logic
+    await scoreResumesForApplication(applicationId, application.userId, application.jobDescription);
+    
+    revalidatePath('/'); // This will trigger a re-fetch on the client
+  } catch (error) {
+    console.error("Error re-evaluating resume scores:", error);
+    // Let the client know something went wrong
+    throw new Error('Failed to re-evaluate resume scores.');
+  }
+}
 
 export async function addUser(data: Omit<User, 'id' | 'avatarUrl'>) {
   await db.insert(users).values({
