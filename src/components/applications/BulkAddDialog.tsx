@@ -20,8 +20,7 @@ import { Input } from '../ui/input';
 import { applicationTypes, categories, workArrangements } from '@/lib/types';
 import { ScrollArea } from '../ui/scroll-area';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Textarea } from '../ui/textarea';
-import { Label } from '../ui/label';
+import { z } from 'zod';
 
 const requiredHeaders = [
   'companyName',
@@ -37,16 +36,23 @@ export function BulkAddDialog() {
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const { toast } = useToast();
 
-  // For CSV
-  const [file, setFile] = React.useState<File | null>(null);
-  const fileInputRef = React.useRef<HTMLInputElement>(null);
+  // For Filled Form CSV
+  const [filledCsvFile, setFilledCsvFile] = React.useState<File | null>(null);
+  const filledCsvFileInputRef = React.useRef<HTMLInputElement>(null);
 
-  // For URLs
-  const [urls, setUrls] = React.useState('');
+  // For URL CSV
+  const [urlCsvFile, setUrlCsvFile] = React.useState<File | null>(null);
+  const urlCsvFileInputRef = React.useRef<HTMLInputElement>(null);
 
-  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFilledCsvFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.files && event.target.files.length > 0) {
-      setFile(event.target.files[0]);
+      setFilledCsvFile(event.target.files[0]);
+    }
+  };
+  
+  const handleUrlCsvFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    if (event.target.files && event.target.files.length > 0) {
+      setUrlCsvFile(event.target.files[0]);
     }
   };
 
@@ -54,22 +60,22 @@ export function BulkAddDialog() {
     event.preventDefault();
   };
 
-  const handleDrop = (event: React.DragEvent<HTMLDivElement>) => {
+  const handleDrop = (setter: React.Dispatch<React.SetStateAction<File | null>>) => (event: React.DragEvent<HTMLDivElement>) => {
     event.preventDefault();
     if (event.dataTransfer.files && event.dataTransfer.files.length > 0) {
-      setFile(event.dataTransfer.files[0]);
+      setter(event.dataTransfer.files[0]);
       event.dataTransfer.clearData();
     }
   };
 
-  const handleCsvSubmit = () => {
-    if (!file) {
+  const handleFilledCsvSubmit = () => {
+    if (!filledCsvFile) {
       toast({ variant: 'destructive', title: 'No file selected' });
       return;
     }
 
     setIsSubmitting(true);
-    Papa.parse(file, {
+    Papa.parse(filledCsvFile, {
       header: true,
       skipEmptyLines: true,
       complete: async (results) => {
@@ -96,9 +102,9 @@ export function BulkAddDialog() {
             title: 'Upload Successful',
             description: `${applications.length} application entries have been processed and added for all users.`,
           });
-          setFile(null);
-          if (fileInputRef.current) {
-            fileInputRef.current.value = '';
+          setFilledCsvFile(null);
+          if (filledCsvFileInputRef.current) {
+            filledCsvFileInputRef.current.value = '';
           }
           setOpen(false);
         } catch (error) {
@@ -123,32 +129,59 @@ export function BulkAddDialog() {
     });
   };
   
-  const handleUrlSubmit = async () => {
-    const urlList = urls.split('\n').map(u => u.trim()).filter(Boolean);
-    if (urlList.length === 0) {
-        toast({ variant: 'destructive', title: 'No URLs provided' });
+  const handleUrlCsvSubmit = async () => {
+    if (!urlCsvFile) {
+        toast({ variant: 'destructive', title: 'No URL CSV file selected' });
         return;
     }
 
     setIsSubmitting(true);
-    try {
-        const result = await bulkAddApplicationsFromUrls(urlList);
-        toast({
-            title: 'Processing Complete',
-            description: `${result.successCount} applications added successfully. ${result.failedCount > 0 ? `${result.failedCount} failed.` : ''}`,
-        });
-        setUrls('');
-        setOpen(false);
-    } catch (error) {
-        const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred.';
-        toast({
-            variant: 'destructive',
-            title: 'URL Processing Failed',
-            description: <pre className="mt-2 w-[340px] rounded-md bg-slate-950 p-4"><code className="text-white whitespace-pre-wrap">{errorMessage}</code></pre>,
-        });
-    } finally {
-        setIsSubmitting(false);
-    }
+    
+    Papa.parse(urlCsvFile, {
+        skipEmptyLines: true,
+        complete: async (results) => {
+            const urlList = (results.data as string[][])
+                .map(row => row[0]) // Get the first column
+                .map(url => url?.trim())
+                .filter(url => url && z.string().url().safeParse(url).success);
+
+            if (urlList.length === 0) {
+                toast({ variant: 'destructive', title: 'No valid URLs found in the CSV file.' });
+                setIsSubmitting(false);
+                return;
+            }
+
+            try {
+                const result = await bulkAddApplicationsFromUrls(urlList);
+                toast({
+                    title: 'Processing Complete',
+                    description: `${result.successCount} applications added successfully. ${result.failedCount > 0 ? `${result.failedCount} failed.` : ''}`,
+                });
+                setUrlCsvFile(null);
+                 if (urlCsvFileInputRef.current) {
+                    urlCsvFileInputRef.current.value = '';
+                }
+                setOpen(false);
+            } catch (error) {
+                const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred.';
+                toast({
+                    variant: 'destructive',
+                    title: 'URL Processing Failed',
+                    description: <pre className="mt-2 w-[340px] rounded-md bg-slate-950 p-4"><code className="text-white whitespace-pre-wrap">{errorMessage}</code></pre>,
+                });
+            } finally {
+                setIsSubmitting(false);
+            }
+        },
+        error: (error) => {
+            toast({
+                variant: 'destructive',
+                title: 'CSV Parsing Error',
+                description: error.message,
+            });
+            setIsSubmitting(false);
+        },
+    });
   };
 
 
@@ -164,39 +197,55 @@ export function BulkAddDialog() {
         <DialogHeader className="p-6 pb-0 flex-shrink-0">
           <DialogTitle>Bulk Add Applications</DialogTitle>
           <DialogDescription>
-            Use AI to add jobs from a list of URLs, or upload a CSV file with application data.
+            Use AI to add jobs from a CSV of URLs, or upload a CSV with pre-filled application data.
           </DialogDescription>
         </DialogHeader>
 
         <Tabs defaultValue="urls" className="flex-1 flex flex-col min-h-0 px-6 pt-4">
             <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger value="urls">From URLs</TabsTrigger>
-                <TabsTrigger value="csv">From CSV</TabsTrigger>
+                <TabsTrigger value="urls">URL CSV</TabsTrigger>
+                <TabsTrigger value="csv">Filled form CSV</TabsTrigger>
             </TabsList>
             
             <TabsContent value="urls" className="flex-1 flex flex-col mt-4 space-y-4">
                 <ScrollArea className="flex-1 pr-4 -mr-4">
                     <div className="space-y-4">
-                        <div className="space-y-2">
-                            <Label htmlFor="urls-textarea">Job Posting URLs</Label>
-                            <Textarea
-                                id="urls-textarea"
-                                placeholder="Paste one URL per line..."
-                                className="min-h-[150px]"
-                                value={urls}
-                                onChange={(e) => setUrls(e.target.value)}
+                        <div
+                          className="relative flex flex-col items-center justify-center w-full p-6 border-2 border-dashed rounded-lg cursor-pointer hover:border-primary"
+                          onDragOver={handleDragOver}
+                          onDrop={handleDrop(setUrlCsvFile)}
+                          onClick={() => urlCsvFileInputRef.current?.click()}
+                        >
+                            <Upload className="w-10 h-10 text-muted-foreground" />
+                            <p className="mt-2 text-sm text-muted-foreground">
+                                <span className="font-semibold text-primary">Click to upload</span> or drag and drop
+                            </p>
+                            <p className="text-xs text-muted-foreground">CSV file with URLs</p>
+                            {urlCsvFile && (
+                                <p className="mt-2 text-sm font-medium text-foreground">
+                                Selected file: {urlCsvFile.name}
+                                </p>
+                            )}
+                            <Input
+                                ref={urlCsvFileInputRef}
+                                type="file"
+                                accept=".csv"
+                                className="hidden"
+                                onChange={handleUrlCsvFileChange}
                             />
                         </div>
                         <div className="space-y-2 text-sm">
                             <h4 className="font-semibold">How it Works</h4>
-                            <p className="text-muted-foreground">The AI will visit each URL, extract job details, and create an application entry for all users with the status "Yet to Apply".</p>
+                            <p className="text-muted-foreground">
+                                Upload a CSV file containing one job posting URL per row in the first column. The AI will visit each URL, extract job details, and create an application entry for all users with the status "Yet to Apply".
+                            </p>
                         </div>
                     </div>
                 </ScrollArea>
                 <DialogFooter className="pt-4 border-t mt-auto">
-                    <Button onClick={handleUrlSubmit} disabled={!urls.trim() || isSubmitting} className="w-full sm:w-auto">
+                    <Button onClick={handleUrlCsvSubmit} disabled={!urlCsvFile || isSubmitting} className="w-full sm:w-auto">
                         {isSubmitting ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Link className="w-4 h-4 mr-2" />}
-                        Add Applications from URLs
+                        Add from URL CSV
                     </Button>
                 </DialogFooter>
             </TabsContent>
@@ -207,26 +256,26 @@ export function BulkAddDialog() {
                         <div
                         className="relative flex flex-col items-center justify-center w-full p-6 border-2 border-dashed rounded-lg cursor-pointer hover:border-primary"
                         onDragOver={handleDragOver}
-                        onDrop={handleDrop}
-                        onClick={() => fileInputRef.current?.click()}
+                        onDrop={handleDrop(setFilledCsvFile)}
+                        onClick={() => filledCsvFileInputRef.current?.click()}
                         >
                             <Upload className="w-10 h-10 text-muted-foreground" />
                             <p className="mt-2 text-sm text-muted-foreground">
                                 <span className="font-semibold text-primary">Click to upload</span> or drag and drop
                             </p>
                             <p className="text-xs text-muted-foreground">CSV up to 10MB</p>
-                            {file && (
+                            {filledCsvFile && (
                                 <p className="mt-2 text-sm font-medium text-foreground">
-                                Selected file: {file.name}
+                                Selected file: {filledCsvFile.name}
                                 </p>
                             )}
                             <Input
-                                ref={fileInputRef}
+                                ref={filledCsvFileInputRef}
                                 id="file-upload"
                                 type="file"
                                 accept=".csv"
                                 className="hidden"
-                                onChange={handleFileChange}
+                                onChange={handleFilledCsvFileChange}
                             />
                         </div>
 
@@ -248,9 +297,9 @@ export function BulkAddDialog() {
                     </div>
                 </ScrollArea>
                 <DialogFooter className="pt-4 border-t mt-auto">
-                    <Button onClick={handleCsvSubmit} disabled={!file || isSubmitting} className="w-full sm:w-auto">
+                    <Button onClick={handleFilledCsvSubmit} disabled={!filledCsvFile || isSubmitting} className="w-full sm:w-auto">
                         {isSubmitting ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Upload className="w-4 h-4 mr-2" />}
-                        Upload and Add Applications
+                        Add from Filled CSV
                     </Button>
                 </DialogFooter>
             </TabsContent>
