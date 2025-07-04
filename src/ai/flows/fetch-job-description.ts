@@ -42,12 +42,12 @@ const prompt = ai.definePrompt({
   name: 'fetchJobDescriptionPrompt',
   input: {schema: FetchJobDescriptionInputSchema},
   output: {schema: FetchJobDescriptionOutputSchema},
-  prompt: `You are an expert AI assistant that extracts structured job posting data from a webpage URL. The URL provided will point to a specific job listing. Your task is to extract information ONLY for that specific job, ignoring any other job listings that might be on the same page (e.g., in a sidebar).
+  prompt: `You are an expert AI assistant that extracts structured job posting data from a webpage URL.
 
   Please visit the following URL and extract the requested information.
   URL: {{jobUrl}}
 
-  Analyze the main content of the page to identify the following details for the primary job posting:
+  Analyze the main content of the page to identify the following details for the job posting:
   - Company Name
   - Job Title: Extract the full, original job title from the page.
   - Summarized Job Title: Create a concise, summarized version of the job title that captures the core role and primary technology or focus. For example, if the full title is "Early in Career Windows Software Engineer, (C#, C++)", the summarized title should be "Software Engineer - Windows".
