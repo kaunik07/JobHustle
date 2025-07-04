@@ -131,7 +131,7 @@ export async function bulkAddApplicationsFromUrls(urls: string[]) {
               for (const user of allUsers) {
                   applicationsToInsert.push({
                       companyName: data.companyName,
-                      jobTitle: data.jobTitle,
+                      jobTitle: data.summarizedJobTitle || data.jobTitle,
                       jobUrl: urls[index],
                       location: data.location,
                       type: data.type,

@@ -107,7 +107,7 @@ export function AddApplicationDialog({ children, users, selectedUserId, allLocat
       const details = await fetchJobDescription({ jobUrl });
       if (details) {
         if(details.companyName) form.setValue('companyName', details.companyName, { shouldValidate: true });
-        if(details.jobTitle) form.setValue('jobTitle', details.jobTitle, { shouldValidate: true });
+        if(details.jobTitle) form.setValue('jobTitle', details.summarizedJobTitle || details.jobTitle, { shouldValidate: true });
         if(details.location) form.setValue('locations', [details.location], { shouldValidate: true });
         if(details.type) form.setValue('type', details.type, { shouldValidate: true });
         if(details.category) form.setValue('category', details.category, { shouldValidate: true });

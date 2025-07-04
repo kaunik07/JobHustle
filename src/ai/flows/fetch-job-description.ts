@@ -24,7 +24,8 @@ export type FetchJobDescriptionInput = z.infer<typeof FetchJobDescriptionInputSc
 
 const FetchJobDescriptionOutputSchema = z.object({
     companyName: z.string().optional().describe('The name of the company.'),
-    jobTitle: z.string().optional().describe('The title of the job position.'),
+    jobTitle: z.string().optional().describe('The full, original title of the job position.'),
+    summarizedJobTitle: z.string().optional().describe('A summarized version of the job title, capturing the core role and primary technology or focus. For example, "Early in Career Windows Software Engineer (C#, C++)" would be summarized as "Software Engineer - Windows".'),
     location: z.string().optional().describe('The primary location of the job. e.g., "San Francisco, CA" or "Remote".'),
     jobDescription: z.string().describe('The full job description text extracted from the page. If no description is found, return an empty string.'),
     type: z.enum(applicationTypes).optional().describe(`The type of employment. Must be one of: ${applicationTypes.join(', ')}`),
@@ -48,7 +49,8 @@ const prompt = ai.definePrompt({
 
   Analyze the content of the page to identify the following details:
   - Company Name
-  - Job Title
+  - Job Title: Extract the full, original job title from the page.
+  - Summarized Job Title: Create a concise, summarized version of the job title that captures the core role and primary technology or focus. For example, if the full title is "Early in Career Windows Software Engineer, (C#, C++)", the summarized title should be "Software Engineer - Windows".
   - Location (e.g., "City, ST", "Remote")
   - The full Job Description text. It is crucial that you extract the **entire, exact, and un-summarized** job description text from the webpage. Do not alter or shorten it. **If you cannot find a job description, you MUST return an empty string for the jobDescription field.**
   - Employment Type
