@@ -168,6 +168,135 @@ export function AllUsersAnalytics({ users, applications }: AllUsersAnalyticsProp
   }, [users, applications]);
 
 
+  const TrendChartCard = (
+    <Card>
+        <CardHeader>
+            <CardTitle>Application Trends</CardTitle>
+            <CardDescription>
+              {isSingleUserView
+                ? 'Daily count of applications added to the board over the last 30 days.'
+                : 'Daily count of applications added to the board by user over the last 30 days.'}
+            </CardDescription>
+        </CardHeader>
+        <CardContent>
+            <ChartContainer config={trendChartConfig} className="h-[300px] w-full">
+                <ResponsiveContainer width="100%" height="100%">
+                    <LineChart data={trendChartData}>
+                        <CartesianGrid vertical={false} />
+                        <XAxis
+                            dataKey="date"
+                            tickLine={false}
+                            axisLine={false}
+                            tickMargin={8}
+                        />
+                        <YAxis
+                            tickLine={false}
+                            axisLine={false}
+                            tickMargin={8}
+                            allowDecimals={false}
+                        />
+                        <ChartTooltip content={<ChartTooltipContent />} />
+                        <ChartLegend content={<ChartLegendContent />} />
+                        {users.map(user => (
+                            <Line
+                                key={user.id}
+                                dataKey={user.id}
+                                type="monotone"
+                                stroke={`var(--color-${user.id})`}
+                                strokeWidth={2}
+                                dot={false}
+                            />
+                        ))}
+                    </LineChart>
+                </ResponsiveContainer>
+            </ChartContainer>
+        </CardContent>
+    </Card>
+  );
+
+  const PerformanceMetricsSection = (
+    <div className="space-y-4">
+      <h3 className="text-xl font-bold tracking-tight">
+        {isSingleUserView ? 'Performance Metrics' : 'User Performance Metrics'}
+      </h3>
+      {users.length > 0 ? (
+        <div className={`grid grid-cols-1 ${!isSingleUserView ? 'md:grid-cols-2' : ''} gap-6`}>
+          {userPerformanceData.map(({ user, stats, hasData }) => (
+            <Card key={user.id} className="bg-card/50">
+              <CardHeader className="p-4">
+                <CardTitle className="text-lg">{`${user.firstName} ${user.lastName}`.trim()}</CardTitle>
+              </CardHeader>
+              <CardContent className="p-4 pt-0">
+                {hasData ? (
+                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+                    <Card className="group relative aspect-square overflow-hidden rounded-lg transition-all duration-300 ease-in-out hover:shadow-xl">
+                      <div className="flex h-full flex-col p-4 transition-all duration-300 group-hover:scale-105">
+                        <div className="flex items-start justify-between">
+                          <p className="text-sm font-medium">OA Conversion</p>
+                          <TrendingUp className="h-4 w-4 text-muted-foreground" />
+                        </div>
+                        <div className="flex flex-1 items-center justify-center">
+                          <p className="text-4xl font-bold">{stats.oaConversion.rate.toFixed(1)}%</p>
+                        </div>
+                      </div>
+                      <div className="absolute inset-0 flex items-center justify-center bg-card/80 p-4 text-center backdrop-blur-sm transition-opacity duration-300 opacity-0 group-hover:opacity-100">
+                        <p className="text-sm text-card-foreground">
+                          {stats.oaConversion.oas} OA from {stats.oaConversion.applied} Applied
+                        </p>
+                      </div>
+                    </Card>
+
+                    <Card className="group relative aspect-square overflow-hidden rounded-lg transition-all duration-300 ease-in-out hover:shadow-xl">
+                      <div className="flex h-full flex-col p-4 transition-all duration-300 group-hover:scale-105">
+                        <div className="flex items-start justify-between">
+                          <p className="text-sm font-medium">Interview Conversion</p>
+                          <Users className="h-4 w-4 text-muted-foreground" />
+                        </div>
+                        <div className="flex flex-1 items-center justify-center">
+                          <p className="text-4xl font-bold">{stats.interviewConversion.rate.toFixed(1)}%</p>
+                        </div>
+                      </div>
+                      <div className="absolute inset-0 flex items-center justify-center bg-card/80 p-4 text-center backdrop-blur-sm transition-opacity duration-300 opacity-0 group-hover:opacity-100">
+                        <p className="text-sm text-card-foreground">
+                          {stats.interviewConversion.interviews} from {stats.interviewConversion.completed} completed OAs
+                        </p>
+                      </div>
+                    </Card>
+                    
+                    <Card className="group relative aspect-square overflow-hidden rounded-lg transition-all duration-300 ease-in-out hover:shadow-xl">
+                      <div className="flex h-full flex-col p-4 transition-all duration-300 group-hover:scale-105">
+                        <div className="flex items-start justify-between">
+                          <p className="text-sm font-medium">Direct Interviews</p>
+                          <Zap className="h-4 w-4 text-muted-foreground" />
+                        </div>
+                        <div className="flex flex-1 items-center justify-center">
+                          <p className="text-4xl font-bold">{stats.directInterviews.count}</p>
+                        </div>
+                      </div>
+                      <div className="absolute inset-0 flex items-center justify-center bg-card/80 p-4 text-center backdrop-blur-sm transition-opacity duration-300 opacity-0 group-hover:opacity-100">
+                        <p className="text-sm text-card-foreground">
+                          Apps that skipped OA
+                        </p>
+                      </div>
+                    </Card>
+                  </div>
+                ) : (
+                  <div className="flex h-full min-h-[160px] items-center justify-center rounded-lg border-2 border-dashed p-4">
+                    <p className="text-center text-sm text-muted-foreground">No performance data yet. Apply to jobs to see stats.</p>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      ) : (
+        <div className="flex h-24 w-full items-center justify-center rounded-lg border-2 border-dashed p-4">
+          <p className="text-sm text-muted-foreground">Add users to see performance metrics.</p>
+        </div>
+      )}
+    </div>
+  );
+
   return (
     <div className="space-y-8">
       <div className="flex items-center gap-2">
@@ -176,202 +305,87 @@ export function AllUsersAnalytics({ users, applications }: AllUsersAnalyticsProp
           {isSingleUserView && singleUser ? `${singleUser.firstName}'s Analytics` : 'All Users Analytics'}
         </h2>
       </div>
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
-        <Card className="flex flex-col">
-          <CardHeader>
-            <CardTitle>Applications to Apply</CardTitle>
-            <CardDescription>
-              {isSingleUserView 
-                ? `A total of ${totalYetToApply} applications are pending.`
-                : `A total of ${totalYetToApply} applications are pending across ${dataByUser.length} user(s).`}
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="flex-1 pb-0">
-            {totalYetToApply > 0 ? (
-              <ChartContainer
-                config={pieChartConfig}
-                className="mx-auto aspect-square max-h-[300px]"
-              >
-                <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
-                    <ChartTooltip
-                      cursor={false}
-                      content={<ChartTooltipContent hideLabel nameKey="userId" />}
-                    />
-                    <Pie
-                      data={dataByUser}
-                      dataKey="count"
-                      nameKey="userId"
-                      innerRadius={60}
-                      strokeWidth={5}
-                      labelLine={false}
-                      label={({ value, cx, cy, midAngle, innerRadius, outerRadius }) => {
-                        const RADIAN = Math.PI / 180;
-                        const radius = innerRadius + (outerRadius - innerRadius) * 0.6;
-                        const x = cx + radius * Math.cos(-midAngle * RADIAN);
-                        const y = cy + radius * Math.sin(-midAngle * RADIAN);
-                        return (
-                          <text
-                            x={x}
-                            y={y}
-                            fill="hsl(var(--primary-foreground))"
-                            textAnchor="middle"
-                            dominantBaseline="middle"
-                            className="text-base font-bold"
-                          >
-                            {value}
-                          </text>
-                        );
-                      }}
+      
+      {isSingleUserView ? (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {TrendChartCard}
+            {PerformanceMetricsSection}
+        </div>
+      ) : (
+        <>
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
+                <Card className="flex flex-col">
+                <CardHeader>
+                    <CardTitle>Applications to Apply</CardTitle>
+                    <CardDescription>
+                        {`A total of ${totalYetToApply} applications are pending across ${dataByUser.length} user(s).`}
+                    </CardDescription>
+                </CardHeader>
+                <CardContent className="flex-1 pb-0">
+                    {totalYetToApply > 0 ? (
+                    <ChartContainer
+                        config={pieChartConfig}
+                        className="mx-auto aspect-square max-h-[300px]"
                     >
-                      {dataByUser.map((entry) => (
-                        <Cell
-                          key={`cell-${entry.userId}`}
-                          fill={pieChartConfig[entry.userId]?.color}
-                          className="stroke-background"
-                        />
-                      ))}
-                    </Pie>
-                    <ChartLegend
-                      content={<ChartLegendContent nameKey="userId" />}
-                      className="-translate-y-2 flex-wrap gap-2 [&>*]:basis-1/4 [&>*]:justify-center"
-                    />
-                  </PieChart>
-                </ResponsiveContainer>
-              </ChartContainer>
-            ) : (
-              <div className="flex h-full min-h-[300px] w-full items-center justify-center rounded-lg border-2 border-dashed p-4">
-                <p className="text-sm text-muted-foreground">No pending applications to analyze.</p>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-        
-        <Card>
-            <CardHeader>
-                <CardTitle>Application Trends</CardTitle>
-                <CardDescription>
-                  {isSingleUserView
-                    ? 'Daily count of applications added to the board over the last 30 days.'
-                    : 'Daily count of applications added to the board by user over the last 30 days.'}
-                </CardDescription>
-            </CardHeader>
-            <CardContent>
-                <ChartContainer config={trendChartConfig} className="h-[300px] w-full">
-                    <ResponsiveContainer width="100%" height="100%">
-                        <LineChart data={trendChartData}>
-                            <CartesianGrid vertical={false} />
-                            <XAxis
-                                dataKey="date"
-                                tickLine={false}
-                                axisLine={false}
-                                tickMargin={8}
+                        <ResponsiveContainer width="100%" height="100%">
+                        <PieChart>
+                            <ChartTooltip
+                            cursor={false}
+                            content={<ChartTooltipContent hideLabel nameKey="userId" />}
                             />
-                            <YAxis
-                                tickLine={false}
-                                axisLine={false}
-                                tickMargin={8}
-                                allowDecimals={false}
-                            />
-                            <ChartTooltip content={<ChartTooltipContent />} />
-                            <ChartLegend content={<ChartLegendContent />} />
-                            {users.map(user => (
-                                <Line
-                                    key={user.id}
-                                    dataKey={user.id}
-                                    type="monotone"
-                                    stroke={`var(--color-${user.id})`}
-                                    strokeWidth={2}
-                                    dot={false}
+                            <Pie
+                            data={dataByUser}
+                            dataKey="count"
+                            nameKey="userId"
+                            innerRadius={60}
+                            strokeWidth={5}
+                            labelLine={false}
+                            label={({ value, cx, cy, midAngle, innerRadius, outerRadius }) => {
+                                const RADIAN = Math.PI / 180;
+                                const radius = innerRadius + (outerRadius - innerRadius) * 0.6;
+                                const x = cx + radius * Math.cos(-midAngle * RADIAN);
+                                const y = cy + radius * Math.sin(-midAngle * RADIAN);
+                                return (
+                                <text
+                                    x={x}
+                                    y={y}
+                                    fill="hsl(var(--primary-foreground))"
+                                    textAnchor="middle"
+                                    dominantBaseline="middle"
+                                    className="text-base font-bold"
+                                >
+                                    {value}
+                                </text>
+                                );
+                            }}
+                            >
+                            {dataByUser.map((entry) => (
+                                <Cell
+                                key={`cell-${entry.userId}`}
+                                fill={pieChartConfig[entry.userId]?.color}
+                                className="stroke-background"
                                 />
                             ))}
-                        </LineChart>
-                    </ResponsiveContainer>
-                </ChartContainer>
-            </CardContent>
-        </Card>
-      </div>
-      
-      <div className="space-y-4">
-        <h3 className="text-xl font-bold tracking-tight">
-          {isSingleUserView ? 'Performance Metrics' : 'User Performance Metrics'}
-        </h3>
-        {users.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {userPerformanceData.map(({ user, stats, hasData }) => (
-              <Card key={user.id} className="bg-card/50">
-                <CardHeader className="p-4">
-                  <CardTitle className="text-lg">{`${user.firstName} ${user.lastName}`.trim()}</CardTitle>
-                </CardHeader>
-                <CardContent className="p-4 pt-0">
-                  {hasData ? (
-                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-                      <Card className="group relative aspect-square overflow-hidden rounded-lg transition-all duration-300 ease-in-out hover:shadow-xl">
-                        <div className="flex h-full flex-col p-4 transition-all duration-300 group-hover:scale-105">
-                          <div className="flex items-start justify-between">
-                            <p className="text-sm font-medium">OA Conversion</p>
-                            <TrendingUp className="h-4 w-4 text-muted-foreground" />
-                          </div>
-                          <div className="flex flex-1 items-center justify-center">
-                            <p className="text-4xl font-bold">{stats.oaConversion.rate.toFixed(1)}%</p>
-                          </div>
-                        </div>
-                        <div className="absolute inset-0 flex items-center justify-center bg-card/80 p-4 text-center backdrop-blur-sm transition-opacity duration-300 opacity-0 group-hover:opacity-100">
-                          <p className="text-sm text-card-foreground">
-                            {stats.oaConversion.oas} OA from {stats.oaConversion.applied} Applied
-                          </p>
-                        </div>
-                      </Card>
-
-                      <Card className="group relative aspect-square overflow-hidden rounded-lg transition-all duration-300 ease-in-out hover:shadow-xl">
-                        <div className="flex h-full flex-col p-4 transition-all duration-300 group-hover:scale-105">
-                          <div className="flex items-start justify-between">
-                            <p className="text-sm font-medium">Interview Conversion</p>
-                            <Users className="h-4 w-4 text-muted-foreground" />
-                          </div>
-                          <div className="flex flex-1 items-center justify-center">
-                            <p className="text-4xl font-bold">{stats.interviewConversion.rate.toFixed(1)}%</p>
-                          </div>
-                        </div>
-                        <div className="absolute inset-0 flex items-center justify-center bg-card/80 p-4 text-center backdrop-blur-sm transition-opacity duration-300 opacity-0 group-hover:opacity-100">
-                          <p className="text-sm text-card-foreground">
-                            {stats.interviewConversion.interviews} from {stats.interviewConversion.completed} completed OAs
-                          </p>
-                        </div>
-                      </Card>
-                      
-                      <Card className="group relative aspect-square overflow-hidden rounded-lg transition-all duration-300 ease-in-out hover:shadow-xl">
-                        <div className="flex h-full flex-col p-4 transition-all duration-300 group-hover:scale-105">
-                          <div className="flex items-start justify-between">
-                            <p className="text-sm font-medium">Direct Interviews</p>
-                            <Zap className="h-4 w-4 text-muted-foreground" />
-                          </div>
-                          <div className="flex flex-1 items-center justify-center">
-                            <p className="text-4xl font-bold">{stats.directInterviews.count}</p>
-                          </div>
-                        </div>
-                        <div className="absolute inset-0 flex items-center justify-center bg-card/80 p-4 text-center backdrop-blur-sm transition-opacity duration-300 opacity-0 group-hover:opacity-100">
-                          <p className="text-sm text-card-foreground">
-                            Apps that skipped OA
-                          </p>
-                        </div>
-                      </Card>
+                            </Pie>
+                            <ChartLegend
+                            content={<ChartLegendContent nameKey="userId" />}
+                            className="-translate-y-2 flex-wrap gap-2 [&>*]:basis-1/4 [&>*]:justify-center"
+                            />
+                        </PieChart>
+                        </ResponsiveContainer>
+                    </ChartContainer>
+                    ) : (
+                    <div className="flex h-full min-h-[300px] w-full items-center justify-center rounded-lg border-2 border-dashed p-4">
+                        <p className="text-sm text-muted-foreground">No pending applications to analyze.</p>
                     </div>
-                  ) : (
-                    <div className="flex h-full min-h-[160px] items-center justify-center rounded-lg border-2 border-dashed p-4">
-                      <p className="text-center text-sm text-muted-foreground">No performance data yet. Apply to jobs to see stats.</p>
-                    </div>
-                  )}
+                    )}
                 </CardContent>
-              </Card>
-            ))}
-          </div>
-        ) : (
-          <div className="flex h-24 w-full items-center justify-center rounded-lg border-2 border-dashed p-4">
-            <p className="text-sm text-muted-foreground">Add users to see performance metrics.</p>
-          </div>
-        )}
-      </div>
+                </Card>
+                {TrendChartCard}
+            </div>
+            {PerformanceMetricsSection}
+        </>
+      )}
     </div>
   );
 }
