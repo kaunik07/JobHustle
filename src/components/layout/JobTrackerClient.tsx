@@ -4,7 +4,7 @@
 import * as React from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Header } from '@/components/layout/Header';
-import type { Application, User, ApplicationType, ApplicationCategory } from '@/lib/types';
+import type { Application, User, Resume } from '@/lib/types';
 import { KanbanBoard } from '@/components/kanban/KanbanBoard';
 import { YetToApplyList } from '@/components/applications/YetToApplyList';
 import { Separator } from '@/components/ui/separator';
@@ -15,10 +15,14 @@ import { kanbanStatuses } from '@/lib/types';
 import { RejectedList } from '../applications/RejectedList';
 import { FilterSidebar } from './FilterSidebar';
 import { AllUsersAnalytics } from '@/components/analytics/AllUsersAnalytics';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { ResumesPage } from '@/components/resumes/ResumesPage';
+
 
 interface JobTrackerClientProps {
     users: User[];
     applications: Application[];
+    resumes: Resume[];
     selectedUserId: string;
     selectedType: string;
     selectedCategory: string;
@@ -28,7 +32,7 @@ interface JobTrackerClientProps {
 }
 
 export function JobTrackerClient({ 
-    users, applications, 
+    users, applications, resumes,
     selectedUserId, selectedType, selectedCategory, selectedLocation, selectedCompany,
     allLocations 
 }: JobTrackerClientProps) {
@@ -110,6 +114,8 @@ export function JobTrackerClient({
   const yetToApplyApplications = filteredApplications.filter(app => app.status === 'Yet to Apply');
   const kanbanApplications = filteredApplications.filter(app => kanbanStatuses.includes(app.status));
   const rejectedApplications = filteredApplications.filter(app => app.status === 'Rejected');
+  
+  const selectedUser = users.find(u => u.id === selectedUserId);
 
   return (
     <div className="flex min-h-screen w-full flex-col">
@@ -131,17 +137,42 @@ export function JobTrackerClient({
           onUserRemoved={handleRemoveUser}
           allLocations={allLocations}
         />
-        <main className="flex-1 p-4 md:p-6 lg:p-8 space-y-6">
-          <AnalyticsOverview applications={filteredApplications} />
-          {selectedUserId === 'all' ? (
-            <AllUsersAnalytics users={users} applications={filteredApplications} />
-          ) : (
-            <YetToApplyList applications={yetToApplyApplications} selectedUserId={selectedUserId} />
-          )}
-          <Separator />
-          <KanbanBoard applications={kanbanApplications} selectedUserId={selectedUserId} />
-          <Separator />
-          <RejectedList applications={rejectedApplications} selectedUserId={selectedUserId} />
+        <main className="flex-1 p-4 md:p-6 lg:p-8">
+            <Tabs defaultValue="board" className="space-y-4">
+                <TabsList className="grid w-full grid-cols-3 max-w-md">
+                    <TabsTrigger value="board">Job Board</TabsTrigger>
+                    <TabsTrigger value="analytics">Analytics</TabsTrigger>
+                    <TabsTrigger value="resumes" disabled={selectedUserId === 'all'}>
+                        My Resumes
+                    </TabsTrigger>
+                </TabsList>
+
+                <TabsContent value="board" className="space-y-6">
+                    <YetToApplyList applications={yetToApplyApplications} selectedUserId={selectedUserId} resumes={resumes} />
+                    <Separator />
+                    <KanbanBoard applications={kanbanApplications} selectedUserId={selectedUserId} resumes={resumes} />
+                    <Separator />
+                    <RejectedList applications={rejectedApplications} selectedUserId={selectedUserId} resumes={resumes} />
+                </TabsContent>
+
+                <TabsContent value="analytics" className="space-y-6">
+                    <AnalyticsOverview applications={filteredApplications} />
+                    <AllUsersAnalytics users={users} applications={filteredApplications} />
+                </TabsContent>
+
+                <TabsContent value="resumes">
+                    {selectedUser ? (
+                        <ResumesPage 
+                            user={selectedUser} 
+                            resumes={resumes} 
+                        />
+                    ) : (
+                        <div className="flex items-center justify-center h-24 rounded-md border-2 border-dashed">
+                            <p className="text-muted-foreground">Select a user to manage their resumes.</p>
+                        </div>
+                    )}
+                </TabsContent>
+            </Tabs>
         </main>
       </div>
     </div>

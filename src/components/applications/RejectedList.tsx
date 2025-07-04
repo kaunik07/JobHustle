@@ -2,15 +2,16 @@
 'use client';
 
 import { KanbanCard } from "@/components/kanban/KanbanCard";
-import type { Application } from "@/lib/types";
+import type { Application, Resume } from "@/lib/types";
 import { XCircle } from "lucide-react";
 
 interface RejectedListProps {
     applications: Application[];
     selectedUserId: string;
+    resumes: Resume[];
 }
 
-export function RejectedList({ applications, selectedUserId }: RejectedListProps) {
+export function RejectedList({ applications, selectedUserId, resumes }: RejectedListProps) {
     return (
         <div className="space-y-4">
             <div className="flex items-center gap-2">
@@ -20,7 +21,7 @@ export function RejectedList({ applications, selectedUserId }: RejectedListProps
             {applications.length > 0 ? (
                  <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                     {applications.map(app => (
-                        <KanbanCard key={app.id} application={app} selectedUserId={selectedUserId} />
+                        <KanbanCard key={app.id} application={app} selectedUserId={selectedUserId} resumes={resumes} />
                     ))}
                 </div>
             ) : (

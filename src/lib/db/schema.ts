@@ -22,6 +22,14 @@ export const users = pgTable('users', {
   avatarUrl: text('avatar_url'),
 });
 
+export const resumes = pgTable('resumes', {
+  id: text('id').$defaultFn(() => createId()).primaryKey(),
+  name: varchar('name', { length: 255 }).notNull(),
+  resumeText: text('resume_text').notNull(),
+  userId: text('user_id').references(() => users.id, { onDelete: 'cascade' }).notNull(),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+});
+
 export const applications = pgTable('applications', {
     id: text('id').$defaultFn(() => createId()).primaryKey(),
     companyName: varchar('company_name', { length: 255 }).notNull(),
@@ -29,13 +37,12 @@ export const applications = pgTable('applications', {
     location: varchar('location', { length: 255 }).notNull(),
     jobUrl: text('job_url').notNull(),
     jobDescription: text('job_description'),
-    resumeUrl: text('resume_url'),
-    resumeText: text('resume_text'),
     type: applicationTypeEnum('type').notNull(),
     category: categoriesEnum('category').notNull(),
     workArrangement: workArrangementEnum('work_arrangement'),
     status: statusesEnum('status').notNull(),
     userId: text('user_id').references(() => users.id, { onDelete: 'cascade' }).notNull(),
+    resumeId: text('resume_id').references(() => resumes.id, { onDelete: 'set null' }),
     notes: text('notes'),
     appliedOn: timestamp('applied_on'),
     oaDueDate: timestamp('oa_due_date'),

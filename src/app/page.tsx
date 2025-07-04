@@ -1,8 +1,8 @@
 
 import { db } from '@/lib/db';
-import { applications as applicationsSchema, users as usersSchema } from '@/lib/db/schema';
+import { applications as applicationsSchema, users as usersSchema, resumes as resumesSchema } from '@/lib/db/schema';
 import { eq, desc, distinct } from 'drizzle-orm';
-import type { Application, User } from '@/lib/types';
+import type { Application, User, Resume } from '@/lib/types';
 import { JobTrackerClient } from '@/components/layout/JobTrackerClient';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { AlertCircle } from 'lucide-react';
@@ -18,7 +18,7 @@ export default async function Home({
 
     if (allUsers.length === 0) {
       // If there are no users, we can show the main screen with a prompt to add one.
-      return <JobTrackerClient users={[]} applications={[]} selectedUserId="all" selectedType="all" selectedCategory="all" selectedLocation="" selectedCompany="" allLocations={suggestedLocations} />;
+      return <JobTrackerClient users={[]} applications={[]} resumes={[]} selectedUserId="all" selectedType="all" selectedCategory="all" selectedLocation="" selectedCompany="" allLocations={suggestedLocations} />;
     }
     
     // Determine the selected user ID
@@ -56,11 +56,17 @@ export default async function Home({
     const dbLocations = locationsResult.map(l => l.location).filter(Boolean) as string[];
     const allLocations = [...new Set([...suggestedLocations, ...dbLocations])];
 
+    let resumesForUser: Resume[] = [];
+    if (selectedUserId !== 'all') {
+      resumesForUser = await db.select().from(resumesSchema).where(eq(resumesSchema.userId, selectedUserId)).orderBy(desc(resumesSchema.createdAt));
+    }
+
 
     return (
       <JobTrackerClient
         users={allUsers}
         applications={applicationsForClient}
+        resumes={resumesForUser}
         selectedUserId={selectedUserId}
         selectedType={selectedType}
         selectedCategory={selectedCategory}

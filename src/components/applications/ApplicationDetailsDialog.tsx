@@ -13,9 +13,9 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { type Application, type ApplicationStatus, statuses, categories, type ApplicationCategory, type User, applicationTypes, type ApplicationType, workArrangements, type ApplicationWorkArrangement } from '@/lib/types';
+import { type Application, type ApplicationStatus, statuses, categories, type ApplicationCategory, type User, applicationTypes, type ApplicationType, workArrangements, type ApplicationWorkArrangement, type Resume } from '@/lib/types';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { ExternalLink, Trash2, CalendarIcon, CheckCircle2, Plus, Upload, Loader2 } from 'lucide-react';
+import { ExternalLink, Trash2, CalendarIcon, CheckCircle2, Plus, FileText } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -38,11 +38,12 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
-import { updateApplication, deleteApplication, extractAndSaveResume, clearResume } from '@/app/actions';
+import { updateApplication, deleteApplication } from '@/app/actions';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 interface ApplicationDetailsDialogProps {
   application: Application;
+  resumes: Resume[];
   children: React.ReactNode;
 }
 
@@ -66,7 +67,7 @@ const workArrangementStyles: Record<ApplicationWorkArrangement, string> = {
 };
 
 
-export function ApplicationDetailsDialog({ application, children }: ApplicationDetailsDialogProps) {
+export function ApplicationDetailsDialog({ application, resumes, children }: ApplicationDetailsDialogProps) {
   const [open, setOpen] = React.useState(false);
   const { toast } = useToast();
   const companyDomain = application.companyName.toLowerCase().replace(/[^a-z0-9]/gi, '') + '.com';
@@ -76,7 +77,6 @@ export function ApplicationDetailsDialog({ application, children }: ApplicationD
   const [currentCompanyName, setCurrentCompanyName] = React.useState(application.companyName);
   const [currentLocation, setCurrentLocation] = React.useState(application.location);
   const [currentOaSkipped, setCurrentOaSkipped] = React.useState(application.oaSkipped);
-  const [isUploading, setIsUploading] = React.useState(false);
 
   // State for OA date/time
   const [oaDueTime, setOaDueTime] = React.useState('23:59');
@@ -87,6 +87,10 @@ export function ApplicationDetailsDialog({ application, children }: ApplicationD
   
   const [timezones, setTimezones] = React.useState<string[]>([]);
   const isInterviewStage = application.status === 'Interview';
+  
+  const selectedResume = React.useMemo(() => {
+    return resumes.find(r => r.id === application.resumeId);
+  }, [resumes, application.resumeId]);
 
   React.useEffect(() => {
     // This runs on client only and avoids hydration errors
@@ -245,6 +249,14 @@ export function ApplicationDetailsDialog({ application, children }: ApplicationD
       toast({ title: `Work arrangement changed to ${newWorkArrangement}.` });
     }
   };
+  
+  const handleResumeChange = async (newResumeId: string) => {
+    const resumeIdToUpdate = newResumeId === "none" ? null : newResumeId;
+    if (await handleUpdate({ resumeId: resumeIdToUpdate })) {
+      const resumeName = resumes.find(r => r.id === newResumeId)?.name || "None";
+      toast({ title: `Resume updated to "${resumeName}".` });
+    }
+  };
 
   const handleAppliedOnChange = async (date: Date | undefined) => {
     if (await handleUpdate({ appliedOn: date })) {
@@ -368,48 +380,6 @@ export function ApplicationDetailsDialog({ application, children }: ApplicationD
   }
 
   const showOaSkipToggle = !['Yet to Apply', 'OA'].includes(application.status);
-
-  const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-
-    if (file.type !== 'application/pdf') {
-        toast({ variant: 'destructive', title: 'Invalid file type. Please upload a PDF.' });
-        return;
-    }
-
-    if (file.size > 5 * 1024 * 1024) {
-        toast({ variant: 'destructive', title: 'File is too large. Please upload a PDF under 5MB.' });
-        return;
-    }
-
-    setIsUploading(true);
-    try {
-        const resumeDataUri = await new Promise<string>((resolve, reject) => {
-            const reader = new FileReader();
-            reader.readAsDataURL(file);
-            reader.onload = () => resolve(reader.result as string);
-            reader.onerror = (error) => reject(error);
-        });
-        await extractAndSaveResume(application.id, resumeDataUri);
-        toast({ title: 'Resume uploaded and text extracted.' });
-    } catch (error) {
-        toast({ variant: 'destructive', title: 'Upload failed. Please try again.' });
-    } finally {
-        setIsUploading(false);
-        event.target.value = '';
-    }
-  };
-
-  const handleClearResume = async () => {
-    try {
-      await clearResume(application.id);
-      toast({ title: 'Resume cleared.' });
-    } catch (error) {
-       toast({ variant: 'destructive', title: 'Failed to clear resume.' });
-    }
-  };
-
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -781,45 +751,46 @@ export function ApplicationDetailsDialog({ application, children }: ApplicationD
                 />
             </div>
             
-            <div className="space-y-2">
-              <h3 className="font-semibold">Resume</h3>
-              {application.resumeText ? (
-                  <div className="space-y-2">
-                      <ScrollArea className="h-48 rounded-md border p-4">
-                          <p className="text-sm text-muted-foreground whitespace-pre-wrap">
-                              {application.resumeText}
-                          </p>
-                      </ScrollArea>
-                      <Button onClick={handleClearResume} variant="destructive" size="sm">
-                          <Trash2 className="mr-2 h-4 w-4" /> Clear Resume
-                      </Button>
-                  </div>
-              ) : (
-                  <div>
-                      <input
-                          id="resume-upload"
-                          type="file"
-                          accept="application/pdf"
-                          onChange={handleFileChange}
-                          className="hidden"
-                          disabled={isUploading}
-                      />
-                      <Button asChild>
-                          <label htmlFor="resume-upload" className={cn(isUploading && 'cursor-not-allowed opacity-50')}>
-                              {isUploading ? (
-                                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                              ) : (
-                                  <Upload className="mr-2 h-4 w-4" />
-                              )}
-                              Upload PDF
-                          </label>
-                      </Button>
-                      <p className="text-sm text-muted-foreground mt-2">
-                          Upload a PDF to extract its text content for AI analysis.
-                      </p>
-                  </div>
-              )}
+             <div className="space-y-2">
+                <h3 className="font-semibold">Attached Resume</h3>
+                <div className="grid grid-cols-[1fr_auto] gap-4 items-center">
+                    <Select value={application.resumeId || "none"} onValueChange={handleResumeChange} disabled={resumes.length === 0}>
+                        <SelectTrigger>
+                            <SelectValue placeholder="Select a resume" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="none">
+                                <span className="text-muted-foreground">No Resume Attached</span>
+                            </SelectItem>
+                            {resumes.map(resume => (
+                                <SelectItem key={resume.id} value={resume.id}>{resume.name}</SelectItem>
+                            ))}
+                        </SelectContent>
+                    </Select>
+                    {selectedResume && (
+                        <Popover>
+                            <PopoverTrigger asChild>
+                                <Button variant="outline" size="sm">
+                                    <FileText className="mr-2 h-4 w-4" /> View
+                                </Button>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-96" align="end">
+                                <div className="space-y-2">
+                                    <h4 className="font-medium leading-none">{selectedResume.name}</h4>
+                                    <p className="text-sm text-muted-foreground">
+                                        Uploaded {format(new Date(selectedResume.createdAt), "PPP")}
+                                    </p>
+                                    <ScrollArea className="h-48 mt-2 rounded-md border p-2">
+                                        <p className="text-xs text-muted-foreground whitespace-pre-wrap">{selectedResume.resumeText}</p>
+                                    </ScrollArea>
+                                </div>
+                            </PopoverContent>
+                        </Popover>
+                    )}
+                </div>
+                {resumes.length === 0 && <p className="text-xs text-muted-foreground">No resumes have been uploaded for this user. You can add one in the "My Resumes" tab.</p>}
             </div>
+
 
             {isInterviewStage && (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4 pt-4 border-t">

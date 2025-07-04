@@ -1,7 +1,7 @@
 
 'use client';
 
-import { Application } from '@/lib/types';
+import { Application, Resume } from '@/lib/types';
 import { KanbanCard } from './KanbanCard';
 import { ScrollArea } from '@/components/ui/scroll-area';
 
@@ -9,9 +9,10 @@ interface KanbanColumnProps {
   title: string;
   applications: Application[];
   selectedUserId: string;
+  resumes: Resume[];
 }
 
-export function KanbanColumn({ title, applications, selectedUserId }: KanbanColumnProps) {
+export function KanbanColumn({ title, applications, selectedUserId, resumes }: KanbanColumnProps) {
   return (
     <div className="flex h-full flex-col rounded-lg bg-secondary shadow-sm">
       <div className="flex items-center justify-between p-4">
@@ -23,7 +24,7 @@ export function KanbanColumn({ title, applications, selectedUserId }: KanbanColu
       <ScrollArea className="flex-1">
         <div className="flex flex-col gap-3 p-4 pt-0">
           {applications.map(app => (
-            <KanbanCard key={app.id} application={app} selectedUserId={selectedUserId} />
+            <KanbanCard key={app.id} application={app} selectedUserId={selectedUserId} resumes={resumes} />
           ))}
            {applications.length === 0 && (
             <div className="flex h-24 items-center justify-center rounded-md border-2 border-dashed border-border text-sm text-muted-foreground">

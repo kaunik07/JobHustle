@@ -3,12 +3,12 @@
 
 import { revalidatePath } from 'next/cache';
 import { db } from '@/lib/db';
-import { applications, users } from '@/lib/db/schema';
+import { applications, users, resumes } from '@/lib/db/schema';
 import { eq } from 'drizzle-orm';
 import type { Application, User } from '@/lib/types';
 import { extractResumeText } from '@/ai/flows/extract-resume-text';
 
-export async function addApplication(data: Omit<Application, 'id' | 'user' | 'resumeUrl' | 'appliedOn' | 'oaDueDate' | 'createdAt' | 'location'> & { locations: string[] }) {
+export async function addApplication(data: Omit<Application, 'id' | 'user' | 'appliedOn' | 'oaDueDate' | 'createdAt' | 'location'> & { locations: string[] }) {
   const usersToApplyFor = data.userId === 'all' 
     ? await db.select().from(users) 
     : await db.select().from(users).where(eq(users.id, data.userId));
@@ -34,7 +34,7 @@ export async function addApplication(data: Omit<Application, 'id' | 'user' | 're
   revalidatePath('/');
 }
 
-export async function bulkAddApplications(applicationsData: Array<Omit<Application, 'id' | 'user' | 'resumeUrl' | 'appliedOn' | 'oaDueDate' | 'createdAt' | 'userId' | 'status'>>) {
+export async function bulkAddApplications(applicationsData: Array<Omit<Application, 'id' | 'user' | 'appliedOn' | 'oaDueDate' | 'createdAt' | 'userId' | 'status'>>) {
   const allUsers = await db.select().from(users);
   
   if (allUsers.length === 0) {
@@ -104,14 +104,17 @@ export async function deleteUser(userId: string) {
     revalidatePath('/');
 }
 
-export async function extractAndSaveResume(appId: string, resumeDataUri: string) {
+export async function addResume(name: string, resumeDataUri: string, userId: string) {
   const { resumeText } = await extractResumeText({ resumeDataUri });
-  // Also clear the old resumeUrl field to avoid confusion
-  await db.update(applications).set({ resumeText, resumeUrl: null }).where(eq(applications.id, appId));
+  await db.insert(resumes).values({
+    name,
+    resumeText,
+    userId,
+  });
   revalidatePath('/');
 }
 
-export async function clearResume(appId: string) {
-  await db.update(applications).set({ resumeText: null, resumeUrl: null }).where(eq(applications.id, appId));
+export async function deleteResume(resumeId: string) {
+  await db.delete(resumes).where(eq(resumes.id, resumeId));
   revalidatePath('/');
 }

@@ -4,7 +4,7 @@
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import type { Application, ApplicationCategory, ApplicationType, ApplicationWorkArrangement } from '@/lib/types';
+import type { Application, ApplicationCategory, ApplicationType, ApplicationWorkArrangement, Resume } from '@/lib/types';
 import { ApplicationDetailsDialog } from '@/components/applications/ApplicationDetailsDialog';
 import { format, formatDistanceToNow } from 'date-fns';
 import { Clock, MapPin, CheckCircle2 } from 'lucide-react';
@@ -17,6 +17,7 @@ import { updateApplication } from '@/app/actions';
 interface KanbanCardProps {
   application: Application;
   selectedUserId: string;
+  resumes: Resume[];
 }
 
 const categoryStyles: Record<ApplicationCategory, string> = {
@@ -38,7 +39,7 @@ const workArrangementStyles: Record<ApplicationWorkArrangement, string> = {
   'Hybrid': 'bg-chart-4/20 text-chart-4 border-chart-4/30',
 };
 
-export function KanbanCard({ application, selectedUserId }: KanbanCardProps) {
+export function KanbanCard({ application, selectedUserId, resumes }: KanbanCardProps) {
   const companyDomain = application.companyName.toLowerCase().replace(/[^a-z0-9]/gi, '') + '.com';
   const { user } = application;
   const { toast } = useToast();
@@ -112,7 +113,7 @@ export function KanbanCard({ application, selectedUserId }: KanbanCardProps) {
   }
 
   return (
-    <ApplicationDetailsDialog application={application}>
+    <ApplicationDetailsDialog application={application} resumes={resumes}>
       <Card className="cursor-pointer transition-shadow hover:shadow-lg relative">
         {selectedUserId === 'all' && user && (
           <TooltipProvider>

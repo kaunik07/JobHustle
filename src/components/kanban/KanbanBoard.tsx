@@ -4,14 +4,15 @@
 import * as React from 'react';
 import { useMemo } from 'react';
 import { KanbanColumn } from './KanbanColumn';
-import { Application, kanbanStatuses } from '@/lib/types';
+import { Application, kanbanStatuses, Resume } from '@/lib/types';
 
 interface KanbanBoardProps {
   applications: Application[];
   selectedUserId: string;
+  resumes: Resume[];
 }
 
-export function KanbanBoard({ applications, selectedUserId }: KanbanBoardProps) {
+export function KanbanBoard({ applications, selectedUserId, resumes }: KanbanBoardProps) {
 
   const columns = useMemo(() => {
     return kanbanStatuses.map(status => ({
@@ -31,6 +32,7 @@ export function KanbanBoard({ applications, selectedUserId }: KanbanBoardProps) 
               title={column.title} 
               applications={column.applications}
               selectedUserId={selectedUserId}
+              resumes={resumes}
             />
           ))}
         </div>

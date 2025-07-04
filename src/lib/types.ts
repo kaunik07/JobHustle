@@ -1,4 +1,5 @@
 
+
 export type ApplicationStatus = 'Yet to Apply' | 'Applied' | 'OA' | 'Interview' | 'Offer' | 'Rejected';
 
 export const statuses: ApplicationStatus[] = ['Yet to Apply', 'Applied', 'OA', 'Interview', 'Offer', 'Rejected'];
@@ -78,6 +79,14 @@ export interface User {
   avatarUrl: string | null;
 }
 
+export interface Resume {
+  id: string;
+  name: string;
+  resumeText: string;
+  userId: string;
+  createdAt: Date;
+}
+
 export interface Application {
   id:string;
   companyName: string;
@@ -85,14 +94,13 @@ export interface Application {
   location: string;
   jobUrl: string;
   jobDescription?: string | null;
-  resumeUrl?: string | null;
-  resumeText?: string | null;
   type: ApplicationType;
   category: ApplicationCategory;
   workArrangement?: ApplicationWorkArrangement | null;
   status: ApplicationStatus;
   userId: string;
   user?: User;
+  resumeId?: string | null;
   notes?: string | null;
   appliedOn?: Date | null;
   oaDueDate?: Date | null;
