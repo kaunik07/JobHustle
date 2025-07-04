@@ -33,7 +33,7 @@ const prompt = ai.definePrompt({
   name: 'scoreResumePrompt',
   input: {schema: ScoreResumeInputSchema},
   output: {schema: ScoreResumeOutputSchema},
-  model: 'googleai/gemini-1.5-pro-latest',
+  model: 'googleai/gemini-2.0-flash',
   prompt: `You are an expert career coach and hiring manager. Your task is to analyze a resume against a job description and provide a match score.
 
 Analyze the provided resume text and job description.
