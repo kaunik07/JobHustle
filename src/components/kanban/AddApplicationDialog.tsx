@@ -33,9 +33,10 @@ import {
 } from '@/components/ui/select';
 import { User, categories, statuses, applicationTypes, suggestedLocations, workArrangements } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, ChevronsUpDown, Check, X, Plus } from 'lucide-react';
+import { Loader2, ChevronsUpDown, Check, X, Plus, Bot } from 'lucide-react';
 import { Textarea } from '@/components/ui/textarea';
 import { addApplication as addApplicationAction } from '@/app/actions';
+import { fetchJobDescription } from '@/ai/flows/fetch-job-description';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
 import { cn } from '@/lib/utils';
@@ -67,6 +68,7 @@ interface AddApplicationDialogProps {
 export function AddApplicationDialog({ children, users, selectedUserId, allLocations }: AddApplicationDialogProps) {
   const [open, setOpen] = React.useState(false);
   const [isSubmitting, setIsSubmitting] = React.useState(false);
+  const [isFetchingDescription, setIsFetchingDescription] = React.useState(false);
   const [locationsPopoverOpen, setLocationsPopoverOpen] = React.useState(false);
   const [inputValue, setInputValue] = React.useState('');
   const { toast } = useToast();
@@ -91,6 +93,31 @@ export function AddApplicationDialog({ children, users, selectedUserId, allLocat
   React.useEffect(() => {
     form.setValue('userId', selectedUserId);
   }, [selectedUserId, form]);
+
+  const handleFetchDescription = async () => {
+    const jobUrl = form.getValues('jobUrl');
+    const urlCheck = z.string().url().safeParse(jobUrl);
+    if (!urlCheck.success) {
+      form.setError('jobUrl', { message: 'Please enter a valid URL to fetch.' });
+      return;
+    }
+
+    setIsFetchingDescription(true);
+    try {
+      const { jobDescription } = await fetchJobDescription({ jobUrl });
+      if (jobDescription) {
+        form.setValue('jobDescription', jobDescription, { shouldValidate: true });
+        toast({ title: 'Success', description: 'Job description has been fetched.' });
+      } else {
+        toast({ variant: 'destructive', title: 'Could not fetch description', description: 'The AI could not extract a job description from the URL. Please copy and paste it manually.' });
+      }
+    } catch (error) {
+      console.error('Error fetching job description:', error);
+      toast({ variant: 'destructive', title: 'Fetch Error', description: 'An error occurred while fetching the job description.' });
+    } finally {
+      setIsFetchingDescription(false);
+    }
+  };
 
   async function onSubmit(values: FormValues) {
     setIsSubmitting(true);
@@ -297,9 +324,25 @@ export function AddApplicationDialog({ children, users, selectedUserId, allLocat
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Job Posting URL</FormLabel>
-                    <FormControl>
-                      <Input placeholder="https://example.com/job/123" {...field} />
-                    </FormControl>
+                    <div className="flex items-center gap-2">
+                        <FormControl>
+                            <Input placeholder="https://example.com/job/123" {...field} />
+                        </FormControl>
+                        <Button
+                            type="button"
+                            variant="outline"
+                            size="icon"
+                            onClick={handleFetchDescription}
+                            disabled={isFetchingDescription}
+                            title="Fetch Job Description"
+                        >
+                            {isFetchingDescription ? (
+                                <Loader2 className="h-4 w-4 animate-spin" />
+                            ) : (
+                                <Bot className="h-4 w-4" />
+                            )}
+                        </Button>
+                    </div>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -312,7 +355,7 @@ export function AddApplicationDialog({ children, users, selectedUserId, allLocat
                     <FormLabel>Job Description</FormLabel>
                     <FormControl>
                       <Textarea
-                        placeholder="Paste the job description here..."
+                        placeholder="Paste the job description here, or fetch it from the URL above."
                         className="min-h-[120px]"
                         {...field}
                       />
