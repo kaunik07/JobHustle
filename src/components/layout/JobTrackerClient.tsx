@@ -15,8 +15,8 @@ import { kanbanStatuses } from '@/lib/types';
 import { RejectedList } from '../applications/RejectedList';
 import { FilterSidebar } from './FilterSidebar';
 import { AllUsersAnalytics } from '@/components/analytics/AllUsersAnalytics';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { ResumesPage } from '@/components/resumes/ResumesPage';
+import { cn } from '@/lib/utils';
 
 
 interface JobTrackerClientProps {
@@ -40,6 +40,8 @@ export function JobTrackerClient({
   const searchParams = useSearchParams();
   const { toast } = useToast();
 
+  const [sidebarOpen, setSidebarOpen] = React.useState(true);
+  const [view, setView] = React.useState<'board' | 'resumes'>('board');
   const [locationQuery, setLocationQuery] = React.useState(selectedLocation);
   const [companyQuery, setCompanyQuery] = React.useState(selectedCompany);
   
@@ -75,6 +77,9 @@ export function JobTrackerClient({
 
 
   const handleUserChange = (userId: string) => {
+    if (userId === 'all') {
+      setView('board');
+    }
     updateQuery('user', userId);
   };
   
@@ -118,8 +123,13 @@ export function JobTrackerClient({
   const selectedUser = users.find(u => u.id === selectedUserId);
 
   return (
-    <div className="flex min-h-screen w-full flex-col">
-       <FilterSidebar 
+    <div className="min-h-screen w-full bg-muted/40">
+      <FilterSidebar 
+        isOpen={sidebarOpen}
+        onToggle={() => setSidebarOpen(p => !p)}
+        currentView={view}
+        onViewChange={setView}
+        selectedUserId={selectedUserId}
         selectedType={selectedType}
         onTypeChange={handleTypeChange}
         selectedCategory={selectedCategory}
@@ -129,7 +139,7 @@ export function JobTrackerClient({
         companyQuery={companyQuery}
         onCompanyChange={setCompanyQuery}
       />
-      <div className="pl-16">
+      <div className={cn("flex flex-col transition-all duration-300", sidebarOpen ? "md:pl-64" : "md:pl-16")}>
         <Header 
           users={users} 
           selectedUser={selectedUserId} 
@@ -138,41 +148,32 @@ export function JobTrackerClient({
           allLocations={allLocations}
         />
         <main className="flex-1 p-4 md:p-6 lg:p-8">
-            <Tabs defaultValue="board" className="space-y-4">
-                <TabsList className="grid w-full grid-cols-3 max-w-md">
-                    <TabsTrigger value="board">Job Board</TabsTrigger>
-                    <TabsTrigger value="analytics">Analytics</TabsTrigger>
-                    <TabsTrigger value="resumes" disabled={selectedUserId === 'all'}>
-                        My Resumes
-                    </TabsTrigger>
-                </TabsList>
-
-                <TabsContent value="board" className="space-y-6">
-                    <YetToApplyList applications={yetToApplyApplications} selectedUserId={selectedUserId} resumes={resumes} />
-                    <Separator />
-                    <KanbanBoard applications={kanbanApplications} selectedUserId={selectedUserId} resumes={resumes} />
-                    <Separator />
-                    <RejectedList applications={rejectedApplications} selectedUserId={selectedUserId} resumes={resumes} />
-                </TabsContent>
-
-                <TabsContent value="analytics" className="space-y-6">
-                    <AnalyticsOverview applications={filteredApplications} />
-                    <AllUsersAnalytics users={users} applications={filteredApplications} />
-                </TabsContent>
-
-                <TabsContent value="resumes">
-                    {selectedUser ? (
-                        <ResumesPage 
-                            user={selectedUser} 
-                            resumes={resumes} 
-                        />
-                    ) : (
-                        <div className="flex items-center justify-center h-24 rounded-md border-2 border-dashed">
-                            <p className="text-muted-foreground">Select a user to manage their resumes.</p>
-                        </div>
-                    )}
-                </TabsContent>
-            </Tabs>
+            {view === 'board' ? (
+              <div className="space-y-6">
+                <AnalyticsOverview applications={filteredApplications} />
+                <Separator />
+                <AllUsersAnalytics users={users} applications={filteredApplications} />
+                <Separator />
+                <YetToApplyList applications={yetToApplyApplications} selectedUserId={selectedUserId} resumes={resumes} />
+                <Separator />
+                <KanbanBoard applications={kanbanApplications} selectedUserId={selectedUserId} resumes={resumes} />
+                <Separator />
+                <RejectedList applications={rejectedApplications} selectedUserId={selectedUserId} resumes={resumes} />
+              </div>
+            ) : (
+                <>
+                  {selectedUser ? (
+                      <ResumesPage 
+                          user={selectedUser} 
+                          resumes={resumes} 
+                      />
+                  ) : (
+                      <div className="flex items-center justify-center h-24 rounded-md border-2 border-dashed">
+                          <p className="text-muted-foreground">Select a user to manage their resumes.</p>
+                      </div>
+                  )}
+                </>
+            )}
         </main>
       </div>
     </div>

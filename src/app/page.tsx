@@ -59,6 +59,10 @@ export default async function Home({
     let resumesForUser: Resume[] = [];
     if (selectedUserId !== 'all') {
       resumesForUser = await db.select().from(resumesSchema).where(eq(resumesSchema.userId, selectedUserId)).orderBy(desc(resumesSchema.createdAt));
+    } else {
+      // If 'all' users are selected, we can fetch all resumes to have them ready if the user switches,
+      // but the Resumes tab will be disabled anyway. So fetching them for the selected user is sufficient.
+      // Or we can decide not to fetch any. Let's stick to fetching only for a specific user.
     }
 
 
