@@ -852,38 +852,32 @@ export function ApplicationDetailsDialog({ application, children }: ApplicationD
                   </div>
                 </div>
               ) : (application.resumeScores && application.resumeScores.length > 0) ? (
-                <div className="space-y-2 rounded-lg border p-2">
+                <div className="space-y-1 rounded-lg border p-1">
                   {application.resumeScores
                     .sort((a, b) => b.score - a.score) // Sort by score descending
                     .map((score) => (
-                    <div key={score.id} className="flex items-center justify-between rounded-md p-2 hover:bg-secondary">
-                      <div className="flex items-center gap-3">
-                        <FileText className="h-5 w-5 text-muted-foreground" />
-                        <div className="text-sm font-medium">{score.resume.name}</div>
-                        <TooltipProvider>
-                          <Tooltip>
-                            <TooltipTrigger>
-                              <Badge variant="secondary" className="flex items-center gap-1.5 cursor-default">
-                                <Sparkles className="h-3 w-3 text-yellow-400" />
-                                {score.score}
-                              </Badge>
-                            </TooltipTrigger>
-                            <TooltipContent>
-                              <p className="max-w-xs">{score.summary}</p>
-                            </TooltipContent>
-                          </Tooltip>
-                        </TooltipProvider>
-                      </div>
-                      {application.resumeId === score.resumeId ? (
-                        <Button variant="outline" size="sm" disabled>
-                          <Check className="mr-2 h-4 w-4" />
-                          Attached
-                        </Button>
-                      ) : (
-                        <Button variant="outline" size="sm" onClick={() => handleResumeChange(score.resumeId)}>
-                          Attach
-                        </Button>
-                      )}
+                    <div key={score.id} className="flex flex-col gap-1 rounded-md p-2 hover:bg-secondary">
+                        <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-3">
+                                <FileText className="h-5 w-5 text-muted-foreground" />
+                                <div className="text-sm font-medium">{score.resume.name}</div>
+                                <Badge variant="secondary" className="flex items-center gap-1.5 cursor-default">
+                                    <Sparkles className="h-3 w-3 text-yellow-400" />
+                                    {score.score}
+                                </Badge>
+                            </div>
+                            {application.resumeId === score.resumeId ? (
+                            <Button variant="outline" size="sm" disabled>
+                                <Check className="mr-2 h-4 w-4" />
+                                Attached
+                            </Button>
+                            ) : (
+                            <Button variant="outline" size="sm" onClick={() => handleResumeChange(score.resumeId)}>
+                                Attach
+                            </Button>
+                            )}
+                        </div>
+                        <p className="pl-8 text-xs text-muted-foreground">{score.summary}</p>
                     </div>
                   ))}
                 </div>
