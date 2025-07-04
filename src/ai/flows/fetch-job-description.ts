@@ -31,6 +31,7 @@ const FetchJobDescriptionOutputSchema = z.object({
     type: z.enum(applicationTypes).optional().describe(`The type of employment. Must be one of: ${applicationTypes.join(', ')}`),
     category: z.enum(categories).optional().describe(`The most relevant job category. Must be one of: ${categories.join(', ')}`),
     workArrangement: z.enum(workArrangements).optional().describe(`The work arrangement. Must be one of: ${workArrangements.join(', ')}`),
+    isUsCitizenOnly: z.boolean().optional().describe('Whether the job is restricted to US citizens only. This is often indicated by phrases like "US Citizenship required", "must be a US Citizen", or mentions of security clearance requirements.'),
 });
 export type FetchJobDescriptionOutput = z.infer<typeof FetchJobDescriptionOutputSchema>;
 
@@ -44,7 +45,7 @@ const prompt = ai.definePrompt({
   output: {schema: FetchJobDescriptionOutputSchema},
   prompt: `You are an expert AI assistant that extracts structured job posting data from a webpage URL.
 
-  Please visit the following URL and extract the requested information.
+  Please visit the following URL and extract the requested information. Analyze the main content of the page to identify the following details for the job posting. Do not get distracted by other content on the page like "similar jobs".
   URL: {{jobUrl}}
 
   Analyze the main content of the page to identify the following details for the job posting:
@@ -56,6 +57,7 @@ const prompt = ai.definePrompt({
   - Employment Type
   - Job Category
   - Work Arrangement
+  - US Citizen Only: Check the job description for any requirements related to US citizenship (e.g., "US Citizenship required", "must be a US citizen", "requires security clearance"). Set the isUsCitizenOnly flag to true if such a requirement is found.
 
   For all fields other than 'jobDescription', you may omit them if the information is not present. However, you must always provide a value for the 'jobDescription' field. Prioritize accuracy.`,
 });

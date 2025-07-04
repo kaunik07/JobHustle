@@ -18,6 +18,7 @@ import {
 import {
   Form,
   FormControl,
+  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -41,6 +42,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
+import { Switch } from '../ui/switch';
 
 const formSchema = z.object({
   companyName: z.string().min(2, 'Company name is required'),
@@ -54,6 +56,7 @@ const formSchema = z.object({
   status: z.enum(statuses),
   userId: z.string().min(1, 'User is required'),
   notes: z.string().optional(),
+  isUsCitizenOnly: z.boolean().default(false),
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -87,6 +90,7 @@ export function AddApplicationDialog({ children, users, selectedUserId, allLocat
       status: 'Yet to Apply',
       userId: selectedUserId,
       notes: '',
+      isUsCitizenOnly: false,
     },
   });
 
@@ -113,6 +117,7 @@ export function AddApplicationDialog({ children, users, selectedUserId, allLocat
         if(details.category) form.setValue('category', details.category, { shouldValidate: true });
         if(details.workArrangement) form.setValue('workArrangement', details.workArrangement, { shouldValidate: true });
         if(details.jobDescription) form.setValue('jobDescription', details.jobDescription, { shouldValidate: true });
+        if(details.isUsCitizenOnly !== undefined) form.setValue('isUsCitizenOnly', details.isUsCitizenOnly, { shouldValidate: true });
 
         toast({ title: 'Success', description: 'Job details have been auto-filled.' });
       } else {
@@ -148,6 +153,7 @@ export function AddApplicationDialog({ children, users, selectedUserId, allLocat
         status: 'Yet to Apply',
         workArrangement: 'On-site',
         type: 'Full-Time',
+        isUsCitizenOnly: false,
       });
     } catch (error) {
       toast({
@@ -439,6 +445,26 @@ export function AddApplicationDialog({ children, users, selectedUserId, allLocat
                     </FormItem>
                   )}
                 />
+              <FormField
+                control={form.control}
+                name="isUsCitizenOnly"
+                render={({ field }) => (
+                  <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm">
+                    <div className="space-y-0.5">
+                      <FormLabel>US Citizen Only</FormLabel>
+                      <FormDescription>
+                        Check if this job requires US citizenship.
+                      </FormDescription>
+                    </div>
+                    <FormControl>
+                      <Switch
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                      />
+                    </FormControl>
+                  </FormItem>
+                )}
+              />
               <div className="grid grid-cols-2 gap-4">
                  <FormField
                   control={form.control}

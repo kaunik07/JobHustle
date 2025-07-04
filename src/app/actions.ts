@@ -63,6 +63,7 @@ export async function addApplication(data: Omit<Application, 'id' | 'user' | 'ap
         userId: user.id,
         appliedOn: data.status !== 'Yet to Apply' ? new Date() : null,
         jobDescription: data.jobDescription,
+        isUsCitizenOnly: data.isUsCitizenOnly,
       }).returning({ id: applications.id });
 
       // After creating the application, trigger scoring if a job description exists.
@@ -140,6 +141,7 @@ export async function bulkAddApplicationsFromUrls(urls: string[]) {
                       status: 'Yet to Apply',
                       userId: user.id,
                       jobDescription: data.jobDescription,
+                      isUsCitizenOnly: data.isUsCitizenOnly || false,
                       appliedOn: null,
                   });
               }

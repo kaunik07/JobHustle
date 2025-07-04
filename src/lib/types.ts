@@ -118,6 +118,7 @@ export interface Application {
   oaDueDateTimezone?: string | null;
   oaCompletedOn?: Date | null;
   oaSkipped: boolean;
+  isUsCitizenOnly: boolean;
   createdAt: Date;
   interviewDate1?: Date | null;
   interviewDateTimezone1?: string | null;

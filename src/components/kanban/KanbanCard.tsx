@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -171,6 +172,9 @@ export function KanbanCard({ application, selectedUserId }: KanbanCardProps) {
             {application.workArrangement && (
               <Badge variant="outline" className={cn(workArrangementStyles[application.workArrangement])}>{application.workArrangement}</Badge>
             )}
+            {application.isUsCitizenOnly && (
+              <Badge variant="destructive">US Citizen</Badge>
+            )}
           </div>
           
           <div className="flex justify-between items-center pt-2">
@@ -189,9 +193,10 @@ export function KanbanCard({ application, selectedUserId }: KanbanCardProps) {
                       </Badge>
                     </TooltipTrigger>
                     <TooltipContent>
-                      <p className="max-w-[250px] text-sm text-muted-foreground">
-                        {topResumeScore.summary}
-                      </p>
+                      <p
+                        className="max-w-[250px] text-sm text-muted-foreground [&>strong]:font-semibold [&>strong]:text-foreground/90"
+                        dangerouslySetInnerHTML={{ __html: topResumeScore.summary }}
+                      />
                     </TooltipContent>
                   </Tooltip>
                 </TooltipProvider>
