@@ -6,7 +6,7 @@
  *
  * - fetchJobDescription - A function that handles the job description fetching process.
  * - FetchJobDescriptionInput - The input type for the fetchJobDescription function.
- * - FetchJobDescriptionOutput - The return type for the fetchJobDescription function.
+ * - FetchJobDescriptionOutput - The return type for the fetchJobdescription function.
  */
 
 import {ai} from '@/ai/genkit';
@@ -23,13 +23,13 @@ const FetchJobDescriptionInputSchema = z.object({
 export type FetchJobDescriptionInput = z.infer<typeof FetchJobDescriptionInputSchema>;
 
 const FetchJobDescriptionOutputSchema = z.object({
-    companyName: z.string().describe('The name of the company.'),
-    jobTitle: z.string().describe('The title of the job position.'),
-    location: z.string().describe('The primary location of the job. e.g., "San Francisco, CA" or "Remote".'),
-    jobDescription: z.string().describe('The full job description text extracted from the page.'),
-    type: z.enum(applicationTypes).describe(`The type of employment. Must be one of: ${applicationTypes.join(', ')}`),
-    category: z.enum(categories).describe(`The most relevant job category. Must be one of: ${categories.join(', ')}`),
-    workArrangement: z.enum(workArrangements).describe(`The work arrangement. Must be one of: ${workArrangements.join(', ')}`),
+    companyName: z.string().optional().describe('The name of the company.'),
+    jobTitle: z.string().optional().describe('The title of the job position.'),
+    location: z.string().optional().describe('The primary location of the job. e.g., "San Francisco, CA" or "Remote".'),
+    jobDescription: z.string().optional().describe('The full job description text extracted from the page.'),
+    type: z.enum(applicationTypes).optional().describe(`The type of employment. Must be one of: ${applicationTypes.join(', ')}`),
+    category: z.enum(categories).optional().describe(`The most relevant job category. Must be one of: ${categories.join(', ')}`),
+    workArrangement: z.enum(workArrangements).optional().describe(`The work arrangement. Must be one of: ${workArrangements.join(', ')}`),
 });
 export type FetchJobDescriptionOutput = z.infer<typeof FetchJobDescriptionOutputSchema>;
 
@@ -55,7 +55,7 @@ const prompt = ai.definePrompt({
   - Job Category
   - Work Arrangement
 
-  If you cannot find a specific piece of information, you may leave the field blank. Prioritize accuracy.`,
+  If you cannot find a specific piece of information, you may omit the field from the output. Prioritize accuracy.`,
 });
 
 const fetchJobDescriptionFlow = ai.defineFlow(

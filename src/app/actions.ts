@@ -126,20 +126,26 @@ export async function bulkAddApplicationsFromUrls(urls: string[]) {
     results.forEach((result, index) => {
         if (result.status === 'fulfilled' && result.value) {
             const data = result.value;
-            for (const user of allUsers) {
-                applicationsToInsert.push({
-                    companyName: data.companyName,
-                    jobTitle: data.jobTitle,
-                    jobUrl: urls[index],
-                    location: data.location,
-                    type: data.type,
-                    category: data.category,
-                    workArrangement: data.workArrangement,
-                    status: 'Yet to Apply',
-                    userId: user.id,
-                    jobDescription: data.jobDescription,
-                    appliedOn: null,
-                });
+            // Validate that all required fields are present
+            if (data.companyName && data.jobTitle && data.location && data.type && data.category) {
+              for (const user of allUsers) {
+                  applicationsToInsert.push({
+                      companyName: data.companyName,
+                      jobTitle: data.jobTitle,
+                      jobUrl: urls[index],
+                      location: data.location,
+                      type: data.type,
+                      category: data.category,
+                      workArrangement: data.workArrangement,
+                      status: 'Yet to Apply',
+                      userId: user.id,
+                      jobDescription: data.jobDescription,
+                      appliedOn: null,
+                  });
+              }
+            } else {
+              console.error(`Failed to extract required fields for URL: ${urls[index]}`, data);
+              failedUrls.push(urls[index]);
             }
         } else {
             const reason = result.status === 'rejected' ? result.reason : 'No data returned';
