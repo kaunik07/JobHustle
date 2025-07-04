@@ -12,7 +12,7 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { type Application, type ApplicationStatus, statuses, categories, type ApplicationCategory, type User, applicationTypes, type ApplicationType, workArrangements, type ApplicationWorkArrangement } from '@/lib/types';
+import { type Application, type ApplicationStatus, statuses, categories, type ApplicationCategory, type User, applicationTypes, type ApplicationType, workArrangements, type ApplicationWorkArrangement, type Resume } from '@/lib/types';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { ExternalLink, Trash2, CalendarIcon, CheckCircle2, Plus, FileText, Check, Sparkles, Loader2 } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -98,6 +98,27 @@ export function ApplicationDetailsDialog({ application, children }: ApplicationD
     wasRecentlyCreated &&
     !!application.jobDescription &&
     (!application.resumeScores || application.resumeScores.length === 0);
+
+  const userResumes = React.useMemo(() => {
+    if (application.user?.resumes && application.user.resumes.length > 0) {
+        return application.user.resumes;
+    }
+    // Fallback for cases where `user.resumes` might not be populated
+    if (application.resumeScores && application.resumeScores.length > 0) {
+        const resumesFromScores = application.resumeScores.map(s => ({
+            id: s.resumeId,
+            name: s.resume.name,
+            createdAt: s.resume.createdAt,
+            // These fields are not available here but are not essential for the dropdown
+            resumeText: '',
+            userId: application.userId,
+        }));
+        const uniqueResumes = Array.from(new Map(resumesFromScores.map(r => [r.id, r])).values());
+        return uniqueResumes as Resume[];
+    }
+    return [];
+  }, [application.user?.resumes, application.resumeScores, application.userId]);
+
 
   React.useEffect(() => {
     // This runs on client only and avoids hydration errors
@@ -260,7 +281,7 @@ export function ApplicationDetailsDialog({ application, children }: ApplicationD
   const handleResumeChange = async (newResumeId: string) => {
     const resumeIdToUpdate = newResumeId === "none" ? null : newResumeId;
     if (await handleUpdate({ resumeId: resumeIdToUpdate })) {
-      const resumeName = application.resumeScores?.find(s => s.resumeId === newResumeId)?.resume.name || "None";
+      const resumeName = userResumes.find(r => r.id === newResumeId)?.name || "None";
       toast({ title: `Resume updated to "${resumeName}".` });
     }
   };
@@ -756,6 +777,27 @@ export function ApplicationDetailsDialog({ application, children }: ApplicationD
                 onBlur={handleNotesBlur}
                 className="min-h-[100px] text-sm"
                 />
+            </div>
+
+            <div className="space-y-2">
+                <h3 className="font-semibold">Attach Resume</h3>
+                {userResumes.length > 0 ? (
+                    <Select onValueChange={handleResumeChange} value={application.resumeId || "none"}>
+                        <SelectTrigger>
+                            <SelectValue placeholder="Select a resume" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="none">None (detach)</SelectItem>
+                            {userResumes.map(resume => (
+                                <SelectItem key={resume.id} value={resume.id}>
+                                    {resume.name}
+                                </SelectItem>
+                            ))}
+                        </SelectContent>
+                    </Select>
+                ) : (
+                    <p className="text-sm text-muted-foreground">This user has no resumes uploaded.</p>
+                )}
             </div>
             
             <div className="space-y-2">

@@ -41,7 +41,11 @@ export default async function Home({
     // Fetch all applications and let the client component handle filtering
     const results = await db.query.applications.findMany({
         with: {
-            user: true,
+            user: {
+              with: {
+                resumes: true,
+              }
+            },
             resumeScores: {
                 with: {
                     resume: {

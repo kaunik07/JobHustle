@@ -77,6 +77,7 @@ export interface User {
   lastName: string;
   email: string;
   avatarUrl: string | null;
+  resumes?: Resume[];
 }
 
 export interface Resume {
