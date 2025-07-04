@@ -68,7 +68,7 @@ interface AddApplicationDialogProps {
 export function AddApplicationDialog({ children, users, selectedUserId, allLocations }: AddApplicationDialogProps) {
   const [open, setOpen] = React.useState(false);
   const [isSubmitting, setIsSubmitting] = React.useState(false);
-  const [isFetchingDescription, setIsFetchingDescription] = React.useState(false);
+  const [isFetchingDetails, setIsFetchingDetails] = React.useState(false);
   const [locationsPopoverOpen, setLocationsPopoverOpen] = React.useState(false);
   const [inputValue, setInputValue] = React.useState('');
   const { toast } = useToast();
@@ -94,7 +94,7 @@ export function AddApplicationDialog({ children, users, selectedUserId, allLocat
     form.setValue('userId', selectedUserId);
   }, [selectedUserId, form]);
 
-  const handleFetchDescription = async () => {
+  const handleFetchJobDetails = async () => {
     const jobUrl = form.getValues('jobUrl');
     const urlCheck = z.string().url().safeParse(jobUrl);
     if (!urlCheck.success) {
@@ -102,20 +102,27 @@ export function AddApplicationDialog({ children, users, selectedUserId, allLocat
       return;
     }
 
-    setIsFetchingDescription(true);
+    setIsFetchingDetails(true);
     try {
-      const { jobDescription } = await fetchJobDescription({ jobUrl });
-      if (jobDescription) {
-        form.setValue('jobDescription', jobDescription, { shouldValidate: true });
-        toast({ title: 'Success', description: 'Job description has been fetched.' });
+      const details = await fetchJobDescription({ jobUrl });
+      if (details) {
+        if(details.companyName) form.setValue('companyName', details.companyName, { shouldValidate: true });
+        if(details.jobTitle) form.setValue('jobTitle', details.jobTitle, { shouldValidate: true });
+        if(details.location) form.setValue('locations', [details.location], { shouldValidate: true });
+        if(details.type) form.setValue('type', details.type, { shouldValidate: true });
+        if(details.category) form.setValue('category', details.category, { shouldValidate: true });
+        if(details.workArrangement) form.setValue('workArrangement', details.workArrangement, { shouldValidate: true });
+        if(details.jobDescription) form.setValue('jobDescription', details.jobDescription, { shouldValidate: true });
+
+        toast({ title: 'Success', description: 'Job details have been auto-filled.' });
       } else {
-        toast({ variant: 'destructive', title: 'Could not fetch description', description: 'The AI could not extract a job description from the URL. Please copy and paste it manually.' });
+        toast({ variant: 'destructive', title: 'Could not fetch details', description: 'The AI could not extract job details from the URL. Please fill them in manually.' });
       }
     } catch (error) {
-      console.error('Error fetching job description:', error);
-      toast({ variant: 'destructive', title: 'Fetch Error', description: 'An error occurred while fetching the job description.' });
+      console.error('Error fetching job details:', error);
+      toast({ variant: 'destructive', title: 'Fetch Error', description: 'An error occurred while fetching job details.' });
     } finally {
-      setIsFetchingDescription(false);
+      setIsFetchingDetails(false);
     }
   };
 
@@ -332,11 +339,11 @@ export function AddApplicationDialog({ children, users, selectedUserId, allLocat
                             type="button"
                             variant="outline"
                             size="icon"
-                            onClick={handleFetchDescription}
-                            disabled={isFetchingDescription}
-                            title="Fetch Job Description"
+                            onClick={handleFetchJobDetails}
+                            disabled={isFetchingDetails}
+                            title="Auto-fill with AI"
                         >
-                            {isFetchingDescription ? (
+                            {isFetchingDetails ? (
                                 <Loader2 className="h-4 w-4 animate-spin" />
                             ) : (
                                 <Bot className="h-4 w-4" />
@@ -371,7 +378,7 @@ export function AddApplicationDialog({ children, users, selectedUserId, allLocat
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Type</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <Select onValueChange={field.onChange} defaultValue={field.value} value={field.value}>
                         <FormControl>
                           <SelectTrigger>
                             <SelectValue placeholder="Select a type" />
@@ -393,7 +400,7 @@ export function AddApplicationDialog({ children, users, selectedUserId, allLocat
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Category</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <Select onValueChange={field.onChange} defaultValue={field.value} value={field.value}>
                         <FormControl>
                           <SelectTrigger>
                             <SelectValue placeholder="Select a category" />
@@ -416,7 +423,7 @@ export function AddApplicationDialog({ children, users, selectedUserId, allLocat
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Work Arrangement</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <Select onValueChange={field.onChange} defaultValue={field.value} value={field.value}>
                         <FormControl>
                           <SelectTrigger>
                             <SelectValue placeholder="Select an arrangement" />
