@@ -1,4 +1,3 @@
-
 'use client';
 
 import * as React from 'react';
@@ -122,6 +121,26 @@ export function JobTrackerClient({
   
   const selectedUser = users.find(u => u.id === selectedUserId);
 
+  const resumesWithCounts = React.useMemo(() => {
+    if (!resumes || resumes.length === 0 || selectedUserId === 'all') {
+        return resumes;
+    }
+
+    const applicationCounts = new Map<string, number>();
+    const userApplications = applications.filter(app => app.userId === selectedUserId);
+
+    for (const app of userApplications) {
+        if (app.resumeId) {
+            applicationCounts.set(app.resumeId, (applicationCounts.get(app.resumeId) || 0) + 1);
+        }
+    }
+
+    return resumes.map(resume => ({
+        ...resume,
+        applicationCount: applicationCounts.get(resume.id) || 0,
+    }));
+  }, [resumes, applications, selectedUserId]);
+
   return (
     <div className="min-h-screen w-full bg-muted/40">
       <FilterSidebar 
@@ -165,7 +184,7 @@ export function JobTrackerClient({
                   {selectedUser ? (
                       <ResumesPage 
                           user={selectedUser} 
-                          resumes={resumes} 
+                          resumes={resumesWithCounts} 
                       />
                   ) : (
                       <div className="flex items-center justify-center h-24 rounded-md border-2 border-dashed">

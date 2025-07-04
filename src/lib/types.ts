@@ -85,6 +85,7 @@ export interface Resume {
   resumeText: string;
   userId: string;
   createdAt: Date;
+  applicationCount?: number;
 }
 
 export interface Application {

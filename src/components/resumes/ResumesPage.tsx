@@ -1,4 +1,3 @@
-
 'use client';
 
 import * as React from 'react';
@@ -22,6 +21,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import { Badge } from '@/components/ui/badge';
 
 interface ResumesPageProps {
   user: User;
@@ -55,15 +55,22 @@ export function ResumesPage({ user, resumes }: ResumesPageProps) {
           {resumes.map(resume => (
             <Card key={resume.id}>
               <CardHeader>
-                <div className="flex items-start gap-4">
-                  <FileText className="h-8 w-8 text-primary flex-shrink-0 mt-1" />
-                  <div>
-                    <CardTitle>{resume.name}</CardTitle>
-                    <CardDescription className="flex items-center gap-1.5 text-xs pt-1">
-                      <Calendar className="h-3 w-3" />
-                      Uploaded {formatDistanceToNow(new Date(resume.createdAt), { addSuffix: true })}
-                    </CardDescription>
+                <div className="flex items-start justify-between gap-4">
+                  <div className="flex items-start gap-4">
+                    <FileText className="h-8 w-8 text-primary flex-shrink-0 mt-1" />
+                    <div className="flex-1">
+                      <CardTitle>{resume.name}</CardTitle>
+                      <CardDescription className="flex items-center gap-1.5 text-xs pt-1">
+                        <Calendar className="h-3 w-3" />
+                        Uploaded {formatDistanceToNow(new Date(resume.createdAt), { addSuffix: true })}
+                      </CardDescription>
+                    </div>
                   </div>
+                  {resume.applicationCount !== undefined && resume.applicationCount > 0 ? (
+                      <Badge variant="secondary" className="shrink-0">
+                          Used in {resume.applicationCount} {resume.applicationCount === 1 ? 'app' : 'apps'}
+                      </Badge>
+                  ) : null}
                 </div>
               </CardHeader>
               <CardContent>
