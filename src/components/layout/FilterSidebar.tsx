@@ -1,4 +1,3 @@
-
 'use client';
 
 import * as React from 'react';
@@ -43,10 +42,17 @@ export function FilterSidebar({
         isOpen ? "w-64" : "w-16"
     )}>
       <div className="flex flex-col h-full">
-        <div className="p-4 flex items-center justify-between border-b">
-            <h2 className={cn("font-bold transition-opacity whitespace-nowrap", isOpen ? "opacity-100" : "opacity-0")}>JobTrackr Filters</h2>
-            <Button variant="ghost" size="icon" onClick={onToggle}>
-                <PanelLeft />
+        <div className="relative flex h-16 items-center border-b px-4">
+            <h2 className={cn("font-bold transition-opacity whitespace-nowrap", isOpen ? "opacity-100" : "opacity-0")}>
+                Filters
+            </h2>
+            <Button
+                variant="ghost"
+                size="icon"
+                onClick={onToggle}
+                className="absolute right-3 top-1/2 -translate-y-1/2"
+            >
+                <PanelLeft className={cn("transition-transform duration-300", isOpen && "rotate-180")} />
             </Button>
         </div>
 
