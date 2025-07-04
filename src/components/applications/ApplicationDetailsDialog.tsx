@@ -877,7 +877,10 @@ export function ApplicationDetailsDialog({ application, children }: ApplicationD
                             </Button>
                             )}
                         </div>
-                        <p className="pl-8 text-xs text-muted-foreground">{score.summary}</p>
+                        <p
+                          className="pl-8 text-xs text-muted-foreground [&>strong]:font-semibold [&>strong]:text-foreground/90"
+                          dangerouslySetInnerHTML={{ __html: score.summary }}
+                        />
                     </div>
                   ))}
                 </div>

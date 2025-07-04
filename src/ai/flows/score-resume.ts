@@ -21,7 +21,7 @@ const ScoreResumeOutputSchema = z.object({
     .describe('A score from 0-100 representing how well the resume matches the job description, based on skills, experience, and keywords.'),
   summary: z
     .string()
-    .describe('A brief, one-sentence summary explaining the score and highlighting the key reason for the match quality.'),
+    .describe('A brief, one-sentence summary explaining the score and highlighting the key reason for the match quality. Important keywords or skills should be wrapped in <strong> tags.'),
 });
 export type ScoreResumeOutput = z.infer<typeof ScoreResumeOutputSchema>;
 
@@ -40,6 +40,7 @@ Analyze the provided resume text and job description.
 - Evaluate the alignment of skills, experience, and qualifications.
 - Pay close attention to keywords and required technologies.
 - Provide a concise, one-sentence summary explaining the reasoning behind your score.
+- In the summary, wrap the most important matching keywords, skills, or experiences in <strong></strong> tags to highlight them. For example: "This resume is a strong match due to extensive experience with <strong>React</strong> and <strong>Node.js</strong>."
 
 Resume Text:
 {{{resumeText}}}
