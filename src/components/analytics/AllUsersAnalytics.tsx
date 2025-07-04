@@ -43,6 +43,9 @@ const USER_COLORS = [
 
 
 export function AllUsersAnalytics({ users, applications }: AllUsersAnalyticsProps) {
+  const isSingleUserView = users.length === 1;
+  const singleUser = isSingleUserView ? users[0] : null;
+
   // --- Pie Chart Logic ---
   const yetToApplyApplications = React.useMemo(
     () => applications.filter((app) => app.status === 'Yet to Apply'),
@@ -169,14 +172,18 @@ export function AllUsersAnalytics({ users, applications }: AllUsersAnalyticsProp
     <div className="space-y-8">
       <div className="flex items-center gap-2">
         <UserIcon className="h-6 w-6" />
-        <h2 className="text-2xl font-bold tracking-tight">User Analytics</h2>
+        <h2 className="text-2xl font-bold tracking-tight">
+          {isSingleUserView && singleUser ? `${singleUser.firstName}'s Analytics` : 'All Users Analytics'}
+        </h2>
       </div>
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
         <Card className="flex flex-col">
           <CardHeader>
             <CardTitle>Applications to Apply</CardTitle>
             <CardDescription>
-              A total of {totalYetToApply} applications are pending across {dataByUser.length} user(s).
+              {isSingleUserView 
+                ? `A total of ${totalYetToApply} applications are pending.`
+                : `A total of ${totalYetToApply} applications are pending across ${dataByUser.length} user(s).`}
             </CardDescription>
           </CardHeader>
           <CardContent className="flex-1 pb-0">
@@ -243,7 +250,11 @@ export function AllUsersAnalytics({ users, applications }: AllUsersAnalyticsProp
         <Card>
             <CardHeader>
                 <CardTitle>Application Trends</CardTitle>
-                <CardDescription>Daily count of applications added to the board by user over the last 30 days.</CardDescription>
+                <CardDescription>
+                  {isSingleUserView
+                    ? 'Daily count of applications added to the board over the last 30 days.'
+                    : 'Daily count of applications added to the board by user over the last 30 days.'}
+                </CardDescription>
             </CardHeader>
             <CardContent>
                 <ChartContainer config={trendChartConfig} className="h-[300px] w-full">
@@ -282,7 +293,9 @@ export function AllUsersAnalytics({ users, applications }: AllUsersAnalyticsProp
       </div>
       
       <div className="space-y-4">
-        <h3 className="text-xl font-bold tracking-tight">User Performance Metrics</h3>
+        <h3 className="text-xl font-bold tracking-tight">
+          {isSingleUserView ? 'Performance Metrics' : 'User Performance Metrics'}
+        </h3>
         {users.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {userPerformanceData.map(({ user, stats, hasData }) => (

@@ -130,6 +130,10 @@ export function JobTrackerClient({
     return userMatch && typeMatch && categoryMatch && locationMatch && companyMatch && resumeMatch;
   });
 
+  const usersForAnalytics = selectedUserId === 'all' 
+    ? users 
+    : users.filter(u => u.id === selectedUserId);
+
   const yetToApplyApplications = filteredApplications.filter(app => app.status === 'Yet to Apply');
   const kanbanApplications = filteredApplications.filter(app => kanbanStatuses.includes(app.status));
   const rejectedApplications = filteredApplications.filter(app => app.status === 'Rejected');
@@ -200,7 +204,7 @@ export function JobTrackerClient({
               <div className="space-y-6">
                 <AnalyticsOverview applications={filteredApplications} />
                 <Separator />
-                <AllUsersAnalytics users={users} applications={filteredApplications} />
+                <AllUsersAnalytics users={usersForAnalytics} applications={filteredApplications} />
                 <Separator />
                 <YetToApplyList applications={yetToApplyApplications} selectedUserId={selectedUserId} />
                 <Separator />
