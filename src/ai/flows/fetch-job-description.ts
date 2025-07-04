@@ -52,12 +52,12 @@ const prompt = ai.definePrompt({
   - Job Title: Extract the full, original job title from the page.
   - Summarized Job Title: Create a concise, summarized version of the job title that captures the core role and primary technology or focus. For example, if the full title is "Early in Career Windows Software Engineer, (C#, C++)", the summarized title should be "Software Engineer - Windows".
   - Location (e.g., "City, ST", "Remote")
-  - The full Job Description text. It is crucial that you extract the **entire, exact, and un-summarized** job description text from the webpage. Do not alter or shorten it. **If you cannot find a job description, you MUST return an empty string for the jobDescription field.**
+  - Job Description: This is the most critical field. You MUST extract the **entire, exact, and un-summarized** job description text from the webpage. Your role for this field is to copy and paste the raw text. Do not clean, alter, rephrase, or shorten it in any way. Preserve all original line breaks and formatting as best as possible. **If you cannot find a job description, you MUST return an empty string for this field.**
   - Employment Type
   - Job Category
   - Work Arrangement
 
-  If you cannot find a specific piece of information for other fields (like type, category, etc.), you may omit them, but you must always provide a value for the 'jobDescription' field. Prioritize accuracy.`,
+  For all fields other than 'jobDescription', you may omit them if the information is not present. However, you must always provide a value for the 'jobDescription' field. Prioritize accuracy.`,
 });
 
 const fetchJobDescriptionFlow = ai.defineFlow(
