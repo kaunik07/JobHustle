@@ -112,12 +112,13 @@ export function KanbanCard({ application, selectedUserId }: KanbanCardProps) {
     return 'Added recently';
   }
   
-  const attachedResumeScore = React.useMemo(() => {
-    if (!application.resumeId || !application.resumeScores) {
-        return null;
+  const topResumeScore = React.useMemo(() => {
+    if (!application.resumeScores || application.resumeScores.length === 0) {
+      return null;
     }
-    return application.resumeScores.find(score => score.resumeId === application.resumeId);
-  }, [application.resumeId, application.resumeScores]);
+    // Sort by score descending and return the top one
+    return [...application.resumeScores].sort((a, b) => b.score - a.score)[0];
+  }, [application.resumeScores]);
 
   return (
     <ApplicationDetailsDialog application={application}>
@@ -179,18 +180,21 @@ export function KanbanCard({ application, selectedUserId }: KanbanCardProps) {
                 {renderDate()}
             </p>
             <div className="flex items-center gap-1">
-              {application.status === 'Yet to Apply' && attachedResumeScore && (
+              {application.status === 'Yet to Apply' && topResumeScore && (
                 <TooltipProvider>
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <Badge variant="secondary" className="flex items-center gap-1.5 cursor-default">
                         <Sparkles className="h-3 w-3 text-yellow-400" />
-                        {attachedResumeScore.score}
+                        {topResumeScore.score}
                       </Badge>
                     </TooltipTrigger>
                     <TooltipContent>
-                      <p className="max-w-[250px] text-sm">
-                        {attachedResumeScore.summary}
+                      <p className="max-w-[250px] text-sm font-semibold">
+                        Top match: {topResumeScore.resume.name}
+                      </p>
+                      <p className="max-w-[250px] text-sm text-muted-foreground mt-1">
+                        {topResumeScore.summary}
                       </p>
                     </TooltipContent>
                   </Tooltip>
