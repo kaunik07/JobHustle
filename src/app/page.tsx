@@ -1,8 +1,8 @@
 
 import { db } from '@/lib/db';
 import { applications as applicationsSchema, users as usersSchema, resumes as resumesSchema } from '@/lib/db/schema';
-import { eq, desc, distinct } from 'drizzle-orm';
-import type { Application, User, Resume } from '@/lib/types';
+import { eq, desc } from 'drizzle-orm';
+import type { Application, User, Resume, ResumeScore } from '@/lib/types';
 import { JobTrackerClient } from '@/components/layout/JobTrackerClient';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { AlertCircle } from 'lucide-react';
@@ -14,7 +14,7 @@ export default async function Home({
   searchParams: { user?: string; type?: string; category?: string; location?: string; company?: string, resume?: string };
 }) {
   try {
-    const allUsers: User[] = await db.select().from(usersSchema);
+    const allUsers: User[] = await db.query.users.findMany();
 
     if (allUsers.length === 0) {
       // If there are no users, we can show the main screen with a prompt to add one.
@@ -39,19 +39,33 @@ export default async function Home({
     const selectedResumeId = searchParams.resume || '';
     
     // Fetch all applications and let the client component handle filtering
-    const results = await db
-      .select({
-        application: applicationsSchema,
-        user: usersSchema,
-      })
-      .from(applicationsSchema)
-      .leftJoin(usersSchema, eq(applicationsSchema.userId, usersSchema.id))
-      .orderBy(desc(applicationsSchema.createdAt));
+    const results = await db.query.applications.findMany({
+        with: {
+            user: true,
+            resumeScores: {
+                with: {
+                    resume: {
+                        columns: {
+                            id: true,
+                            name: true,
+                            createdAt: true,
+                        }
+                    }
+                }
+            }
+        },
+        orderBy: desc(applicationsSchema.createdAt)
+    });
     
-    const applicationsForClient = results.map(r => ({
-      ...(r.application as Omit<Application, 'user'>),
+    const applicationsForClient: Application[] = results.map(r => ({
+      ...r,
       user: r.user as User,
+      resumeScores: r.resumeScores.map(score => ({
+        ...score,
+        resume: score.resume!
+      })) as ResumeScore[],
     }));
+
 
     const locationsResult = await db.selectDistinct({ location: applicationsSchema.location }).from(applicationsSchema);
     const dbLocations = locationsResult.map(l => l.location).filter(Boolean) as string[];

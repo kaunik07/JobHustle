@@ -2,16 +2,15 @@
 'use client';
 
 import { KanbanCard } from "@/components/kanban/KanbanCard";
-import type { Application, Resume } from "@/lib/types";
+import type { Application } from "@/lib/types";
 import { FilePlus2 } from "lucide-react";
 
 interface YetToApplyListProps {
     applications: Application[];
     selectedUserId: string;
-    resumes: Resume[];
 }
 
-export function YetToApplyList({ applications, selectedUserId, resumes }: YetToApplyListProps) {
+export function YetToApplyList({ applications, selectedUserId }: YetToApplyListProps) {
     return (
         <div className="space-y-4">
             <div className="flex items-center gap-2">
@@ -21,7 +20,7 @@ export function YetToApplyList({ applications, selectedUserId, resumes }: YetToA
             {applications.length > 0 ? (
                  <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                     {applications.map(app => (
-                        <KanbanCard key={app.id} application={app} selectedUserId={selectedUserId} resumes={resumes} />
+                        <KanbanCard key={app.id} application={app} selectedUserId={selectedUserId} />
                     ))}
                 </div>
             ) : (

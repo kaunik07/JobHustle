@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -201,11 +202,11 @@ export function JobTrackerClient({
                 <Separator />
                 <AllUsersAnalytics users={users} applications={filteredApplications} />
                 <Separator />
-                <YetToApplyList applications={yetToApplyApplications} selectedUserId={selectedUserId} resumes={resumes} />
+                <YetToApplyList applications={yetToApplyApplications} selectedUserId={selectedUserId} />
                 <Separator />
-                <KanbanBoard applications={kanbanApplications} selectedUserId={selectedUserId} resumes={resumes} />
+                <KanbanBoard applications={kanbanApplications} selectedUserId={selectedUserId} />
                 <Separator />
-                <RejectedList applications={rejectedApplications} selectedUserId={selectedUserId} resumes={resumes} />
+                <RejectedList applications={rejectedApplications} selectedUserId={selectedUserId} />
               </div>
             ) : (
                 <>

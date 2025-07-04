@@ -9,6 +9,7 @@ import {
   integer,
 } from 'drizzle-orm/pg-core';
 import { createId } from '@paralleldrive/cuid2';
+import { relations } from 'drizzle-orm';
 
 export const categoriesEnum = pgEnum('category', ['SWE', 'SRE/Devops', 'Quant', 'Systems', 'Data Scientist']);
 export const statusesEnum = pgEnum('status', ['Yet to Apply', 'Applied', 'OA', 'Interview', 'Offer', 'Rejected']);
@@ -71,6 +72,35 @@ export const applications = pgTable('applications', {
     interviewDateTimezone9: varchar('interview_date_timezone_9', { length: 255 }),
     interviewDate10: timestamp('interview_date_10'),
     interviewDateTimezone10: varchar('interview_date_timezone_10', { length: 255 }),
-    resumeMatchScore: integer('resume_match_score'),
-    resumeMatchSummary: text('resume_match_summary'),
 });
+
+export const applicationResumeScores = pgTable('application_resume_scores', {
+    id: text('id').$defaultFn(() => createId()).primaryKey(),
+    applicationId: text('application_id').notNull().references(() => applications.id, { onDelete: 'cascade' }),
+    resumeId: text('resume_id').notNull().references(() => resumes.id, { onDelete: 'cascade' }),
+    score: integer('score').notNull(),
+    summary: text('summary').notNull(),
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+});
+
+// Relations
+export const usersRelations = relations(users, ({ many }) => ({
+  applications: many(applications),
+  resumes: many(resumes),
+}));
+
+export const resumesRelations = relations(resumes, ({ one, many }) => ({
+  user: one(users, { fields: [resumes.userId], references: [users.id] }),
+  scores: many(applicationResumeScores),
+}));
+
+export const applicationsRelations = relations(applications, ({ one, many }) => ({
+  user: one(users, { fields: [applications.userId], references: [users.id] }),
+  attachedResume: one(resumes, { fields: [applications.resumeId], references: [resumes.id] }),
+  resumeScores: many(applicationResumeScores),
+}));
+
+export const applicationResumeScoresRelations = relations(applicationResumeScores, ({ one }) => ({
+  application: one(applications, { fields: [applicationResumeScores.applicationId], references: [applications.id] }),
+  resume: one(resumes, { fields: [applicationResumeScores.resumeId], references: [resumes.id] }),
+}));

@@ -1,12 +1,13 @@
 
 'use client';
 
+import * as React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import type { Application, ApplicationCategory, ApplicationType, ApplicationWorkArrangement, Resume } from '@/lib/types';
 import { ApplicationDetailsDialog } from '@/components/applications/ApplicationDetailsDialog';
-import { format, formatDistanceToNow } from 'date-fns';
+import { formatDistanceToNow } from 'date-fns';
 import { Clock, MapPin, CheckCircle2, Sparkles } from 'lucide-react';
 import { cn, getUserColor } from '@/lib/utils';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
@@ -17,7 +18,6 @@ import { updateApplication } from '@/app/actions';
 interface KanbanCardProps {
   application: Application;
   selectedUserId: string;
-  resumes: Resume[];
 }
 
 const categoryStyles: Record<ApplicationCategory, string> = {
@@ -39,7 +39,7 @@ const workArrangementStyles: Record<ApplicationWorkArrangement, string> = {
   'Hybrid': 'bg-chart-4/20 text-chart-4 border-chart-4/30',
 };
 
-export function KanbanCard({ application, selectedUserId, resumes }: KanbanCardProps) {
+export function KanbanCard({ application, selectedUserId }: KanbanCardProps) {
   const companyDomain = application.companyName.toLowerCase().replace(/[^a-z0-9]/gi, '') + '.com';
   const { user } = application;
   const { toast } = useToast();
@@ -77,7 +77,7 @@ export function KanbanCard({ application, selectedUserId, resumes }: KanbanCardP
         application.interviewDate8,
         application.interviewDate9,
         application.interviewDate10,
-      ].filter((d): d is Date | string => !!d).map(d => new Date(d));
+      ].filter((d): d is Date => !!d).map(d => new Date(d));
 
       const now = new Date();
       
@@ -111,9 +111,16 @@ export function KanbanCard({ application, selectedUserId, resumes }: KanbanCardP
     }
     return 'Added recently';
   }
+  
+  const attachedResumeScore = React.useMemo(() => {
+    if (!application.resumeId || !application.resumeScores) {
+        return null;
+    }
+    return application.resumeScores.find(score => score.resumeId === application.resumeId);
+  }, [application.resumeId, application.resumeScores]);
 
   return (
-    <ApplicationDetailsDialog application={application} resumes={resumes}>
+    <ApplicationDetailsDialog application={application}>
       <Card className="cursor-pointer transition-shadow hover:shadow-lg relative">
         {selectedUserId === 'all' && user && (
           <TooltipProvider>
@@ -172,18 +179,18 @@ export function KanbanCard({ application, selectedUserId, resumes }: KanbanCardP
                 {renderDate()}
             </p>
             <div className="flex items-center gap-1">
-              {application.status === 'Yet to Apply' && application.resumeMatchScore != null && (
+              {application.status === 'Yet to Apply' && attachedResumeScore && (
                 <TooltipProvider>
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <Badge variant="secondary" className="flex items-center gap-1.5 cursor-default">
                         <Sparkles className="h-3 w-3 text-yellow-400" />
-                        {application.resumeMatchScore}
+                        {attachedResumeScore.score}
                       </Badge>
                     </TooltipTrigger>
                     <TooltipContent>
                       <p className="max-w-[250px] text-sm">
-                        {application.resumeMatchSummary}
+                        {attachedResumeScore.summary}
                       </p>
                     </TooltipContent>
                   </Tooltip>

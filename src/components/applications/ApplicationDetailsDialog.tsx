@@ -13,9 +13,9 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { type Application, type ApplicationStatus, statuses, categories, type ApplicationCategory, type User, applicationTypes, type ApplicationType, workArrangements, type ApplicationWorkArrangement, type Resume } from '@/lib/types';
+import { type Application, type ApplicationStatus, statuses, categories, type ApplicationCategory, type User, applicationTypes, type ApplicationType, workArrangements, type ApplicationWorkArrangement } from '@/lib/types';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { ExternalLink, Trash2, CalendarIcon, CheckCircle2, Plus, FileText } from 'lucide-react';
+import { ExternalLink, Trash2, CalendarIcon, CheckCircle2, Plus, FileText, Check, Sparkles } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -43,7 +43,6 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 
 interface ApplicationDetailsDialogProps {
   application: Application;
-  resumes: Resume[];
   children: React.ReactNode;
 }
 
@@ -67,7 +66,7 @@ const workArrangementStyles: Record<ApplicationWorkArrangement, string> = {
 };
 
 
-export function ApplicationDetailsDialog({ application, resumes, children }: ApplicationDetailsDialogProps) {
+export function ApplicationDetailsDialog({ application, children }: ApplicationDetailsDialogProps) {
   const [open, setOpen] = React.useState(false);
   const { toast } = useToast();
   const companyDomain = application.companyName.toLowerCase().replace(/[^a-z0-9]/gi, '') + '.com';
@@ -87,10 +86,6 @@ export function ApplicationDetailsDialog({ application, resumes, children }: App
   
   const [timezones, setTimezones] = React.useState<string[]>([]);
   const isInterviewStage = application.status === 'Interview';
-  
-  const selectedResume = React.useMemo(() => {
-    return resumes.find(r => r.id === application.resumeId);
-  }, [resumes, application.resumeId]);
 
   React.useEffect(() => {
     // This runs on client only and avoids hydration errors
@@ -253,7 +248,7 @@ export function ApplicationDetailsDialog({ application, resumes, children }: App
   const handleResumeChange = async (newResumeId: string) => {
     const resumeIdToUpdate = newResumeId === "none" ? null : newResumeId;
     if (await handleUpdate({ resumeId: resumeIdToUpdate })) {
-      const resumeName = resumes.find(r => r.id === newResumeId)?.name || "None";
+      const resumeName = application.resumeScores?.find(s => s.resumeId === newResumeId)?.resume.name || "None";
       toast({ title: `Resume updated to "${resumeName}".` });
     }
   };
@@ -751,44 +746,51 @@ export function ApplicationDetailsDialog({ application, resumes, children }: App
                 />
             </div>
             
-             <div className="space-y-2">
-                <h3 className="font-semibold">Attached Resume</h3>
-                <div className="grid grid-cols-[1fr_auto] gap-4 items-center">
-                    <Select value={application.resumeId || "none"} onValueChange={handleResumeChange} disabled={resumes.length === 0}>
-                        <SelectTrigger>
-                            <SelectValue placeholder="Select a resume" />
-                        </SelectTrigger>
-                        <SelectContent>
-                            <SelectItem value="none">
-                                <span className="text-muted-foreground">No Resume Attached</span>
-                            </SelectItem>
-                            {resumes.map(resume => (
-                                <SelectItem key={resume.id} value={resume.id}>{resume.name}</SelectItem>
-                            ))}
-                        </SelectContent>
-                    </Select>
-                    {selectedResume && (
-                        <Popover>
-                            <PopoverTrigger asChild>
-                                <Button variant="outline" size="sm">
-                                    <FileText className="mr-2 h-4 w-4" /> View
-                                </Button>
-                            </PopoverTrigger>
-                            <PopoverContent className="w-96" align="end">
-                                <div className="space-y-2">
-                                    <h4 className="font-medium leading-none">{selectedResume.name}</h4>
-                                    <p className="text-sm text-muted-foreground">
-                                        Uploaded {format(new Date(selectedResume.createdAt), "PPP")}
-                                    </p>
-                                    <ScrollArea className="h-48 mt-2 rounded-md border p-2">
-                                        <p className="text-xs text-muted-foreground whitespace-pre-wrap">{selectedResume.resumeText}</p>
-                                    </ScrollArea>
-                                </div>
-                            </PopoverContent>
-                        </Popover>
-                    )}
+            <div className="space-y-2">
+              <h3 className="font-semibold">Resume Suggestions</h3>
+              {(application.resumeScores && application.resumeScores.length > 0) ? (
+                <div className="space-y-2 rounded-lg border p-2">
+                  {application.resumeScores
+                    .sort((a, b) => b.score - a.score) // Sort by score descending
+                    .map((score) => (
+                    <div key={score.id} className="flex items-center justify-between rounded-md p-2 hover:bg-secondary">
+                      <div className="flex items-center gap-3">
+                        <FileText className="h-5 w-5 text-muted-foreground" />
+                        <div className="text-sm font-medium">{score.resume.name}</div>
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger>
+                              <Badge variant="secondary" className="flex items-center gap-1.5 cursor-default">
+                                <Sparkles className="h-3 w-3 text-yellow-400" />
+                                {score.score}
+                              </Badge>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p className="max-w-xs">{score.summary}</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                      </div>
+                      {application.resumeId === score.resumeId ? (
+                        <Button variant="outline" size="sm" disabled>
+                          <Check className="mr-2 h-4 w-4" />
+                          Attached
+                        </Button>
+                      ) : (
+                        <Button variant="outline" size="sm" onClick={() => handleResumeChange(score.resumeId)}>
+                          Attach
+                        </Button>
+                      )}
+                    </div>
+                  ))}
                 </div>
-                {resumes.length === 0 && <p className="text-xs text-muted-foreground">No resumes have been uploaded for this user. You can add one in the "My Resumes" tab.</p>}
+              ) : (
+                <div className="flex items-center justify-center rounded-lg border-2 border-dashed p-4 text-center">
+                  <p className="text-sm text-muted-foreground">
+                    No resume scores available. This might be because no job description was provided or the user has no resumes uploaded.
+                  </p>
+                </div>
+              )}
             </div>
 
 

@@ -88,6 +88,15 @@ export interface Resume {
   applicationCount?: number;
 }
 
+export interface ResumeScore {
+  id: string;
+  applicationId: string;
+  resumeId: string;
+  score: number;
+  summary: string;
+  resume: Pick<Resume, 'id' | 'name' | 'createdAt'>;
+}
+
 export interface Application {
   id:string;
   companyName: string;
@@ -129,6 +138,5 @@ export interface Application {
   interviewDateTimezone9?: string | null;
   interviewDate10?: Date | null;
   interviewDateTimezone10?: string | null;
-  resumeMatchScore?: number | null;
-  resumeMatchSummary?: string | null;
+  resumeScores?: ResumeScore[];
 }

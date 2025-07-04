@@ -3,11 +3,44 @@
 
 import { revalidatePath } from 'next/cache';
 import { db } from '@/lib/db';
-import { applications, users, resumes } from '@/lib/db/schema';
+import { applications, users, resumes, applicationResumeScores } from '@/lib/db/schema';
 import { eq } from 'drizzle-orm';
 import type { Application, User } from '@/lib/types';
 import { extractResumeText } from '@/ai/flows/extract-resume-text';
 import { scoreResume } from '@/ai/flows/score-resume';
+
+// This function will be called to score resumes against a job description.
+async function scoreResumesForApplication(applicationId: string, userId: string, jobDescription: string) {
+  try {
+    const userResumes = await db.select().from(resumes).where(eq(resumes.userId, userId));
+    if (userResumes.length === 0 || !jobDescription) {
+      return;
+    }
+
+    const scorePromises = userResumes.map(resume => 
+      scoreResume({ resumeText: resume.resumeText, jobDescription }).then(score => ({
+        ...score,
+        resumeId: resume.id,
+      }))
+    );
+
+    const scores = await Promise.all(scorePromises);
+    
+    const scoresToInsert = scores.map(s => ({
+      applicationId,
+      resumeId: s.resumeId,
+      score: s.score,
+      summary: s.summary,
+    }));
+
+    if (scoresToInsert.length > 0) {
+      await db.insert(applicationResumeScores).values(scoresToInsert);
+    }
+  } catch (error) {
+    console.error("Error scoring resumes for application:", error);
+    // We don't want to block the main application creation if scoring fails.
+  }
+}
 
 export async function addApplication(data: Omit<Application, 'id' | 'user' | 'appliedOn' | 'oaDueDate' | 'createdAt' | 'location'> & { locations: string[] }) {
   const usersToApplyFor = data.userId === 'all' 
@@ -16,7 +49,7 @@ export async function addApplication(data: Omit<Application, 'id' | 'user' | 'ap
   
   for (const location of data.locations) {
     for (const user of usersToApplyFor) {
-      await db.insert(applications).values({
+      const [newApplication] = await db.insert(applications).values({
         companyName: data.companyName,
         jobTitle: data.jobTitle,
         jobUrl: data.jobUrl,
@@ -29,7 +62,13 @@ export async function addApplication(data: Omit<Application, 'id' | 'user' | 'ap
         userId: user.id,
         appliedOn: data.status !== 'Yet to Apply' ? new Date() : null,
         jobDescription: data.jobDescription,
-      });
+      }).returning({ id: applications.id });
+
+      // After creating the application, trigger scoring if a job description exists.
+      if (data.jobDescription) {
+        // This can take a moment, but it runs on the server.
+        await scoreResumesForApplication(newApplication.id, user.id, data.jobDescription);
+      }
     }
   }
   revalidatePath('/');
@@ -80,39 +119,8 @@ export async function updateApplication(appId: string, data: Partial<Application
     delete payload.createdAt;
   }
   
-  // Handle resume match score calculation
-  const shouldCalculateScore = data.resumeId !== undefined;
-
-  if (shouldCalculateScore) {
-    if (data.resumeId) { // resume is being added or changed
-      try {
-        const application = await db.query.applications.findFirst({ where: eq(applications.id, appId) });
-        const resume = await db.query.resumes.findFirst({ where: eq(resumes.id, data.resumeId) });
-        
-        if (application?.jobDescription && resume?.resumeText) {
-          const { score, summary } = await scoreResume({
-            resumeText: resume.resumeText,
-            jobDescription: application.jobDescription,
-          });
-          payload.resumeMatchScore = score;
-          payload.resumeMatchSummary = summary;
-        } else {
-          // Not enough info to score, so nullify
-          payload.resumeMatchScore = null;
-          payload.resumeMatchSummary = null;
-        }
-      } catch (e) {
-        console.error("Failed to calculate resume match score:", e);
-        // Don't block the main update if scoring fails.
-        // Just nullify the fields.
-        payload.resumeMatchScore = null;
-        payload.resumeMatchSummary = null;
-      }
-    } else { // resume is being removed (data.resumeId is null)
-      payload.resumeMatchScore = null;
-      payload.resumeMatchSummary = null;
-    }
-  }
+  // Scoring is now done on creation, so we remove the logic from here.
+  // We just update the fields passed in.
 
   await db.update(applications).set(payload).where(eq(applications.id, appId));
   revalidatePath('/');
