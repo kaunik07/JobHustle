@@ -7,7 +7,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import type { Application, ApplicationCategory, ApplicationType, ApplicationWorkArrangement, Resume } from '@/lib/types';
 import { ApplicationDetailsDialog } from '@/components/applications/ApplicationDetailsDialog';
 import { format, formatDistanceToNow } from 'date-fns';
-import { Clock, MapPin, CheckCircle2 } from 'lucide-react';
+import { Clock, MapPin, CheckCircle2, Sparkles } from 'lucide-react';
 import { cn, getUserColor } from '@/lib/utils';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Button } from '@/components/ui/button';
@@ -172,6 +172,23 @@ export function KanbanCard({ application, selectedUserId, resumes }: KanbanCardP
                 {renderDate()}
             </p>
             <div className="flex items-center gap-1">
+              {application.status === 'Yet to Apply' && application.resumeMatchScore != null && (
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Badge variant="secondary" className="flex items-center gap-1.5 cursor-default">
+                        <Sparkles className="h-3 w-3 text-yellow-400" />
+                        {application.resumeMatchScore}
+                      </Badge>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p className="max-w-[250px] text-sm">
+                        {application.resumeMatchSummary}
+                      </p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              )}
               <Badge variant="outline">{application.status}</Badge>
               {application.status === 'Yet to Apply' && (
                 <TooltipProvider>

@@ -7,6 +7,7 @@ import { applications, users, resumes } from '@/lib/db/schema';
 import { eq } from 'drizzle-orm';
 import type { Application, User } from '@/lib/types';
 import { extractResumeText } from '@/ai/flows/extract-resume-text';
+import { scoreResume } from '@/ai/flows/score-resume';
 
 export async function addApplication(data: Omit<Application, 'id' | 'user' | 'appliedOn' | 'oaDueDate' | 'createdAt' | 'location'> & { locations: string[] }) {
   const usersToApplyFor = data.userId === 'all' 
@@ -79,6 +80,40 @@ export async function updateApplication(appId: string, data: Partial<Application
     delete payload.createdAt;
   }
   
+  // Handle resume match score calculation
+  const shouldCalculateScore = data.resumeId !== undefined;
+
+  if (shouldCalculateScore) {
+    if (data.resumeId) { // resume is being added or changed
+      try {
+        const application = await db.query.applications.findFirst({ where: eq(applications.id, appId) });
+        const resume = await db.query.resumes.findFirst({ where: eq(resumes.id, data.resumeId) });
+        
+        if (application?.jobDescription && resume?.resumeText) {
+          const { score, summary } = await scoreResume({
+            resumeText: resume.resumeText,
+            jobDescription: application.jobDescription,
+          });
+          payload.resumeMatchScore = score;
+          payload.resumeMatchSummary = summary;
+        } else {
+          // Not enough info to score, so nullify
+          payload.resumeMatchScore = null;
+          payload.resumeMatchSummary = null;
+        }
+      } catch (e) {
+        console.error("Failed to calculate resume match score:", e);
+        // Don't block the main update if scoring fails.
+        // Just nullify the fields.
+        payload.resumeMatchScore = null;
+        payload.resumeMatchSummary = null;
+      }
+    } else { // resume is being removed (data.resumeId is null)
+      payload.resumeMatchScore = null;
+      payload.resumeMatchSummary = null;
+    }
+  }
+
   await db.update(applications).set(payload).where(eq(applications.id, appId));
   revalidatePath('/');
 }

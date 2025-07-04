@@ -6,6 +6,7 @@ import {
   timestamp,
   pgEnum,
   boolean,
+  integer,
 } from 'drizzle-orm/pg-core';
 import { createId } from '@paralleldrive/cuid2';
 
@@ -70,4 +71,6 @@ export const applications = pgTable('applications', {
     interviewDateTimezone9: varchar('interview_date_timezone_9', { length: 255 }),
     interviewDate10: timestamp('interview_date_10'),
     interviewDateTimezone10: varchar('interview_date_timezone_10', { length: 255 }),
+    resumeMatchScore: integer('resume_match_score'),
+    resumeMatchSummary: text('resume_match_summary'),
 });

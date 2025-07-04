@@ -129,4 +129,6 @@ export interface Application {
   interviewDateTimezone9?: string | null;
   interviewDate10?: Date | null;
   interviewDateTimezone10?: string | null;
+  resumeMatchScore?: number | null;
+  resumeMatchSummary?: string | null;
 }
