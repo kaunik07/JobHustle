@@ -15,7 +15,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { type Application, type ApplicationStatus, statuses, categories, type ApplicationCategory, type User, applicationTypes, type ApplicationType, workArrangements, type ApplicationWorkArrangement } from '@/lib/types';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { ExternalLink, Trash2, CalendarIcon, CheckCircle2, Plus } from 'lucide-react';
+import { ExternalLink, Trash2, CalendarIcon, CheckCircle2, Plus, Upload, Loader2 } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -38,7 +38,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
-import { updateApplication, deleteApplication } from '@/app/actions';
+import { updateApplication, deleteApplication, extractAndSaveResume, clearResume } from '@/app/actions';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 interface ApplicationDetailsDialogProps {
@@ -75,8 +75,8 @@ export function ApplicationDetailsDialog({ application, children }: ApplicationD
   const [currentJobTitle, setCurrentJobTitle] = React.useState(application.jobTitle);
   const [currentCompanyName, setCurrentCompanyName] = React.useState(application.companyName);
   const [currentLocation, setCurrentLocation] = React.useState(application.location);
-  const [currentResumeUrl, setCurrentResumeUrl] = React.useState(application.resumeUrl || '');
   const [currentOaSkipped, setCurrentOaSkipped] = React.useState(application.oaSkipped);
+  const [isUploading, setIsUploading] = React.useState(false);
 
   // State for OA date/time
   const [oaDueTime, setOaDueTime] = React.useState('23:59');
@@ -99,7 +99,6 @@ export function ApplicationDetailsDialog({ application, children }: ApplicationD
       setCurrentCompanyName(application.companyName);
       setCurrentLocation(application.location);
       setCurrentNotes(application.notes || '');
-      setCurrentResumeUrl(application.resumeUrl || '');
       setCurrentOaSkipped(application.oaSkipped);
       
       const initialTimezone = application.oaDueDateTimezone || Intl.DateTimeFormat().resolvedOptions().timeZone;
@@ -156,23 +155,6 @@ export function ApplicationDetailsDialog({ application, children }: ApplicationD
     } catch (error) {
       toast({ variant: 'destructive', title: 'Update failed. Please try again.' });
       return false;
-    }
-  };
-
-  const handleResumeUrlBlur = async () => {
-    if (currentResumeUrl !== (application.resumeUrl || '')) {
-      const success = await handleUpdate({ resumeUrl: currentResumeUrl.trim() === '' ? null : currentResumeUrl });
-      if (success) {
-        toast({ title: 'Resume updated.' });
-      }
-    }
-  };
-
-  const handleClearResume = async () => {
-    const success = await handleUpdate({ resumeUrl: null });
-    if (success) {
-      setCurrentResumeUrl('');
-      toast({ title: 'Resume removed.' });
     }
   };
 
@@ -386,6 +368,47 @@ export function ApplicationDetailsDialog({ application, children }: ApplicationD
   }
 
   const showOaSkipToggle = !['Yet to Apply', 'OA'].includes(application.status);
+
+  const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    if (file.type !== 'application/pdf') {
+        toast({ variant: 'destructive', title: 'Invalid file type. Please upload a PDF.' });
+        return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+        toast({ variant: 'destructive', title: 'File is too large. Please upload a PDF under 5MB.' });
+        return;
+    }
+
+    setIsUploading(true);
+    try {
+        const resumeDataUri = await new Promise<string>((resolve, reject) => {
+            const reader = new FileReader();
+            reader.readAsDataURL(file);
+            reader.onload = () => resolve(reader.result as string);
+            reader.onerror = (error) => reject(error);
+        });
+        await extractAndSaveResume(application.id, resumeDataUri);
+        toast({ title: 'Resume uploaded and text extracted.' });
+    } catch (error) {
+        toast({ variant: 'destructive', title: 'Upload failed. Please try again.' });
+    } finally {
+        setIsUploading(false);
+        event.target.value = '';
+    }
+  };
+
+  const handleClearResume = async () => {
+    try {
+      await clearResume(application.id);
+      toast({ title: 'Resume cleared.' });
+    } catch (error) {
+       toast({ variant: 'destructive', title: 'Failed to clear resume.' });
+    }
+  };
 
 
   return (
@@ -759,37 +782,43 @@ export function ApplicationDetailsDialog({ application, children }: ApplicationD
             </div>
             
             <div className="space-y-2">
-              <Label htmlFor="resumeUrl" className="font-semibold">Resume</Label>
-              <div className="flex items-center gap-2">
-                <Input
-                  id="resumeUrl"
-                  placeholder="Paste a link or note"
-                  value={currentResumeUrl}
-                  onChange={(e) => setCurrentResumeUrl(e.target.value)}
-                  onBlur={handleResumeUrlBlur}
-                />
-                {application.resumeUrl ? (
-                  <>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={handleClearResume}
-                      className="h-9 w-9 shrink-0 text-muted-foreground hover:text-destructive"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                      <span className="sr-only">Clear Resume</span>
-                    </Button>
-                    {application.resumeUrl.startsWith('http') && (
-                      <Button asChild variant="outline" size="icon" className="h-9 w-9 shrink-0">
-                        <a href={application.resumeUrl} target="_blank" rel="noopener noreferrer">
-                          <ExternalLink className="h-4 w-4" />
-                          <span className="sr-only">Open Link</span>
-                        </a>
+              <h3 className="font-semibold">Resume</h3>
+              {application.resumeText ? (
+                  <div className="space-y-2">
+                      <ScrollArea className="h-48 rounded-md border p-4">
+                          <p className="text-sm text-muted-foreground whitespace-pre-wrap">
+                              {application.resumeText}
+                          </p>
+                      </ScrollArea>
+                      <Button onClick={handleClearResume} variant="destructive" size="sm">
+                          <Trash2 className="mr-2 h-4 w-4" /> Clear Resume
                       </Button>
-                    )}
-                  </>
-                ) : null}
-              </div>
+                  </div>
+              ) : (
+                  <div>
+                      <input
+                          id="resume-upload"
+                          type="file"
+                          accept="application/pdf"
+                          onChange={handleFileChange}
+                          className="hidden"
+                          disabled={isUploading}
+                      />
+                      <Button asChild>
+                          <label htmlFor="resume-upload" className={cn(isUploading && 'cursor-not-allowed opacity-50')}>
+                              {isUploading ? (
+                                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                              ) : (
+                                  <Upload className="mr-2 h-4 w-4" />
+                              )}
+                              Upload PDF
+                          </label>
+                      </Button>
+                      <p className="text-sm text-muted-foreground mt-2">
+                          Upload a PDF to extract its text content for AI analysis.
+                      </p>
+                  </div>
+              )}
             </div>
 
             {isInterviewStage && (

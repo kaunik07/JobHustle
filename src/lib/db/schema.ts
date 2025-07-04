@@ -30,6 +30,7 @@ export const applications = pgTable('applications', {
     jobUrl: text('job_url').notNull(),
     jobDescription: text('job_description'),
     resumeUrl: text('resume_url'),
+    resumeText: text('resume_text'),
     type: applicationTypeEnum('type').notNull(),
     category: categoriesEnum('category').notNull(),
     workArrangement: workArrangementEnum('work_arrangement'),

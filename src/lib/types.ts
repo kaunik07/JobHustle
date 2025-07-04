@@ -86,6 +86,7 @@ export interface Application {
   jobUrl: string;
   jobDescription?: string | null;
   resumeUrl?: string | null;
+  resumeText?: string | null;
   type: ApplicationType;
   category: ApplicationCategory;
   workArrangement?: ApplicationWorkArrangement | null;

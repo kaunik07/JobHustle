@@ -6,6 +6,7 @@ import { db } from '@/lib/db';
 import { applications, users } from '@/lib/db/schema';
 import { eq } from 'drizzle-orm';
 import type { Application, User } from '@/lib/types';
+import { extractResumeText } from '@/ai/flows/extract-resume-text';
 
 export async function addApplication(data: Omit<Application, 'id' | 'user' | 'resumeUrl' | 'appliedOn' | 'oaDueDate' | 'createdAt' | 'location'> & { locations: string[] }) {
   const usersToApplyFor = data.userId === 'all' 
@@ -101,4 +102,16 @@ export async function addUser(data: Omit<User, 'id' | 'avatarUrl'>) {
 export async function deleteUser(userId: string) {
     await db.delete(users).where(eq(users.id, userId));
     revalidatePath('/');
+}
+
+export async function extractAndSaveResume(appId: string, resumeDataUri: string) {
+  const { resumeText } = await extractResumeText({ resumeDataUri });
+  // Also clear the old resumeUrl field to avoid confusion
+  await db.update(applications).set({ resumeText, resumeUrl: null }).where(eq(applications.id, appId));
+  revalidatePath('/');
+}
+
+export async function clearResume(appId: string) {
+  await db.update(applications).set({ resumeText: null, resumeUrl: null }).where(eq(applications.id, appId));
+  revalidatePath('/');
 }
