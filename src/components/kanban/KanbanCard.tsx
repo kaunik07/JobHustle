@@ -1,4 +1,3 @@
-
 'use client';
 
 import * as React from 'react';
@@ -186,14 +185,11 @@ export function KanbanCard({ application, selectedUserId }: KanbanCardProps) {
                     <TooltipTrigger asChild>
                       <Badge variant="secondary" className="flex items-center gap-1.5 cursor-default">
                         <Sparkles className="h-3 w-3 text-yellow-400" />
-                        {topResumeScore.score}
+                        <span>Suggested: {topResumeScore.resume.name} ({topResumeScore.score})</span>
                       </Badge>
                     </TooltipTrigger>
                     <TooltipContent>
-                      <p className="max-w-[250px] text-sm font-semibold">
-                        Top match: {topResumeScore.resume.name}
-                      </p>
-                      <p className="max-w-[250px] text-sm text-muted-foreground mt-1">
+                      <p className="max-w-[250px] text-sm text-muted-foreground">
                         {topResumeScore.summary}
                       </p>
                     </TooltipContent>
