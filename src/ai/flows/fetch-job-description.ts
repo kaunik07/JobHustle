@@ -50,7 +50,7 @@ const prompt = ai.definePrompt({
   - Company Name
   - Job Title
   - Location (e.g., "City, ST", "Remote")
-  - The full Job Description text
+  - The full Job Description text. It is crucial that you extract the **entire, exact, and un-summarized** job description text from the webpage. Do not alter or shorten it.
   - Employment Type
   - Job Category
   - Work Arrangement
