@@ -22,7 +22,7 @@ export type FetchJobDescriptionInput = z.infer<typeof FetchJobDescriptionInputSc
 
 // Output is just the citizenship flag
 const FetchJobDescriptionOutputSchema = z.object({
-    isUsCitizenOnly: z.boolean().optional().describe('Whether the job is restricted to US citizens only. This is often indicated by phrases like "US Citizenship required", "must be a US Citizen", or mentions of security clearance requirements.'),
+    isUsCitizenOnly: z.boolean().describe('Whether the job is restricted to US citizens only. This is often indicated by phrases like "US Citizenship required", "must be a US Citizen", or mentions of security clearance requirements.'),
 });
 export type FetchJobDescriptionOutput = z.infer<typeof FetchJobDescriptionOutputSchema>;
 

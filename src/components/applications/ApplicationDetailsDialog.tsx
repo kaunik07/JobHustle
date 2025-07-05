@@ -87,19 +87,6 @@ export function ApplicationDetailsDialog({ application, children }: ApplicationD
   const [timezones, setTimezones] = React.useState<string[]>([]);
   const isInterviewStage = application.status === 'Interview';
 
-  const wasRecentlyCreated = React.useMemo(() => {
-    if (!application.createdAt) return false;
-    const now = new Date();
-    const createdAt = new Date(application.createdAt);
-    const diffInSeconds = (now.getTime() - createdAt.getTime()) / 1000;
-    return diffInSeconds < 30; // Heuristic: scoring should be done within 30 seconds.
-  }, [application.createdAt]);
-
-  const showResumeScoreLoader =
-    wasRecentlyCreated &&
-    !!application.jobDescription &&
-    (!application.resumeScores || application.resumeScores.length === 0);
-
   const userResumes = React.useMemo(() => {
     if (application.user?.resumes && application.user.resumes.length > 0) {
         return application.user.resumes;
@@ -844,14 +831,7 @@ export function ApplicationDetailsDialog({ application, children }: ApplicationD
                   </Tooltip>
                 </TooltipProvider>
               </div>
-              {showResumeScoreLoader ? (
-                <div className="flex items-center justify-center rounded-lg border-2 border-dashed p-4 text-center">
-                  <div className="flex items-center gap-2 text-muted-foreground">
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                    <span>Getting scores...</span>
-                  </div>
-                </div>
-              ) : (application.resumeScores && application.resumeScores.length > 0) ? (
+              {(application.resumeScores && application.resumeScores.length > 0) ? (
                 <div className="space-y-1 rounded-lg border p-1">
                   {application.resumeScores
                     .sort((a, b) => b.score - a.score) // Sort by score descending
