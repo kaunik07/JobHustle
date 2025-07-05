@@ -932,17 +932,6 @@ export function ApplicationDetailsDialog({ application, children }: ApplicationD
                         </p>
                     </div>
                 )}
-
-                {application.suggestions && (
-                    <Accordion type="single" collapsible className="w-full">
-                        <AccordionItem value="item-1">
-                            <AccordionTrigger>View Improvement Suggestions</AccordionTrigger>
-                            <AccordionContent>
-                                <p className="text-sm text-muted-foreground whitespace-pre-wrap">{application.suggestions}</p>
-                            </AccordionContent>
-                        </AccordionItem>
-                    </Accordion>
-                )}
             </div>
 
             {isInterviewStage && (
