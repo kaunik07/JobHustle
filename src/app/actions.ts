@@ -95,11 +95,9 @@ export async function bulkAddApplications(applicationsData: Array<Omit<Applicati
     throw new Error("No users exist in the system. Please add a user before bulk importing.");
   }
 
-  const applicationsToInsert: (typeof applications.$inferInsert)[] = [];
-
   for (const data of applicationsData) {
     for (const user of allUsers) {
-        applicationsToInsert.push({
+        const [newApplication] = await db.insert(applications).values({
           companyName: data.companyName,
           jobTitle: data.jobTitle,
           jobUrl: data.jobUrl,
@@ -112,12 +110,27 @@ export async function bulkAddApplications(applicationsData: Array<Omit<Applicati
           userId: user.id,
           appliedOn: null,
           jobDescription: data.jobDescription,
-        });
-    }
-  }
+          isUsCitizenOnly: false,
+        }).returning({ id: applications.id });
 
-  if (applicationsToInsert.length > 0) {
-    await db.insert(applications).values(applicationsToInsert);
+        // After creating the application, trigger analysis if a job description exists.
+        if (data.jobDescription) {
+            const jd = data.jobDescription;
+            const scoringPromise = scoreResumesForApplication(newApplication.id, user.id, jd);
+            
+            const citizenshipPromise = fetchJobDescription({ jobDescription: jd })
+            .then(result => {
+                if (result && result.isUsCitizenOnly !== undefined) {
+                return db.update(applications)
+                    .set({ isUsCitizenOnly: result.isUsCitizenOnly })
+                    .where(eq(applications.id, newApplication.id));
+                }
+            }).catch(err => console.error("Citizenship analysis failed for bulk add:", err));
+
+            // Await both background tasks for this application before moving to the next
+            await Promise.all([scoringPromise, citizenshipPromise]);
+        }
+    }
   }
 
   revalidatePath('/');

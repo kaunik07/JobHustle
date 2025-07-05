@@ -86,7 +86,7 @@ export function BulkAddDialog() {
           await bulkAddApplications(applications);
           toast({
             title: 'Upload Successful',
-            description: `${applications.length} application entries have been processed and added for all users.`,
+            description: `${applications.length} application entries are being added. AI analysis will run in the background.`,
           });
           setCsvFile(null);
           if (csvFileInputRef.current) {
@@ -127,7 +127,7 @@ export function BulkAddDialog() {
         <DialogHeader className="p-6 pb-4 flex-shrink-0">
           <DialogTitle>Bulk Add Applications from CSV</DialogTitle>
           <DialogDescription>
-            Upload a CSV with pre-filled application data to add multiple jobs at once.
+            Upload a CSV to add multiple jobs at once. If a job description is provided, AI will automatically analyze it.
           </DialogDescription>
         </DialogHeader>
 
