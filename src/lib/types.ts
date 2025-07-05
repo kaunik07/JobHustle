@@ -105,6 +105,8 @@ export interface Application {
   location: string;
   jobUrl: string;
   jobDescription?: string | null;
+  keywords?: string[] | null;
+  suggestions?: string | null;
   type: ApplicationType;
   category: ApplicationCategory;
   workArrangement?: ApplicationWorkArrangement | null;

@@ -39,6 +39,8 @@ export const applications = pgTable('applications', {
     location: varchar('location', { length: 255 }).notNull(),
     jobUrl: text('job_url').notNull(),
     jobDescription: text('job_description'),
+    keywords: text('keywords').array(),
+    suggestions: text('suggestions'),
     type: applicationTypeEnum('type').notNull(),
     category: categoriesEnum('category').notNull(),
     workArrangement: workArrangementEnum('work_arrangement'),

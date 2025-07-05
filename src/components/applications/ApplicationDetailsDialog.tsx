@@ -37,8 +37,9 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
-import { updateApplication, deleteApplication, reevaluateScores } from '@/app/actions';
+import { updateApplication, deleteApplication, reevaluateScores, reevaluateKeywords } from '@/app/actions';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 
 interface ApplicationDetailsDialogProps {
   application: Application;
@@ -69,6 +70,7 @@ export function ApplicationDetailsDialog({ application, children }: ApplicationD
   const [open, setOpen] = React.useState(false);
   const { toast } = useToast();
   const [isReevaluating, setIsReevaluating] = React.useState(false);
+  const [isReevaluatingKeywords, setIsReevaluatingKeywords] = React.useState(false);
   const companyDomain = application.companyName.toLowerCase().replace(/[^a-z0-9]/gi, '') + '.com';
   
   const [currentNotes, setCurrentNotes] = React.useState(application.notes || '');
@@ -389,6 +391,22 @@ export function ApplicationDetailsDialog({ application, children }: ApplicationD
       toast({ variant: 'destructive', title: 'Re-evaluation Failed', description: error instanceof Error ? error.message : 'An unknown error occurred.' });
     } finally {
       setIsReevaluating(false);
+    }
+  };
+
+  const handleReevaluateKeywords = async () => {
+    if (!application.jobDescription) {
+        toast({ variant: 'destructive', title: 'Cannot Re-evaluate', description: 'A job description is required to extract keywords.' });
+        return;
+    }
+    setIsReevaluatingKeywords(true);
+    try {
+      await reevaluateKeywords(application.id);
+      toast({ title: "Re-evaluation complete", description: "The keywords and suggestions have been updated." });
+    } catch (error) {
+      toast({ variant: 'destructive', title: 'Keyword Extraction Failed', description: error instanceof Error ? error.message : 'An unknown error occurred.' });
+    } finally {
+      setIsReevaluatingKeywords(false);
     }
   };
 
@@ -873,6 +891,59 @@ export function ApplicationDetailsDialog({ application, children }: ApplicationD
               )}
             </div>
 
+            <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                    <h3 className="font-semibold">AI Analysis & Keywords</h3>
+                    <TooltipProvider>
+                        <Tooltip>
+                            <TooltipTrigger asChild>
+                                <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    onClick={handleReevaluateKeywords}
+                                    disabled={isReevaluatingKeywords || !application.jobDescription}
+                                    className="h-7 w-7"
+                                >
+                                    {isReevaluatingKeywords ? (
+                                        <Loader2 className="h-4 w-4 animate-spin" />
+                                    ) : (
+                                        <RefreshCw className="h-4 w-4" />
+                                    )}
+                                    <span className="sr-only">Re-evaluate Keywords</span>
+                                </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                                <p>{!application.jobDescription ? "Add a job description to enable analysis" : "Re-analyze keywords & suggestions"}</p>
+                            </TooltipContent>
+                        </Tooltip>
+                    </TooltipProvider>
+                </div>
+
+                {application.keywords && application.keywords.length > 0 ? (
+                    <div className="flex flex-wrap gap-2">
+                        {application.keywords.map((keyword, index) => (
+                            <Badge key={index} variant="secondary">{keyword}</Badge>
+                        ))}
+                    </div>
+                ) : (
+                    <div className="flex items-center justify-center rounded-lg border-2 border-dashed p-4 text-center">
+                        <p className="text-sm text-muted-foreground">
+                            No keywords extracted. Add a job description and try re-evaluating.
+                        </p>
+                    </div>
+                )}
+
+                {application.suggestions && (
+                    <Accordion type="single" collapsible className="w-full">
+                        <AccordionItem value="item-1">
+                            <AccordionTrigger>View Improvement Suggestions</AccordionTrigger>
+                            <AccordionContent>
+                                <p className="text-sm text-muted-foreground whitespace-pre-wrap">{application.suggestions}</p>
+                            </AccordionContent>
+                        </AccordionItem>
+                    </Accordion>
+                )}
+            </div>
 
             {isInterviewStage && (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4 pt-4 border-t">

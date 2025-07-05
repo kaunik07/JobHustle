@@ -9,6 +9,7 @@ import type { Application, User } from '@/lib/types';
 import { extractResumeText } from '@/ai/flows/extract-resume-text';
 import { scoreResume } from '@/ai/flows/score-resume';
 import { fetchJobDescription } from '@/ai/flows/fetch-job-description';
+import { extractKeywords } from '@/ai/flows/extract-keywords';
 
 // This function will be called to score resumes against a job description.
 async function scoreResumesForApplication(applicationId: string, userId: string, jobDescription: string) {
@@ -43,7 +44,7 @@ async function scoreResumesForApplication(applicationId: string, userId: string,
   }
 }
 
-export async function addApplication(data: Omit<Application, 'id' | 'user' | 'appliedOn' | 'oaDueDate' | 'createdAt' | 'location' | 'isUsCitizenOnly'> & { locations: string[] }) {
+export async function addApplication(data: Omit<Application, 'id' | 'user' | 'appliedOn' | 'oaDueDate' | 'createdAt' | 'location' | 'isUsCitizenOnly' | 'keywords' | 'suggestions'> & { locations: string[] }) {
   const usersToApplyFor = data.userId === 'all' 
     ? await db.select().from(users) 
     : await db.select().from(users).where(eq(users.id, data.userId));
@@ -80,8 +81,17 @@ export async function addApplication(data: Omit<Application, 'id' | 'user' | 'ap
             }
           }).catch(err => console.error("Citizenship analysis failed:", err));
 
-        // Await both background tasks
-        await Promise.all([scoringPromise, citizenshipPromise]);
+        const keywordPromise = extractKeywords({ jobDescription: jd })
+          .then(result => {
+            if (result) {
+              return db.update(applications)
+                .set({ keywords: result.keywords, suggestions: result.suggestions })
+                .where(eq(applications.id, newApplication.id));
+            }
+          }).catch(err => console.error("Keyword extraction failed:", err));
+
+        // Await all background tasks
+        await Promise.all([scoringPromise, citizenshipPromise, keywordPromise]);
       }
     }
   }
@@ -127,8 +137,17 @@ export async function bulkAddApplications(applicationsData: Array<Omit<Applicati
                 }
             }).catch(err => console.error("Citizenship analysis failed for bulk add:", err));
 
+            const keywordPromise = extractKeywords({ jobDescription: jd })
+              .then(result => {
+                if (result) {
+                  return db.update(applications)
+                    .set({ keywords: result.keywords, suggestions: result.suggestions })
+                    .where(eq(applications.id, newApplication.id));
+                }
+              }).catch(err => console.error("Keyword extraction failed for bulk add:", err));
+
             // Await both background tasks for this application before moving to the next
-            await Promise.all([scoringPromise, citizenshipPromise]);
+            await Promise.all([scoringPromise, citizenshipPromise, keywordPromise]);
         }
     }
   }
@@ -184,6 +203,33 @@ export async function reevaluateScores(applicationId: string) {
     console.error("Error re-evaluating resume scores:", error);
     // Let the client know something went wrong
     throw new Error('Failed to re-evaluate resume scores.');
+  }
+}
+
+export async function reevaluateKeywords(applicationId: string) {
+  try {
+    const [application] = await db
+      .select({
+        jobDescription: applications.jobDescription,
+      })
+      .from(applications)
+      .where(eq(applications.id, applicationId));
+
+    if (!application || !application.jobDescription) {
+      console.warn(`Keyword re-evaluation skipped: Application ${applicationId} has no job description.`);
+      return;
+    }
+
+    const { keywords, suggestions } = await extractKeywords({ jobDescription: application.jobDescription });
+
+    await db.update(applications)
+      .set({ keywords, suggestions })
+      .where(eq(applications.id, applicationId));
+    
+    revalidatePath('/');
+  } catch (error) {
+    console.error("Error re-evaluating keywords:", error);
+    throw new Error('Failed to re-evaluate keywords.');
   }
 }
 
