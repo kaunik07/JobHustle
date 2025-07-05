@@ -45,7 +45,7 @@ export function JobTrackerClient({
   const searchParams = useSearchParams();
   const { toast } = useToast();
 
-  const [sidebarOpen, setSidebarOpen] = React.useState(true);
+  const [sidebarOpen, setSidebarOpen] = React.useState(false);
   const [view, setView] = React.useState<'board' | 'resumes'>('board');
   const [locationQuery, setLocationQuery] = React.useState(selectedLocation);
   const [companyQuery, setCompanyQuery] = React.useState(selectedCompany);
