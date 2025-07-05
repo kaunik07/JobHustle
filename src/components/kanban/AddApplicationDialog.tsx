@@ -110,18 +110,12 @@ export function AddApplicationDialog({ children, users, selectedUserId, allLocat
     try {
       const details = await fetchJobDescription({ jobUrl });
       if (details) {
-        if(details.companyName) form.setValue('companyName', details.companyName, { shouldValidate: true });
-        if(details.jobTitle) form.setValue('jobTitle', details.summarizedJobTitle || details.jobTitle, { shouldValidate: true });
-        if(details.location) form.setValue('locations', [details.location], { shouldValidate: true });
-        if(details.type) form.setValue('type', details.type, { shouldValidate: true });
-        if(details.category) form.setValue('category', details.category, { shouldValidate: true });
-        if(details.workArrangement) form.setValue('workArrangement', details.workArrangement, { shouldValidate: true });
         if(details.jobDescription) form.setValue('jobDescription', details.jobDescription, { shouldValidate: true });
         if(details.isUsCitizenOnly !== undefined) form.setValue('isUsCitizenOnly', details.isUsCitizenOnly, { shouldValidate: true });
 
-        toast({ title: 'Success', description: 'Job details have been auto-filled.' });
+        toast({ title: 'Success', description: 'Job description has been fetched from the URL.' });
       } else {
-        toast({ variant: 'destructive', title: 'Could not fetch details', description: 'The AI could not extract job details from the URL. Please fill them in manually.' });
+        toast({ variant: 'destructive', title: 'Could not fetch details', description: 'The AI could not extract the job description from the URL. Please paste it in manually.' });
       }
     } catch (error) {
       console.error('Error fetching job details:', error);
@@ -347,7 +341,7 @@ export function AddApplicationDialog({ children, users, selectedUserId, allLocat
                             size="icon"
                             onClick={handleFetchJobDetails}
                             disabled={isFetchingDetails}
-                            title="Auto-fill with AI"
+                            title="Fetch Job Description"
                         >
                             {isFetchingDetails ? (
                                 <Loader2 className="h-4 w-4 animate-spin" />
