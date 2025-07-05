@@ -33,15 +33,13 @@ import {
 } from '@/components/ui/select';
 import { User, categories, statuses, applicationTypes, suggestedLocations, workArrangements } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, ChevronsUpDown, Check, X, Plus, Bot } from 'lucide-react';
+import { Loader2, ChevronsUpDown, Check, X, Plus } from 'lucide-react';
 import { Textarea } from '@/components/ui/textarea';
 import { addApplication as addApplicationAction } from '@/app/actions';
-import { fetchJobDescription } from '@/ai/flows/fetch-job-description';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
-import { Switch } from '../ui/switch';
 
 const formSchema = z.object({
   companyName: z.string().min(2, 'Company name is required'),
@@ -55,7 +53,6 @@ const formSchema = z.object({
   status: z.enum(statuses),
   userId: z.string().min(1, 'User is required'),
   notes: z.string().optional(),
-  isUsCitizenOnly: z.boolean().default(false),
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -70,7 +67,6 @@ interface AddApplicationDialogProps {
 export function AddApplicationDialog({ children, users, selectedUserId, allLocations }: AddApplicationDialogProps) {
   const [open, setOpen] = React.useState(false);
   const [isSubmitting, setIsSubmitting] = React.useState(false);
-  const [isAnalyzing, setIsAnalyzing] = React.useState(false);
   const [locationsPopoverOpen, setLocationsPopoverOpen] = React.useState(false);
   const [inputValue, setInputValue] = React.useState('');
   const { toast } = useToast();
@@ -89,37 +85,12 @@ export function AddApplicationDialog({ children, users, selectedUserId, allLocat
       status: 'Yet to Apply',
       userId: selectedUserId,
       notes: '',
-      isUsCitizenOnly: false,
     },
   });
 
   React.useEffect(() => {
     form.setValue('userId', selectedUserId);
   }, [selectedUserId, form]);
-
-  const handleAnalyzeDescription = async () => {
-    const jobDescription = form.getValues('jobDescription');
-    if (!jobDescription || jobDescription.trim().length < 20) {
-      form.setError('jobDescription', { message: 'Please provide a job description to analyze.' });
-      return;
-    }
-
-    setIsAnalyzing(true);
-    try {
-      const result = await fetchJobDescription({ jobDescription });
-      if (result && result.isUsCitizenOnly !== undefined) {
-        form.setValue('isUsCitizenOnly', result.isUsCitizenOnly, { shouldValidate: true });
-        toast({ title: 'Analysis Complete', description: 'Citizenship requirement has been updated.' });
-      } else {
-        toast({ variant: 'destructive', title: 'Could not analyze', description: 'The AI could not determine the citizenship requirement.' });
-      }
-    } catch (error) {
-      console.error('Error analyzing job description:', error);
-      toast({ variant: 'destructive', title: 'Analysis Error', description: 'An error occurred during analysis.' });
-    } finally {
-      setIsAnalyzing(false);
-    }
-  };
 
   async function onSubmit(values: FormValues) {
     setIsSubmitting(true);
@@ -143,7 +114,6 @@ export function AddApplicationDialog({ children, users, selectedUserId, allLocat
         status: 'Yet to Apply',
         workArrangement: 'On-site',
         type: 'Full-Time',
-        isUsCitizenOnly: false,
       });
     } catch (error) {
       toast({
@@ -339,31 +309,17 @@ export function AddApplicationDialog({ children, users, selectedUserId, allLocat
                 name="jobDescription"
                 render={({ field }) => (
                   <FormItem>
-                    <div className="flex justify-between items-center">
-                      <FormLabel>Job Description</FormLabel>
-                      <Button
-                            type="button"
-                            variant="outline"
-                            size="sm"
-                            onClick={handleAnalyzeDescription}
-                            disabled={isAnalyzing}
-                            className="gap-1.5"
-                        >
-                            {isAnalyzing ? (
-                                <Loader2 className="h-4 w-4 animate-spin" />
-                            ) : (
-                                <Bot className="h-4 w-4" />
-                            )}
-                            Analyze Description
-                        </Button>
-                    </div>
+                    <FormLabel>Job Description</FormLabel>
                     <FormControl>
                       <Textarea
-                        placeholder="Paste the job description here, then click Analyze."
+                        placeholder="Paste the job description here. AI will analyze it on save."
                         className="min-h-[120px]"
                         {...field}
                       />
                     </FormControl>
+                    <FormDescription>
+                      The citizenship requirement and resume scores will be determined from this text.
+                    </FormDescription>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -436,26 +392,6 @@ export function AddApplicationDialog({ children, users, selectedUserId, allLocat
                     </FormItem>
                   )}
                 />
-              <FormField
-                control={form.control}
-                name="isUsCitizenOnly"
-                render={({ field }) => (
-                  <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm">
-                    <div className="space-y-0.5">
-                      <FormLabel>US Citizen Only</FormLabel>
-                      <FormDescription>
-                        Check if this job requires US citizenship.
-                      </FormDescription>
-                    </div>
-                    <FormControl>
-                      <Switch
-                        checked={field.value}
-                        onCheckedChange={field.onChange}
-                      />
-                    </FormControl>
-                  </FormItem>
-                )}
-              />
               <div className="grid grid-cols-2 gap-4">
                  <FormField
                   control={form.control}

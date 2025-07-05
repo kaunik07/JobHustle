@@ -8,6 +8,7 @@ import { eq } from 'drizzle-orm';
 import type { Application, User } from '@/lib/types';
 import { extractResumeText } from '@/ai/flows/extract-resume-text';
 import { scoreResume } from '@/ai/flows/score-resume';
+import { fetchJobDescription } from '@/ai/flows/fetch-job-description';
 
 // This function will be called to score resumes against a job description.
 async function scoreResumesForApplication(applicationId: string, userId: string, jobDescription: string) {
@@ -42,7 +43,7 @@ async function scoreResumesForApplication(applicationId: string, userId: string,
   }
 }
 
-export async function addApplication(data: Omit<Application, 'id' | 'user' | 'appliedOn' | 'oaDueDate' | 'createdAt' | 'location'> & { locations: string[] }) {
+export async function addApplication(data: Omit<Application, 'id' | 'user' | 'appliedOn' | 'oaDueDate' | 'createdAt' | 'location' | 'isUsCitizenOnly'> & { locations: string[] }) {
   const usersToApplyFor = data.userId === 'all' 
     ? await db.select().from(users) 
     : await db.select().from(users).where(eq(users.id, data.userId));
@@ -62,13 +63,25 @@ export async function addApplication(data: Omit<Application, 'id' | 'user' | 'ap
         userId: user.id,
         appliedOn: data.status !== 'Yet to Apply' ? new Date() : null,
         jobDescription: data.jobDescription,
-        isUsCitizenOnly: data.isUsCitizenOnly,
+        isUsCitizenOnly: false, // Default to false, AI will update it
       }).returning({ id: applications.id });
 
-      // After creating the application, trigger scoring if a job description exists.
+      // After creating the application, trigger analysis if a job description exists.
       if (data.jobDescription) {
-        // This can take a moment, but it runs on the server.
-        await scoreResumesForApplication(newApplication.id, user.id, data.jobDescription);
+        const jd = data.jobDescription;
+        const scoringPromise = scoreResumesForApplication(newApplication.id, user.id, jd);
+        
+        const citizenshipPromise = fetchJobDescription({ jobDescription: jd })
+          .then(result => {
+            if (result && result.isUsCitizenOnly !== undefined) {
+              return db.update(applications)
+                .set({ isUsCitizenOnly: result.isUsCitizenOnly })
+                .where(eq(applications.id, newApplication.id));
+            }
+          }).catch(err => console.error("Citizenship analysis failed:", err));
+
+        // Await both background tasks
+        await Promise.all([scoringPromise, citizenshipPromise]);
       }
     }
   }
