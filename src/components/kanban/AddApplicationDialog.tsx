@@ -71,7 +71,7 @@ interface AddApplicationDialogProps {
 export function AddApplicationDialog({ children, users, selectedUserId, allLocations }: AddApplicationDialogProps) {
   const [open, setOpen] = React.useState(false);
   const [isSubmitting, setIsSubmitting] = React.useState(false);
-  const [isFetchingDetails, setIsFetchingDetails] = React.useState(false);
+  const [isAnalyzing, setIsAnalyzing] = React.useState(false);
   const [locationsPopoverOpen, setLocationsPopoverOpen] = React.useState(false);
   const [inputValue, setInputValue] = React.useState('');
   const { toast } = useToast();
@@ -98,30 +98,27 @@ export function AddApplicationDialog({ children, users, selectedUserId, allLocat
     form.setValue('userId', selectedUserId);
   }, [selectedUserId, form]);
 
-  const handleFetchJobDetails = async () => {
-    const jobUrl = form.getValues('jobUrl');
-    const urlCheck = z.string().url().safeParse(jobUrl);
-    if (!urlCheck.success) {
-      form.setError('jobUrl', { message: 'Please enter a valid URL to fetch.' });
+  const handleAnalyzeDescription = async () => {
+    const jobDescription = form.getValues('jobDescription');
+    if (!jobDescription || jobDescription.trim().length < 20) {
+      form.setError('jobDescription', { message: 'Please provide a job description to analyze.' });
       return;
     }
 
-    setIsFetchingDetails(true);
+    setIsAnalyzing(true);
     try {
-      const details = await fetchJobDescription({ jobUrl });
-      if (details) {
-        if(details.jobDescription) form.setValue('jobDescription', details.jobDescription, { shouldValidate: true });
-        if(details.isUsCitizenOnly !== undefined) form.setValue('isUsCitizenOnly', details.isUsCitizenOnly, { shouldValidate: true });
-
-        toast({ title: 'Success', description: 'Job description has been fetched from the URL.' });
+      const result = await fetchJobDescription({ jobDescription });
+      if (result && result.isUsCitizenOnly !== undefined) {
+        form.setValue('isUsCitizenOnly', result.isUsCitizenOnly, { shouldValidate: true });
+        toast({ title: 'Analysis Complete', description: 'Citizenship requirement has been updated.' });
       } else {
-        toast({ variant: 'destructive', title: 'Could not fetch details', description: 'The AI could not extract the job description from the URL. Please paste it in manually.' });
+        toast({ variant: 'destructive', title: 'Could not analyze', description: 'The AI could not determine the citizenship requirement.' });
       }
     } catch (error) {
-      console.error('Error fetching job details:', error);
-      toast({ variant: 'destructive', title: 'Fetch Error', description: 'An error occurred while fetching job details.' });
+      console.error('Error analyzing job description:', error);
+      toast({ variant: 'destructive', title: 'Analysis Error', description: 'An error occurred during analysis.' });
     } finally {
-      setIsFetchingDetails(false);
+      setIsAnalyzing(false);
     }
   };
 
@@ -331,25 +328,9 @@ export function AddApplicationDialog({ children, users, selectedUserId, allLocat
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Job Posting URL</FormLabel>
-                    <div className="flex items-center gap-2">
-                        <FormControl>
-                            <Input placeholder="https://example.com/job/123" {...field} />
-                        </FormControl>
-                        <Button
-                            type="button"
-                            variant="outline"
-                            size="icon"
-                            onClick={handleFetchJobDetails}
-                            disabled={isFetchingDetails}
-                            title="Fetch Job Description"
-                        >
-                            {isFetchingDetails ? (
-                                <Loader2 className="h-4 w-4 animate-spin" />
-                            ) : (
-                                <Bot className="h-4 w-4" />
-                            )}
-                        </Button>
-                    </div>
+                    <FormControl>
+                        <Input placeholder="https://example.com/job/123" {...field} />
+                    </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -359,10 +340,27 @@ export function AddApplicationDialog({ children, users, selectedUserId, allLocat
                 name="jobDescription"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Job Description</FormLabel>
+                    <div className="flex justify-between items-center">
+                      <FormLabel>Job Description</FormLabel>
+                      <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={handleAnalyzeDescription}
+                            disabled={isAnalyzing}
+                            className="gap-1.5"
+                        >
+                            {isAnalyzing ? (
+                                <Loader2 className="h-4 w-4 animate-spin" />
+                            ) : (
+                                <Bot className="h-4 w-4" />
+                            )}
+                            Analyze Description
+                        </Button>
+                    </div>
                     <FormControl>
                       <Textarea
-                        placeholder="Paste the job description here, or fetch it from the URL above."
+                        placeholder="Paste the job description here, then click Analyze."
                         className="min-h-[120px]"
                         {...field}
                       />

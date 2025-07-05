@@ -2,30 +2,31 @@
 'use server';
 
 /**
- * @fileOverview Job description fetching AI agent.
+ * @fileOverview Job description analysis AI agent.
  *
- * - fetchJobDescription - A function that handles the job description fetching process.
+ * - fetchJobDescription - A function that handles the job description analysis process.
  * - FetchJobDescriptionInput - The input type for the fetchJobDescription function.
- * - FetchJobDescriptionOutput - The return type for the fetchJobdescription function.
+ * - FetchJobDescriptionOutput - The return type for the fetchJobDescription function.
  */
 
 import {ai} from '@/ai/genkit';
 import {z} from 'zod';
 
+// Input is now the job description text itself
 const FetchJobDescriptionInputSchema = z.object({
-  jobUrl: z
+  jobDescription: z
     .string()
-    .url()
-    .describe('The URL of the job description page.'),
+    .describe('The full text of the job description to be analyzed.'),
 });
 export type FetchJobDescriptionInput = z.infer<typeof FetchJobDescriptionInputSchema>;
 
+// Output is just the citizenship flag
 const FetchJobDescriptionOutputSchema = z.object({
-    jobDescription: z.string().describe('The full, un-summarized job description text extracted from the page. If no description is found, return an empty string.'),
     isUsCitizenOnly: z.boolean().optional().describe('Whether the job is restricted to US citizens only. This is often indicated by phrases like "US Citizenship required", "must be a US Citizen", or mentions of security clearance requirements.'),
 });
 export type FetchJobDescriptionOutput = z.infer<typeof FetchJobDescriptionOutputSchema>;
 
+// The function name is kept for simplicity, but its role has changed.
 export async function fetchJobDescription(input: FetchJobDescriptionInput): Promise<FetchJobDescriptionOutput> {
   return fetchJobDescriptionFlow(input);
 }
@@ -34,16 +35,16 @@ const prompt = ai.definePrompt({
   name: 'fetchJobDescriptionPrompt',
   input: {schema: FetchJobDescriptionInputSchema},
   output: {schema: FetchJobDescriptionOutputSchema},
-  prompt: `You are an expert AI assistant that extracts specific data from a job posting URL.
+  prompt: `You are an expert AI assistant that analyzes raw job description text. Your task is to determine if the job has a US citizenship requirement.
 
-  Please visit the following URL and extract only the requested information.
-  URL: {{jobUrl}}
+  Analyze the provided job description text.
+  Job Description:
+  {{{jobDescription}}}
 
-  You must extract the following details:
-  - Job Description: This is the most critical field. You MUST extract the **entire, exact, and un-summarized** job description text from the webpage for the specific job at the URL. Your role for this field is to copy and paste the raw text. Do not clean, alter, rephrase, or shorten it in any way. Preserve all original line breaks and formatting as best as possible. **If you cannot find a job description, you MUST return an empty string for this field.**
-  - US Citizen Only: Check the job description for any requirements related to US citizenship (e.g., "US Citizenship required", "must be a US citizen", "requires security clearance"). Set the isUsCitizenOnly flag to true if such a requirement is found.
-
-  Do NOT extract any other information like company name, job title, or location.`,
+  You must determine the following:
+  - isUsCitizenOnly: Check the job description for any requirements related to US citizenship (e.g., "US Citizenship required", "must be a US citizen", "requires security clearance"). Set this flag to true if such a requirement is found, otherwise set it to false.
+  
+  Only output the boolean flag. Do not extract any other information.`,
 });
 
 const fetchJobDescriptionFlow = ai.defineFlow(
