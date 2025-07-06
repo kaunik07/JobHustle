@@ -23,7 +23,7 @@ export type FetchJobDescriptionInput = z.infer<typeof FetchJobDescriptionInputSc
 // Output is now the citizenship flag
 const FetchJobDescriptionOutputSchema = z.object({
     isUsCitizenOnly: z.boolean().describe('Whether the job is restricted to US citizens only. This is often indicated by phrases like "US Citizenship required", "must be a US Citizen", or mentions of security clearance requirements.'),
-    sponsorshipNotOffered: z.boolean().describe('Whether the job description explicitly states that visa sponsorship is not available. This is often indicated by phrases like "sponsorship not available", "we do not sponsor visas", or "candidates must have pre-existing work authorization."')
+    sponsorshipNotOffered: z.boolean().describe('Whether the job description explicitly states that visa sponsorship is not available. This is true if it says "sponsorship not available" or "we do not sponsor visas". A phrase like "must have work authorization" is only true if it is explicitly paired with a refusal to sponsor (e.g., "...without company sponsorship"). Otherwise, it is false.')
 });
 export type FetchJobDescriptionOutput = z.infer<typeof FetchJobDescriptionOutputSchema>;
 
@@ -44,7 +44,11 @@ const prompt = ai.definePrompt({
 
   You must determine the following two things:
   - isUsCitizenOnly: Check for requirements related to US citizenship (e.g., "US Citizenship required", "must be a US citizen", "requires security clearance"). Set this to true if found, otherwise false.
-  - sponsorshipNotOffered: Check for statements indicating that visa sponsorship is not available (e.g., "sponsorship not available", "we do not sponsor visas", "must have work authorization"). Set this to true if found, otherwise false.
+  - sponsorshipNotOffered: Check for statements indicating that visa sponsorship is not available. 
+    - Explicit phrases like "sponsorship not available" or "we do not sponsor visas" mean this is \`true\`.
+    - Phrases like "must have work authorization" or "authorized to work in the US" ONLY mean this is \`true\` if they are accompanied by a refusal to sponsor, such as "...without sponsorship".
+    - If the job description only says "must have work authorization" without mentioning sponsorship, you should set this to \`false\`.
+    - Set this to \`true\` only if sponsorship is *explicitly* not offered. Otherwise, set it to \`false\`.
   
   Only output the boolean flags. Do not extract any other information.`,
 });
