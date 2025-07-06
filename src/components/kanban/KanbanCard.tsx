@@ -175,6 +175,9 @@ export function KanbanCard({ application, selectedUserId }: KanbanCardProps) {
             {application.isUsCitizenOnly && (
               <Badge variant="destructive">US Citizen</Badge>
             )}
+            {application.sponsorshipNotOffered && (
+              <Badge variant="destructive">No Sponsorship</Badge>
+            )}
           </div>
           
           <div className="flex justify-between items-center pt-2">

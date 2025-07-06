@@ -44,7 +44,7 @@ async function scoreResumesForApplication(applicationId: string, userId: string,
   }
 }
 
-export async function addApplication(data: Omit<Application, 'id' | 'user' | 'appliedOn' | 'oaDueDate' | 'createdAt' | 'location' | 'isUsCitizenOnly' | 'keywords' | 'suggestions'> & { locations: string[] }) {
+export async function addApplication(data: Omit<Application, 'id' | 'user' | 'appliedOn' | 'oaDueDate' | 'createdAt' | 'location' | 'isUsCitizenOnly' | 'sponsorshipNotOffered' | 'keywords' | 'suggestions'> & { locations: string[] }) {
   const usersToApplyFor = data.userId === 'all' 
     ? await db.select().from(users) 
     : await db.select().from(users).where(eq(users.id, data.userId));
@@ -65,6 +65,7 @@ export async function addApplication(data: Omit<Application, 'id' | 'user' | 'ap
         appliedOn: data.status !== 'Yet to Apply' ? new Date() : null,
         jobDescription: data.jobDescription,
         isUsCitizenOnly: false, // Default to false, AI will update it
+        sponsorshipNotOffered: false, // Default to false, AI will update it
       }).returning({ id: applications.id });
 
       // After creating the application, trigger analysis if a job description exists.
@@ -72,14 +73,17 @@ export async function addApplication(data: Omit<Application, 'id' | 'user' | 'ap
         const jd = data.jobDescription;
         const scoringPromise = scoreResumesForApplication(newApplication.id, user.id, jd);
         
-        const citizenshipPromise = fetchJobDescription({ jobDescription: jd })
+        const jobRequirementsPromise = fetchJobDescription({ jobDescription: jd })
           .then(result => {
-            if (result && result.isUsCitizenOnly !== undefined) {
+            if (result) {
               return db.update(applications)
-                .set({ isUsCitizenOnly: result.isUsCitizenOnly })
+                .set({ 
+                    isUsCitizenOnly: result.isUsCitizenOnly,
+                    sponsorshipNotOffered: result.sponsorshipNotOffered,
+                })
                 .where(eq(applications.id, newApplication.id));
             }
-          }).catch(err => console.error("Citizenship analysis failed:", err));
+          }).catch(err => console.error("Job requirements analysis failed:", err));
 
         const keywordPromise = extractKeywords({ jobDescription: jd })
           .then(result => {
@@ -91,7 +95,7 @@ export async function addApplication(data: Omit<Application, 'id' | 'user' | 'ap
           }).catch(err => console.error("Keyword extraction failed:", err));
 
         // Await all background tasks
-        await Promise.all([scoringPromise, citizenshipPromise, keywordPromise]);
+        await Promise.all([scoringPromise, jobRequirementsPromise, keywordPromise]);
       }
     }
   }
@@ -121,6 +125,7 @@ export async function bulkAddApplications(applicationsData: Array<Omit<Applicati
           appliedOn: null,
           jobDescription: data.jobDescription,
           isUsCitizenOnly: false,
+          sponsorshipNotOffered: false,
         }).returning({ id: applications.id });
 
         // After creating the application, trigger analysis if a job description exists.
@@ -128,14 +133,17 @@ export async function bulkAddApplications(applicationsData: Array<Omit<Applicati
             const jd = data.jobDescription;
             const scoringPromise = scoreResumesForApplication(newApplication.id, user.id, jd);
             
-            const citizenshipPromise = fetchJobDescription({ jobDescription: jd })
+            const jobRequirementsPromise = fetchJobDescription({ jobDescription: jd })
             .then(result => {
-                if (result && result.isUsCitizenOnly !== undefined) {
+                if (result) {
                 return db.update(applications)
-                    .set({ isUsCitizenOnly: result.isUsCitizenOnly })
+                    .set({ 
+                        isUsCitizenOnly: result.isUsCitizenOnly,
+                        sponsorshipNotOffered: result.sponsorshipNotOffered,
+                    })
                     .where(eq(applications.id, newApplication.id));
                 }
-            }).catch(err => console.error("Citizenship analysis failed for bulk add:", err));
+            }).catch(err => console.error("Job requirements analysis failed for bulk add:", err));
 
             const keywordPromise = extractKeywords({ jobDescription: jd })
               .then(result => {
@@ -147,7 +155,7 @@ export async function bulkAddApplications(applicationsData: Array<Omit<Applicati
               }).catch(err => console.error("Keyword extraction failed for bulk add:", err));
 
             // Await both background tasks for this application before moving to the next
-            await Promise.all([scoringPromise, citizenshipPromise, keywordPromise]);
+            await Promise.all([scoringPromise, jobRequirementsPromise, keywordPromise]);
         }
     }
   }

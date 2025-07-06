@@ -54,6 +54,7 @@ export const applications = pgTable('applications', {
     oaCompletedOn: timestamp('oa_completed_on'),
     oaSkipped: boolean('oa_skipped').default(false).notNull(),
     isUsCitizenOnly: boolean('is_us_citizen_only').default(false).notNull(),
+    sponsorshipNotOffered: boolean('sponsorship_not_offered').default(false).notNull(),
     createdAt: timestamp('created_at').defaultNow().notNull(),
     interviewDate1: timestamp('interview_date_1'),
     interviewDateTimezone1: varchar('interview_date_timezone_1', { length: 255 }),

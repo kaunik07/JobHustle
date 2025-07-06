@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -513,6 +514,8 @@ export function ApplicationDetailsDialog({ application, children }: ApplicationD
                       <Badge variant="outline" className={cn(workArrangementStyles[application.workArrangement])}>{application.workArrangement}</Badge>
                     )}
                     <Badge variant="outline" className={cn(applicationTypeStyles[application.type])}>{application.type}</Badge>
+                    {application.isUsCitizenOnly && <Badge variant="destructive">US Citizen</Badge>}
+                    {application.sponsorshipNotOffered && <Badge variant="destructive">No Sponsorship</Badge>}
                 </div>
                 <div className="flex flex-wrap items-center gap-2">
                     <span className="text-sm font-medium">Change status:</span>

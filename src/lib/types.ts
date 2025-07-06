@@ -121,6 +121,7 @@ export interface Application {
   oaCompletedOn?: Date | null;
   oaSkipped: boolean;
   isUsCitizenOnly: boolean;
+  sponsorshipNotOffered: boolean;
   createdAt: Date;
   interviewDate1?: Date | null;
   interviewDateTimezone1?: string | null;
