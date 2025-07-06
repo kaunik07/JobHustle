@@ -36,7 +36,7 @@ export const applications = pgTable('applications', {
     id: text('id').$defaultFn(() => createId()).primaryKey(),
     companyName: varchar('company_name', { length: 255 }).notNull(),
     jobTitle: varchar('job_title', { length: 255 }).notNull(),
-    location: varchar('location', { length: 255 }).notNull(),
+    locations: text('locations').array().notNull(),
     jobUrl: text('job_url').notNull(),
     jobDescription: text('job_description'),
     keywords: text('keywords').array(),

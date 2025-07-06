@@ -44,65 +44,63 @@ async function scoreResumesForApplication(applicationId: string, userId: string,
   }
 }
 
-export async function addApplication(data: Omit<Application, 'id' | 'user' | 'appliedOn' | 'oaDueDate' | 'createdAt' | 'location' | 'isUsCitizenOnly' | 'sponsorshipNotOffered' | 'keywords' | 'suggestions'> & { locations: string[] }) {
+export async function addApplication(data: Omit<Application, 'id' | 'user' | 'appliedOn' | 'oaDueDate' | 'createdAt' | 'isUsCitizenOnly' | 'sponsorshipNotOffered' | 'keywords' | 'suggestions'>) {
   const usersToApplyFor = data.userId === 'all' 
     ? await db.select().from(users) 
     : await db.select().from(users).where(eq(users.id, data.userId));
   
-  for (const location of data.locations) {
-    for (const user of usersToApplyFor) {
-      const [newApplication] = await db.insert(applications).values({
-        companyName: data.companyName,
-        jobTitle: data.jobTitle,
-        jobUrl: data.jobUrl,
-        location: location,
-        type: data.type,
-        category: data.category,
-        workArrangement: data.workArrangement,
-        status: data.status,
-        notes: data.notes,
-        userId: user.id,
-        appliedOn: data.status !== 'Yet to Apply' ? new Date() : null,
-        jobDescription: data.jobDescription,
-        isUsCitizenOnly: false, // Default to false, AI will update it
-        sponsorshipNotOffered: false, // Default to false, AI will update it
-      }).returning({ id: applications.id });
+  for (const user of usersToApplyFor) {
+    const [newApplication] = await db.insert(applications).values({
+      companyName: data.companyName,
+      jobTitle: data.jobTitle,
+      jobUrl: data.jobUrl,
+      locations: data.locations,
+      type: data.type,
+      category: data.category,
+      workArrangement: data.workArrangement,
+      status: data.status,
+      notes: data.notes,
+      userId: user.id,
+      appliedOn: data.status !== 'Yet to Apply' ? new Date() : null,
+      jobDescription: data.jobDescription,
+      isUsCitizenOnly: false, // Default to false, AI will update it
+      sponsorshipNotOffered: false, // Default to false, AI will update it
+    }).returning({ id: applications.id });
 
-      // After creating the application, trigger analysis if a job description exists.
-      if (data.jobDescription) {
-        const jd = data.jobDescription;
-        const scoringPromise = scoreResumesForApplication(newApplication.id, user.id, jd);
-        
-        const jobRequirementsPromise = fetchJobDescription({ jobDescription: jd })
-          .then(result => {
-            if (result) {
-              return db.update(applications)
-                .set({ 
-                    isUsCitizenOnly: result.isUsCitizenOnly,
-                    sponsorshipNotOffered: result.sponsorshipNotOffered,
-                })
-                .where(eq(applications.id, newApplication.id));
-            }
-          }).catch(err => console.error("Job requirements analysis failed:", err));
+    // After creating the application, trigger analysis if a job description exists.
+    if (data.jobDescription) {
+      const jd = data.jobDescription;
+      const scoringPromise = scoreResumesForApplication(newApplication.id, user.id, jd);
+      
+      const jobRequirementsPromise = fetchJobDescription({ jobDescription: jd })
+        .then(result => {
+          if (result) {
+            return db.update(applications)
+              .set({ 
+                  isUsCitizenOnly: result.isUsCitizenOnly,
+                  sponsorshipNotOffered: result.sponsorshipNotOffered,
+              })
+              .where(eq(applications.id, newApplication.id));
+          }
+        }).catch(err => console.error("Job requirements analysis failed:", err));
 
-        const keywordPromise = extractKeywords({ jobDescription: jd })
-          .then(result => {
-            if (result) {
-              return db.update(applications)
-                .set({ keywords: result.keywords, suggestions: result.suggestions })
-                .where(eq(applications.id, newApplication.id));
-            }
-          }).catch(err => console.error("Keyword extraction failed:", err));
+      const keywordPromise = extractKeywords({ jobDescription: jd })
+        .then(result => {
+          if (result) {
+            return db.update(applications)
+              .set({ keywords: result.keywords, suggestions: result.suggestions })
+              .where(eq(applications.id, newApplication.id));
+          }
+        }).catch(err => console.error("Keyword extraction failed:", err));
 
-        // Await all background tasks
-        await Promise.all([scoringPromise, jobRequirementsPromise, keywordPromise]);
-      }
+      // Await all background tasks
+      await Promise.all([scoringPromise, jobRequirementsPromise, keywordPromise]);
     }
   }
   revalidatePath('/');
 }
 
-export async function bulkAddApplications(applicationsData: Array<Omit<Application, 'id' | 'user' | 'appliedOn' | 'oaDueDate' | 'createdAt' | 'userId' | 'status'>>) {
+export async function bulkAddApplications(applicationsData: Array<Omit<Application, 'id' | 'user' | 'appliedOn' | 'oaDueDate' | 'createdAt' | 'userId' | 'status' | 'locations'> & { location: string }>) {
   const allUsers = await db.select().from(users);
   
   if (allUsers.length === 0) {
@@ -115,7 +113,7 @@ export async function bulkAddApplications(applicationsData: Array<Omit<Applicati
           companyName: data.companyName,
           jobTitle: data.jobTitle,
           jobUrl: data.jobUrl,
-          location: data.location,
+          locations: [data.location],
           type: data.type,
           category: data.category,
           workArrangement: data.workArrangement,

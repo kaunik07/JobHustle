@@ -15,7 +15,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { type Application, type ApplicationStatus, statuses, categories, type ApplicationCategory, type User, applicationTypes, type ApplicationType, workArrangements, type ApplicationWorkArrangement, type Resume } from '@/lib/types';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { ExternalLink, Trash2, CalendarIcon, CheckCircle2, Plus, FileText, Check, Sparkles, Loader2, RefreshCw } from 'lucide-react';
+import { ExternalLink, Trash2, CalendarIcon, CheckCircle2, Plus, FileText, Check, Sparkles, Loader2, RefreshCw, X } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -40,7 +40,6 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { updateApplication, deleteApplication, reevaluateScores, reevaluateKeywords } from '@/app/actions';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 
 interface ApplicationDetailsDialogProps {
   application: Application;
@@ -77,7 +76,8 @@ export function ApplicationDetailsDialog({ application, children }: ApplicationD
   const [currentNotes, setCurrentNotes] = React.useState(application.notes || '');
   const [currentJobTitle, setCurrentJobTitle] = React.useState(application.jobTitle);
   const [currentCompanyName, setCurrentCompanyName] = React.useState(application.companyName);
-  const [currentLocation, setCurrentLocation] = React.useState(application.location);
+  const [currentLocations, setCurrentLocations] = React.useState(application.locations);
+  const [locationInput, setLocationInput] = React.useState('');
   const [currentOaSkipped, setCurrentOaSkipped] = React.useState(application.oaSkipped);
 
   // State for OA date/time
@@ -120,7 +120,8 @@ export function ApplicationDetailsDialog({ application, children }: ApplicationD
     if (open) {
       setCurrentJobTitle(application.jobTitle);
       setCurrentCompanyName(application.companyName);
-      setCurrentLocation(application.location);
+      setCurrentLocations(application.locations);
+      setLocationInput('');
       setCurrentNotes(application.notes || '');
       setCurrentOaSkipped(application.oaSkipped);
       
@@ -207,16 +208,37 @@ export function ApplicationDetailsDialog({ application, children }: ApplicationD
     }
   };
 
-  const handleLocationBlur = async () => {
-    if (currentLocation.trim() === '') {
-        setCurrentLocation(application.location);
-        toast({ variant: "destructive", title: "Location cannot be empty." });
-        return;
+  const handleUpdateLocations = async (newLocations: string[]) => {
+    if (newLocations.length === 0) {
+      toast({ variant: 'destructive', title: 'At least one location is required.' });
+      return;
     }
-    if (currentLocation !== application.location) {
-      if (await handleUpdate({ location: currentLocation })) {
-        toast({ title: "Location updated." });
-      }
+    if (await handleUpdate({ locations: newLocations })) {
+      setCurrentLocations(newLocations);
+      toast({ title: 'Locations updated.' });
+    }
+  };
+  
+  const handleRemoveLocation = (locationToRemove: string) => {
+    const newLocations = currentLocations.filter(loc => loc !== locationToRemove);
+    handleUpdateLocations(newLocations);
+  };
+  
+  const handleAddLocation = () => {
+    const trimmedInput = locationInput.trim();
+    if (trimmedInput && !currentLocations.some(loc => loc.toLowerCase() === trimmedInput.toLowerCase())) {
+      const newLocations = [...currentLocations, trimmedInput];
+      handleUpdateLocations(newLocations);
+      setLocationInput('');
+    } else if (trimmedInput) {
+      toast({ variant: 'destructive', title: 'Location already exists.' });
+    }
+  };
+  
+  const handleLocationInputKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      handleAddLocation();
     }
   };
 
@@ -477,14 +499,32 @@ export function ApplicationDetailsDialog({ application, children }: ApplicationD
                     />
                 </div>
             </div>
-             <div className="space-y-2">
-                <Label htmlFor="location">Location</Label>
+            <div className="space-y-2">
+              <Label>Locations</Label>
+              <div className="flex flex-wrap gap-2 rounded-lg border p-2 min-h-[40px]">
+                {currentLocations.map((loc) => (
+                  <Badge key={loc} variant="secondary">
+                    {loc}
+                    <button
+                      className="ml-1 rounded-full p-0.5 hover:bg-background/50"
+                      onClick={() => handleRemoveLocation(loc)}
+                    >
+                      <X className="h-3 w-3" />
+                    </button>
+                  </Badge>
+                ))}
+              </div>
+              <div className="flex gap-2">
                 <Input
-                    id="location"
-                    value={currentLocation}
-                    onChange={(e) => setCurrentLocation(e.target.value)}
-                    onBlur={handleLocationBlur}
+                  placeholder="Add a location..."
+                  value={locationInput}
+                  onChange={(e) => setLocationInput(e.target.value)}
+                  onKeyDown={handleLocationInputKeyDown}
                 />
+                <Button variant="outline" onClick={handleAddLocation}>
+                  Add
+                </Button>
+              </div>
             </div>
             <div className="flex flex-wrap items-center gap-4">
                 <div className="flex items-center gap-2">

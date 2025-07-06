@@ -102,7 +102,7 @@ export interface Application {
   id:string;
   companyName: string;
   jobTitle: string;
-  location: string;
+  locations: string[];
   jobUrl: string;
   jobDescription?: string | null;
   keywords?: string[] | null;

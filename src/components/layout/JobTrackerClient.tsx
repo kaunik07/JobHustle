@@ -124,7 +124,7 @@ export function JobTrackerClient({
     const userMatch = selectedUserId === 'all' || app.userId === selectedUserId;
     const typeMatch = selectedType === 'all' || app.type === selectedType;
     const categoryMatch = selectedCategory === 'all' || app.category === selectedCategory;
-    const locationMatch = !selectedLocation || (app.location && app.location.toLowerCase().includes(selectedLocation.toLowerCase()));
+    const locationMatch = !selectedLocation || (app.locations && app.locations.some(loc => loc.toLowerCase().includes(selectedLocation.toLowerCase())));
     const companyMatch = !selectedCompany || (app.companyName && app.companyName.toLowerCase().includes(selectedCompany.toLowerCase()));
     const resumeMatch = !selectedResumeId || app.resumeId === selectedResumeId;
     return userMatch && typeMatch && categoryMatch && locationMatch && companyMatch && resumeMatch;

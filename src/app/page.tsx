@@ -71,8 +71,7 @@ export default async function Home({
     }));
 
 
-    const locationsResult = await db.selectDistinct({ location: applicationsSchema.location }).from(applicationsSchema);
-    const dbLocations = locationsResult.map(l => l.location).filter(Boolean) as string[];
+    const dbLocations = results.flatMap(r => r.locations).filter(Boolean) as string[];
     const allLocations = [...new Set([...suggestedLocations, ...dbLocations])];
 
     let resumesForUser: Resume[] = [];

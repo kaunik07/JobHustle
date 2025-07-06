@@ -157,7 +157,7 @@ export function KanbanCard({ application, selectedUserId }: KanbanCardProps) {
               <p className="text-sm text-muted-foreground">{application.jobTitle}</p>
               <p className="text-xs text-muted-foreground flex items-center gap-1 pt-1">
                   <MapPin className="h-3 w-3" />
-                  {application.location}
+                  {application.locations.join(', ')}
               </p>
             </div>
           </div>
