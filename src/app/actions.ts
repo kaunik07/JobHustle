@@ -4,7 +4,7 @@
 import { revalidatePath } from 'next/cache';
 import { db } from '@/lib/db';
 import { applications, users, resumes, applicationResumeScores } from '@/lib/db/schema';
-import { eq, and } from 'drizzle-orm';
+import { eq, and, isNotNull } from 'drizzle-orm';
 import type { Application, User, Resume } from '@/lib/types';
 import { extractResumeText } from '@/ai/flows/extract-resume-text';
 import { scoreResume } from '@/ai/flows/score-resume';
@@ -14,7 +14,7 @@ import { extractKeywords } from '@/ai/flows/extract-keywords';
 // This function will be called to score resumes against a job description.
 async function scoreResumesForApplication(applicationId: string, userId: string, jobDescription: string) {
   try {
-    const userResumes = await db.select().from(resumes).where(and(eq(resumes.userId, userId), eq(resumes.type, 'pdf')));
+    const userResumes = await db.select().from(resumes).where(and(eq(resumes.userId, userId), isNotNull(resumes.resumeText)));
     if (userResumes.length === 0 || !jobDescription) {
       return;
     }
@@ -281,7 +281,6 @@ export async function addResume(name: string, resumeDataUri: string, userId: str
     name,
     resumeText,
     userId,
-    type: 'pdf'
   });
 
   // Re-score all applications for this user
@@ -308,7 +307,6 @@ export async function saveLatexResume(data: { id?: string; name: string; latexCo
       name: data.name,
       latexContent: data.latexContent,
       userId: data.userId,
-      type: 'latex',
     });
   }
   revalidatePath('/');

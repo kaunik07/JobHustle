@@ -15,7 +15,6 @@ export const categoriesEnum = pgEnum('category', ['SWE', 'SRE/Devops', 'Quant', 
 export const statusesEnum = pgEnum('status', ['Yet to Apply', 'Applied', 'OA', 'Interview', 'Offer', 'Rejected']);
 export const applicationTypeEnum = pgEnum('type', ['Internship', 'Full-Time']);
 export const workArrangementEnum = pgEnum('work_arrangement', ['On-site', 'Remote', 'Hybrid']);
-export const resumeTypeEnum = pgEnum('resume_type', ['pdf', 'latex']);
 
 export const users = pgTable('users', {
   id: text('id').$defaultFn(() => createId()).primaryKey(),
@@ -28,7 +27,6 @@ export const users = pgTable('users', {
 export const resumes = pgTable('resumes', {
   id: text('id').$defaultFn(() => createId()).primaryKey(),
   name: varchar('name', { length: 255 }).notNull(),
-  type: resumeTypeEnum('type').notNull(),
   // For PDF-based resumes, extracted by AI
   resumeText: text('resume_text'),
   // For user-created LaTeX resumes

@@ -35,8 +35,8 @@ interface ResumesPageProps {
 export function ResumesPage({ user, resumes, onFilterByResume }: ResumesPageProps) {
   const { toast } = useToast();
 
-  const pdfResumes = React.useMemo(() => resumes.filter(r => r.type === 'pdf'), [resumes]);
-  const latexResumes = React.useMemo(() => resumes.filter(r => r.type === 'latex'), [resumes]);
+  const pdfResumes = React.useMemo(() => resumes.filter(r => r.resumeText), [resumes]);
+  const latexResumes = React.useMemo(() => resumes.filter(r => r.latexContent), [resumes]);
 
   const handleDelete = async (resumeId: string) => {
     try {
