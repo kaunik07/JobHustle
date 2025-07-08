@@ -46,9 +46,9 @@ export default async function EditLatexResumePage({
   }
 
   return (
-    <div className="min-h-screen w-full bg-muted/40">
+    <div className="h-screen w-full bg-muted/40 flex flex-col">
       <Header users={allUsers} selectedUser={userId} allLocations={[]} />
-      <main className="p-4 md:p-8">
+      <main className="flex-1 flex flex-col min-h-0">
         <LatexEditorLoader user={resume.user} resume={resume} />
       </main>
     </div>

@@ -19,13 +19,17 @@ import { useToast } from '@/hooks/use-toast';
 import { Loader2, Save, Download, FileWarning, ArrowLeft, Eye } from 'lucide-react';
 import { saveLatexResume, compileLatex } from '@/app/actions';
 import type { Resume, User } from '@/lib/types';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { useRouter } from 'next/navigation';
 import { Label } from '@/components/ui/label';
 import CodeMirror from '@uiw/react-codemirror';
 import { vscodeDark } from '@uiw/codemirror-theme-vscode';
 import { stex } from '@codemirror/legacy-modes/mode/stex';
 import { StreamLanguage } from '@codemirror/language';
+import {
+  ResizableHandle,
+  ResizablePanel,
+  ResizablePanelGroup,
+} from "@/components/ui/resizable";
 
 const formSchema = z.object({
   name: z.string().min(1, 'Resume name is required'),
@@ -163,110 +167,115 @@ Email: ${user.email}
   }
 
   return (
-    <Card className="max-w-screen-xl mx-auto">
-        <CardHeader>
-            <Button variant="ghost" size="sm" className="mb-4 w-fit -ml-2" onClick={() => router.back()}>
-                <ArrowLeft className="mr-2 h-4 w-4" />
-                Back
+    <Form {...form}>
+      <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col h-full bg-background">
+        <div className="p-4 border-b flex-shrink-0 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div className="flex items-center gap-2">
+              <Button variant="ghost" size="sm" onClick={() => router.back()} className="w-fit">
+                  <ArrowLeft className="mr-2 h-4 w-4" />
+                  Back
+              </Button>
+              <div>
+                <h1 className="text-xl font-bold">{isEditMode ? 'Edit LaTeX Resume' : 'Create New LaTeX Resume'}</h1>
+                <p className="text-sm text-muted-foreground">
+                    {isEditMode ? `Editing "${resume?.name}".` : 'Create a new resume using LaTeX code.'}
+                </p>
+              </div>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <Button type="button" variant="outline" onClick={handleDownloadTex}>
+              <Download className="mr-2 h-4 w-4" /> Download .tex
             </Button>
-            <CardTitle>{isEditMode ? 'Edit LaTeX Resume' : 'Create New LaTeX Resume'}</CardTitle>
-            <CardDescription>
-                {isEditMode ? `Editing "${resume?.name}".` : 'Create a new resume using LaTeX code.'} Use the preview panel to see your compiled PDF.
-            </CardDescription>
-        </CardHeader>
-        <CardContent>
-            <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)}>
-                <div className="flex flex-wrap gap-4 items-center justify-between w-full pb-6 border-b mb-6">
-                    <div className="flex gap-2 flex-wrap">
-                        <Button type="button" variant="outline" onClick={handleDownloadTex}>
-                            <Download className="mr-2 h-4 w-4" /> Download .tex file
-                        </Button>
-                        <Button type="button" variant="secondary" onClick={handleCompile} disabled={isCompiling}>
-                            {isCompiling ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Eye className="mr-2 h-4 w-4" />}
-                            Compile & Preview
-                        </Button>
-                    </div>
-                    <Button type="submit" disabled={isSubmitting}>
-                        {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
-                        Save Resume
-                    </Button>
-                </div>
-                
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                  {/* Left Column: Editor */}
-                  <div className="space-y-6">
-                    <FormField
-                      control={form.control}
-                      name="name"
-                      render={({ field }) => (
-                          <FormItem>
-                          <FormLabel>Resume Name</FormLabel>
-                          <FormControl>
-                              <Input placeholder="e.g., Senior LaTeX Resume" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                          </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name="latexContent"
-                      render={({ field }) => (
-                          <FormItem className="flex flex-col h-full">
-                            <FormLabel>LaTeX (.tex) Code</FormLabel>
-                            <FormControl>
-                              <div className="rounded-md border h-[500px] lg:h-auto lg:min-h-[600px] flex-1 overflow-hidden">
-                                <CodeMirror
-                                  value={field.value}
-                                  height="100%"
-                                  theme={vscodeDark}
-                                  extensions={[StreamLanguage.define(stex)]}
-                                  onChange={field.onChange}
-                                  className="h-full"
-                                />
-                              </div>
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                      )}
-                    />
-                  </div>
+            <Button type="button" variant="secondary" onClick={handleCompile} disabled={isCompiling}>
+              {isCompiling ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Eye className="mr-2 h-4 w-4" />}
+              Compile & Preview
+            </Button>
+            <Button type="submit" disabled={isSubmitting}>
+              {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
+              Save Resume
+            </Button>
+          </div>
+        </div>
 
-                  {/* Right Column: Previewer */}
-                  <div className="space-y-4">
-                    <div className="flex justify-between items-center">
-                      <Label className="text-lg font-medium">PDF Preview</Label>
-                      {pdfPreviewUrl && (
-                        <Button type="button" variant="outline" size="sm" onClick={handleDownloadPdf}>
-                          <Download className="mr-2 h-4 w-4" /> Download PDF
-                        </Button>
-                      )}
-                    </div>
-                    <div className="rounded-lg border bg-muted w-full aspect-[8.5/11] flex flex-col items-center justify-center">
-                      {isCompiling ? (
-                        <div className="flex flex-col gap-4 text-center">
-                          <Loader2 className="h-8 w-8 animate-spin text-primary mx-auto" />
-                          <p className="text-muted-foreground">Compiling...</p>
-                        </div>
-                      ) : pdfPreviewUrl ? (
-                        <iframe
-                          src={pdfPreviewUrl}
-                          className="w-full h-full rounded-md"
-                          title="PDF Preview"
+        <ResizablePanelGroup
+          direction="horizontal"
+          className="flex-1 w-full"
+        >
+          <ResizablePanel defaultSize={50} minSize={30}>
+            <div className="flex h-full flex-col p-4 pt-2 space-y-4">
+              <FormField
+                control={form.control}
+                name="name"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Resume Name</FormLabel>
+                    <FormControl>
+                      <Input placeholder="e.g., Senior LaTeX Resume" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="latexContent"
+                render={({ field }) => (
+                  <FormItem className="flex flex-col flex-1">
+                    <FormLabel>LaTeX (.tex) Code</FormLabel>
+                    <FormControl>
+                      <div className="rounded-md border flex-1 overflow-hidden relative">
+                        <CodeMirror
+                          value={field.value}
+                          height="100%"
+                          theme={vscodeDark}
+                          extensions={[StreamLanguage.define(stex)]}
+                          onChange={field.onChange}
+                          className="absolute inset-0"
                         />
-                      ) : (
-                        <div className="flex flex-col gap-4 text-center p-4">
-                          <FileWarning className="h-10 w-10 text-muted-foreground mx-auto" />
-                          <p className="text-sm text-muted-foreground">Click "Compile & Preview" to see your PDF.</p>
-                        </div>
-                      )}
-                    </div>
+                      </div>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+          </ResizablePanel>
+
+          <ResizableHandle withHandle />
+
+          <ResizablePanel defaultSize={50} minSize={30}>
+            <div className="flex h-full flex-col p-4 pt-2 space-y-2">
+              <div className="flex justify-between items-center">
+                <Label className="text-base font-medium">PDF Preview</Label>
+                {pdfPreviewUrl && (
+                  <Button type="button" variant="outline" size="sm" onClick={handleDownloadPdf}>
+                    <Download className="mr-2 h-4 w-4" /> Download PDF
+                  </Button>
+                )}
+              </div>
+              <div className="rounded-lg border bg-muted w-full flex-1 flex flex-col items-center justify-center">
+                {isCompiling ? (
+                  <div className="flex flex-col gap-4 text-center">
+                    <Loader2 className="h-8 w-8 animate-spin text-primary mx-auto" />
+                    <p className="text-muted-foreground">Compiling...</p>
                   </div>
-                </div>
-            </form>
-            </Form>
-        </CardContent>
-    </Card>
+                ) : pdfPreviewUrl ? (
+                  <iframe
+                    src={pdfPreviewUrl}
+                    className="w-full h-full rounded-md"
+                    title="PDF Preview"
+                  />
+                ) : (
+                  <div className="flex flex-col gap-4 text-center p-4">
+                    <FileWarning className="h-10 w-10 text-muted-foreground mx-auto" />
+                    <p className="text-sm text-muted-foreground">Click "Compile & Preview" to see your PDF.</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          </ResizablePanel>
+        </ResizablePanelGroup>
+      </form>
+    </Form>
   );
 }
