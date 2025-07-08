@@ -4,8 +4,8 @@
 import { revalidatePath } from 'next/cache';
 import { db } from '@/lib/db';
 import { applications, users, resumes, applicationResumeScores } from '@/lib/db/schema';
-import { eq } from 'drizzle-orm';
-import type { Application, User } from '@/lib/types';
+import { eq, and } from 'drizzle-orm';
+import type { Application, User, Resume } from '@/lib/types';
 import { extractResumeText } from '@/ai/flows/extract-resume-text';
 import { scoreResume } from '@/ai/flows/score-resume';
 import { fetchJobDescription } from '@/ai/flows/fetch-job-description';
@@ -14,13 +14,13 @@ import { extractKeywords } from '@/ai/flows/extract-keywords';
 // This function will be called to score resumes against a job description.
 async function scoreResumesForApplication(applicationId: string, userId: string, jobDescription: string) {
   try {
-    const userResumes = await db.select().from(resumes).where(eq(resumes.userId, userId));
+    const userResumes = await db.select().from(resumes).where(and(eq(resumes.userId, userId), eq(resumes.type, 'pdf')));
     if (userResumes.length === 0 || !jobDescription) {
       return;
     }
 
     const scorePromises = userResumes.map(resume => 
-      scoreResume({ resumeText: resume.resumeText, jobDescription }).then(score => ({
+      scoreResume({ resumeText: resume.resumeText!, jobDescription }).then(score => ({
         ...score,
         resumeId: resume.id,
       }))
@@ -281,9 +281,39 @@ export async function addResume(name: string, resumeDataUri: string, userId: str
     name,
     resumeText,
     userId,
+    type: 'pdf'
   });
+
+  // Re-score all applications for this user
+  const userApplications = await db.select().from(applications).where(eq(applications.userId, userId));
+  for (const app of userApplications) {
+    if (app.jobDescription) {
+      await scoreResumesForApplication(app.id, userId, app.jobDescription);
+    }
+  }
+
   revalidatePath('/');
 }
+
+export async function saveLatexResume(data: { id?: string; name: string; latexContent: string; userId: string }) {
+  if (data.id) {
+    // Update existing
+    await db.update(resumes).set({
+      name: data.name,
+      latexContent: data.latexContent,
+    }).where(eq(resumes.id, data.id));
+  } else {
+    // Create new
+    await db.insert(resumes).values({
+      name: data.name,
+      latexContent: data.latexContent,
+      userId: data.userId,
+      type: 'latex',
+    });
+  }
+  revalidatePath('/');
+}
+
 
 export async function deleteResume(resumeId: string) {
   await db.delete(resumes).where(eq(resumes.id, resumeId));

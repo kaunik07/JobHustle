@@ -25,7 +25,7 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, Plus, Upload } from 'lucide-react';
+import { Loader2, FileUp, FileText } from 'lucide-react';
 import { addResume as addResumeAction } from '@/app/actions';
 import type { User } from '@/lib/types';
 
@@ -89,14 +89,14 @@ export function AddResumeDialog({ user }: AddResumeDialogProps) {
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button>
-          <Plus className="mr-2 h-4 w-4" /> Add Resume
+          <FileUp className="mr-2 h-4 w-4" /> Add PDF Resume
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>Add New Resume</DialogTitle>
+          <DialogTitle>Upload PDF Resume</DialogTitle>
           <DialogDescription>
-            Give your resume a name and upload the PDF file. The text will be extracted for AI analysis.
+            Upload a PDF file. Its text will be extracted for AI analysis and scoring against job descriptions.
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
@@ -117,16 +117,22 @@ export function AddResumeDialog({ user }: AddResumeDialogProps) {
             <FormField
               control={form.control}
               name="file"
-              render={({ field }) => (
+              render={({ field: { onChange, ...fieldProps } }) => (
                 <FormItem>
                   <FormLabel>Resume PDF</FormLabel>
-                  <FormControl>
-                    <Input
-                      type="file"
-                      accept="application/pdf"
-                      ref={fileInputRef}
-                      onChange={(e) => field.onChange(e.target.files?.[0])}
-                    />
+                   <FormControl>
+                    <div className="relative">
+                      <Input
+                          id="file-upload"
+                          type="file"
+                          accept="application/pdf"
+                          ref={fileInputRef}
+                          onChange={(e) => onChange(e.target.files?.[0])}
+                          className="pl-10"
+                          {...fieldProps}
+                      />
+                      <FileText className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+                    </div>
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -134,7 +140,7 @@ export function AddResumeDialog({ user }: AddResumeDialogProps) {
             />
             <DialogFooter>
               <Button type="submit" disabled={isSubmitting}>
-                {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Upload className="mr-2 h-4 w-4" />}
+                {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <FileUp className="mr-2 h-4 w-4" />}
                 Upload and Save
               </Button>
             </DialogFooter>
