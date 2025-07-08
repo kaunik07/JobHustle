@@ -38,7 +38,7 @@ export default async function NewLatexResumePage({
 
   return (
     <div className="min-h-screen w-full bg-muted/40">
-        <Header users={allUsers} selectedUser={userId} onUserChange={() => {}} onUserRemoved={() => {}} allLocations={[]} />
+        <Header users={allUsers} selectedUser={userId} allLocations={[]} />
         <main className="p-4 md:p-8">
             <LatexEditorForm user={user} />
         </main>

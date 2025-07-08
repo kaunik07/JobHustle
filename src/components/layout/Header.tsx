@@ -1,4 +1,3 @@
-
 'use client';
 
 import * as React from 'react';
@@ -26,8 +25,8 @@ import { BulkAddDialog } from '../applications/BulkAddDialog';
 interface HeaderProps {
   users: User[];
   selectedUser: string;
-  onUserChange: (userId: string) => void;
-  onUserRemoved: (userId: string) => void;
+  onUserChange?: (userId: string) => void;
+  onUserRemoved?: (userId: string) => void;
   allLocations: string[];
 }
 
@@ -45,7 +44,7 @@ export function Header({ users, selectedUser, onUserChange, onUserRemoved, allLo
           <div className="flex items-center gap-2">
               <Tooltip>
                 <TooltipTrigger asChild>
-                    <Button variant="ghost" size="icon" className={`rounded-full h-10 w-10 ${selectedUser === 'all' ? 'ring-2 ring-primary ring-offset-2 ring-offset-background' : ''}`} onClick={() => onUserChange('all')}>
+                    <Button variant="ghost" size="icon" className={`rounded-full h-10 w-10 ${selectedUser === 'all' ? 'ring-2 ring-primary ring-offset-2 ring-offset-background' : ''}`} onClick={() => onUserChange?.('all')} disabled={!onUserChange}>
                         <Avatar className="h-10 w-10">
                             <AvatarFallback className="bg-foreground text-background">All</AvatarFallback>
                         </Avatar>
@@ -56,7 +55,7 @@ export function Header({ users, selectedUser, onUserChange, onUserRemoved, allLo
               {users.map(user => (
                    <Tooltip key={user.id}>
                       <TooltipTrigger asChild>
-                         <Button variant="ghost" size="icon" className={`rounded-full h-10 w-10 ${selectedUser === user.id ? 'ring-2 ring-primary ring-offset-2 ring-offset-background' : ''}`} onClick={() => onUserChange(user.id)}>
+                         <Button variant="ghost" size="icon" className={`rounded-full h-10 w-10 ${selectedUser === user.id ? 'ring-2 ring-primary ring-offset-2 ring-offset-background' : ''}`} onClick={() => onUserChange?.(user.id)} disabled={!onUserChange}>
                             <Avatar className="h-10 w-10">
                                 <AvatarImage src={user.avatarUrl || undefined} alt={`${user.firstName} ${user.lastName}`} />
                                 <AvatarFallback className={getUserColor(user.id)}>{user.firstName.charAt(0)}</AvatarFallback>
@@ -75,7 +74,7 @@ export function Header({ users, selectedUser, onUserChange, onUserRemoved, allLo
 
         <AlertDialog>
           <AlertDialogTrigger asChild>
-            <Button variant="destructive" size="icon" className="rounded-full h-10 w-10" disabled={!users.some(u => u.id === selectedUser) || selectedUser === 'all'}>
+            <Button variant="destructive" size="icon" className="rounded-full h-10 w-10" disabled={!onUserRemoved || !users.some(u => u.id === selectedUser) || selectedUser === 'all'}>
               <Trash2 className="h-4 w-4" />
               <span className="sr-only">Remove Selected User</span>
             </Button>
@@ -89,7 +88,7 @@ export function Header({ users, selectedUser, onUserChange, onUserRemoved, allLo
             </AlertDialogHeader>
             <AlertDialogFooter>
               <AlertDialogCancel>Cancel</AlertDialogCancel>
-              <AlertDialogAction onClick={() => onUserRemoved(selectedUser)}>
+              <AlertDialogAction onClick={() => onUserRemoved?.(selectedUser)}>
                 Delete User
               </AlertDialogAction>
             </AlertDialogFooter>
