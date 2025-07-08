@@ -926,7 +926,7 @@ export function ApplicationDetailsDialog({ application, children }: ApplicationD
                         Edit
                       </Button>
                       <Button variant="destructive" size="sm" onClick={handleDetachLatexResume} disabled={isManagingLatex === 'detach'}>
-                        {isManagingLatex === 'detach' ? <Loader2 className="h-4 w-4 animate-spin" /> : <X className="mr-2 h-4 w-4" />}
+                        {isManagingLatex === 'detach' ? <Loader2 className="h-4 w-4 animate-spin" /> : <X className="h-4 w-4" />}
                         Detach
                       </Button>
                     </div>
