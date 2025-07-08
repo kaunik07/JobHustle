@@ -419,6 +419,7 @@ export function ApplicationDetailsDialog({ application, children }: ApplicationD
     try {
       await reevaluateScores(application.id);
       toast({ title: "Re-evaluation complete", description: "The resume scores have been updated based on the current job description." });
+      router.refresh();
     } catch (error) {
       toast({ variant: 'destructive', title: 'Re-evaluation Failed', description: error instanceof Error ? error.message : 'An unknown error occurred.' });
     } finally {
@@ -435,6 +436,7 @@ export function ApplicationDetailsDialog({ application, children }: ApplicationD
     try {
       await reevaluateKeywords(application.id);
       toast({ title: "Re-evaluation complete", description: "The keywords and suggestions have been updated." });
+      router.refresh();
     } catch (error) {
       toast({ variant: 'destructive', title: 'Keyword Extraction Failed', description: error instanceof Error ? error.message : 'An unknown error occurred.' });
     } finally {

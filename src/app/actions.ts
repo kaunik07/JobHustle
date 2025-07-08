@@ -12,7 +12,7 @@ import { fetchJobDescription } from '@/ai/flows/fetch-job-description';
 import { extractKeywords } from '@/ai/flows/extract-keywords';
 
 // This function will be called to score resumes against a job description.
-async function scoreResumesForApplication(applicationId: string, userId: string, jobDescription: string) {
+async function scoreResumesForApplication(applicationId: string, userId: string, jobDescription: string, throwOnError = false) {
   try {
     // Delete existing scores for this application to ensure a fresh evaluation
     await db.delete(applicationResumeScores).where(eq(applicationResumeScores.applicationId, applicationId));
@@ -47,6 +47,9 @@ async function scoreResumesForApplication(applicationId: string, userId: string,
     }
   } catch (error) {
     console.error("Error scoring resumes for application:", error);
+    if (throwOnError) {
+      throw error;
+    }
     // We don't want to block the main application creation if scoring fails.
   }
 }
@@ -226,7 +229,7 @@ export async function reevaluateScores(applicationId: string) {
     }
 
     // scoreResumesForApplication now handles deleting old scores internally
-    await scoreResumesForApplication(applicationId, application.userId, application.jobDescription);
+    await scoreResumesForApplication(applicationId, application.userId, application.jobDescription, true);
     
     revalidatePath('/'); // This will trigger a re-fetch on the client
   } catch (error) {
