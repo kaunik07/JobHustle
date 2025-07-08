@@ -149,7 +149,28 @@ export function LatexEditorForm({ user, resume }: LatexEditorFormProps) {
         </CardHeader>
         <CardContent>
             <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+            <form onSubmit={form.handleSubmit(onSubmit)}>
+                <div className="flex flex-wrap gap-4 items-center justify-between w-full pb-6 border-b mb-6">
+                    <div className="flex gap-2 flex-wrap">
+                        <Button type="button" variant="outline" onClick={handleDownloadTex}>
+                            <Download className="mr-2 h-4 w-4" /> Download .tex
+                        </Button>
+                        <Button type="button" variant="secondary" onClick={handleCompile} disabled={isCompiling}>
+                            {isCompiling ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Eye className="mr-2 h-4 w-4" />}
+                            Compile & Preview
+                        </Button>
+                         {pdfPreviewUrl && (
+                            <Button type="button" variant="outline" onClick={handleDownloadPdf}>
+                                <Download className="mr-2 h-4 w-4" /> Download PDF
+                            </Button>
+                        )}
+                    </div>
+                    <Button type="submit" disabled={isSubmitting}>
+                        {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
+                        Save Resume
+                    </Button>
+                </div>
+                
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                   {/* Left Column: Editor */}
                   <div className="space-y-6">
@@ -189,11 +210,6 @@ export function LatexEditorForm({ user, resume }: LatexEditorFormProps) {
                   <div className="space-y-4">
                     <div className="flex justify-between items-center">
                       <Label className="text-lg font-medium">PDF Preview</Label>
-                      {pdfPreviewUrl && (
-                        <Button type="button" variant="outline" size="sm" onClick={handleDownloadPdf}>
-                          <Download className="mr-2 h-4 w-4" /> Download PDF
-                        </Button>
-                      )}
                     </div>
                     <div className="rounded-lg border bg-muted w-full aspect-[8.5/11] flex flex-col items-center justify-center">
                       {isCompiling ? (
@@ -215,23 +231,6 @@ export function LatexEditorForm({ user, resume }: LatexEditorFormProps) {
                       )}
                     </div>
                   </div>
-                </div>
-                
-                {/* Action Buttons at the bottom */}
-                <div className="flex justify-between w-full pt-6 border-t">
-                    <div className="flex gap-2">
-                        <Button type="button" variant="outline" onClick={handleDownloadTex}>
-                            <Download className="mr-2 h-4 w-4" /> Download .tex
-                        </Button>
-                        <Button type="button" variant="secondary" onClick={handleCompile} disabled={isCompiling}>
-                            {isCompiling ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Eye className="mr-2 h-4 w-4" />}
-                            Compile & Preview
-                        </Button>
-                    </div>
-                    <Button type="submit" disabled={isSubmitting}>
-                        {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
-                        Save Resume
-                    </Button>
                 </div>
             </form>
             </Form>
