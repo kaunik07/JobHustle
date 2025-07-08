@@ -63,6 +63,7 @@ export default async function Home({
     
     const applicationsForClient: Application[] = results.map(r => ({
       ...r,
+      locations: r.locations ? r.locations.split(',').map(l => l.trim()) : [],
       user: r.user as User,
       resumeScores: r.resumeScores.map(score => ({
         ...score,
@@ -71,7 +72,7 @@ export default async function Home({
     }));
 
 
-    const dbLocations = results.flatMap(r => r.locations).filter(Boolean) as string[];
+    const dbLocations = results.flatMap(r => r.locations ? r.locations.split(',').map(l => l.trim()) : []).filter(Boolean);
     const allLocations = [...new Set([...suggestedLocations, ...dbLocations])];
 
     let resumesForUser: Resume[] = [];

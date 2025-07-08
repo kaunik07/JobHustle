@@ -56,7 +56,7 @@ export async function addApplication(data: Omit<Application, 'id' | 'user' | 'ap
       companyName: data.companyName,
       jobTitle: data.jobTitle,
       jobUrl: data.jobUrl,
-      locations: data.locations,
+      locations: data.locations.join(','),
       type: data.type,
       category: data.category,
       workArrangement: data.workArrangement,
@@ -101,6 +101,7 @@ export async function addApplication(data: Omit<Application, 'id' | 'user' | 'ap
     
     const fullApplication: Application = {
         ...newApplicationRecord,
+        locations: newApplicationRecord.locations.split(',').map(l => l.trim()),
         user: user,
     };
     createdApplications.push(fullApplication);
@@ -127,7 +128,7 @@ export async function bulkAddApplications(applicationsData: Array<Omit<Applicati
           companyName: data.companyName,
           jobTitle: data.jobTitle,
           jobUrl: data.jobUrl,
-          locations: locationsArray,
+          locations: locationsArray.join(','),
           type: data.type,
           category: data.category,
           workArrangement: data.workArrangement,
@@ -172,6 +173,7 @@ export async function bulkAddApplications(applicationsData: Array<Omit<Applicati
         
         const fullApplication: Application = {
             ...newApplicationRecord,
+            locations: newApplicationRecord.locations.split(',').map(l => l.trim()),
             user: user,
         };
         createdApplications.push(fullApplication);
@@ -183,17 +185,14 @@ export async function bulkAddApplications(applicationsData: Array<Omit<Applicati
 }
 
 export async function updateApplication(appId: string, data: Partial<Application>) {
-  const payload: Partial<typeof applications.$inferInsert> = { ...data };
-  if (data.user) {
-    delete payload.user;
+  const { locations, user, createdAt, ...rest } = data;
+  const payload: Partial<typeof applications.$inferInsert> = {
+    ...rest,
+  };
+
+  if (locations) {
+    payload.locations = locations.join(', ');
   }
-  // Prevent createdAt from being updated
-  if (payload.createdAt) {
-    delete payload.createdAt;
-  }
-  
-  // Scoring is now done on creation, so we remove the logic from here.
-  // We just update the fields passed in.
 
   await db.update(applications).set(payload).where(eq(applications.id, appId));
   revalidatePath('/');
