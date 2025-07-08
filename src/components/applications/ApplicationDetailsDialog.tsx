@@ -908,7 +908,7 @@ export function ApplicationDetailsDialog({ application, children }: ApplicationD
             <Separator />
             
             <div className="space-y-4">
-              <h3 className="font-semibold">Customized LaTeX Resume</h3>
+              <h3 className="font-semibold">Latex Resume</h3>
               <div className="rounded-lg border p-4 space-y-4">
                 {application.customLatexResume ? (
                   <div className="flex items-center justify-between">
@@ -920,6 +920,10 @@ export function ApplicationDetailsDialog({ application, children }: ApplicationD
                       <Button variant="outline" size="sm" onClick={() => router.push(`/resumes/edit-latex/${application.latexResumeId}?user=${application.userId}`)}>
                         <Pencil className="mr-2 h-4 w-4" />
                         Edit
+                      </Button>
+                       <Button variant="outline" size="sm" onClick={() => handleCopyLatexResume(application.customLatexResume!.id)} disabled={isManagingLatex === application.customLatexResume!.id}>
+                        {isManagingLatex === application.customLatexResume!.id ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Copy className="mr-2 h-4 w-4" />}
+                        Copy & Edit
                       </Button>
                       <Button variant="destructive" size="sm" onClick={handleDetachLatexResume} disabled={isManagingLatex === 'detach'}>
                         {isManagingLatex === 'detach' ? <Loader2 className="h-4 w-4 animate-spin" /> : <X className="mr-2 h-4 w-4" />}
@@ -936,7 +940,7 @@ export function ApplicationDetailsDialog({ application, children }: ApplicationD
                     </Button>
                     {userLatexResumes.length > 0 && (
                       <div className="space-y-2 pt-2">
-                        <p className="text-sm font-medium">Or copy an existing resume:</p>
+                        <p className="text-sm font-medium">Existing Resume:</p>
                         <div className="max-h-40 overflow-y-auto space-y-2 pr-2">
                           {userLatexResumes.map(resume => (
                             <div key={resume.id} className="flex items-center justify-between p-2 rounded-md bg-secondary/50">
