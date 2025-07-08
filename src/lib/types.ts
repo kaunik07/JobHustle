@@ -2,6 +2,7 @@
 
 
 
+
 export type ApplicationStatus = 'Yet to Apply' | 'Applied' | 'OA' | 'Interview' | 'Offer' | 'Rejected';
 
 export const statuses: ApplicationStatus[] = ['Yet to Apply', 'Applied', 'OA', 'Interview', 'Offer', 'Rejected'];
@@ -117,6 +118,8 @@ export interface Application {
   userId: string;
   user?: User;
   resumeId?: string | null;
+  latexResumeId?: string | null;
+  customLatexResume?: Resume | null;
   notes?: string | null;
   appliedOn?: Date | null;
   oaDueDate?: Date | null;

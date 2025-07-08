@@ -15,7 +15,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { type Application, type ApplicationStatus, statuses, categories, type ApplicationCategory, type User, applicationTypes, type ApplicationType, workArrangements, type ApplicationWorkArrangement, type Resume } from '@/lib/types';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { ExternalLink, Trash2, CalendarIcon, CheckCircle2, Plus, FileText, Check, Sparkles, Loader2, RefreshCw, X } from 'lucide-react';
+import { ExternalLink, Trash2, CalendarIcon, CheckCircle2, Plus, FileText, Check, Sparkles, Loader2, RefreshCw, X, FileJson, Pencil, Copy, FilePlus } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -38,8 +38,10 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
-import { updateApplication, deleteApplication, reevaluateScores, reevaluateKeywords } from '@/app/actions';
+import { updateApplication, deleteApplication, reevaluateScores, reevaluateKeywords, createLatexResumeForApplication, copyLatexResumeForApplication, detachLatexResume } from '@/app/actions';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { useRouter } from 'next/navigation';
+import { Separator } from '../ui/separator';
 
 interface ApplicationDetailsDialogProps {
   application: Application;
@@ -71,6 +73,9 @@ export function ApplicationDetailsDialog({ application, children }: ApplicationD
   const { toast } = useToast();
   const [isReevaluating, setIsReevaluating] = React.useState(false);
   const [isReevaluatingKeywords, setIsReevaluatingKeywords] = React.useState(false);
+  const [isManagingLatex, setIsManagingLatex] = React.useState<string | boolean>(false); // Can be a resume ID for copy action
+  const router = useRouter();
+  
   const companyDomain = application.companyName.toLowerCase().replace(/[^a-z0-9]/gi, '') + '.com';
   
   const [currentNotes, setCurrentNotes] = React.useState(application.notes || '');
@@ -109,6 +114,10 @@ export function ApplicationDetailsDialog({ application, children }: ApplicationD
     }
     return [];
   }, [application.user?.resumes, application.resumeScores, application.userId]);
+  
+  const userLatexResumes = React.useMemo(() => {
+      return userResumes.filter(r => r.latexContent);
+  }, [userResumes]);
 
 
   React.useEffect(() => {
@@ -430,6 +439,46 @@ export function ApplicationDetailsDialog({ application, children }: ApplicationD
       toast({ variant: 'destructive', title: 'Keyword Extraction Failed', description: error instanceof Error ? error.message : 'An unknown error occurred.' });
     } finally {
       setIsReevaluatingKeywords(false);
+    }
+  };
+
+  const handleCreateNewLatexResume = async () => {
+    setIsManagingLatex('create');
+    try {
+      const newResumeId = await createLatexResumeForApplication(application.id, application.userId);
+      toast({ title: 'New resume created and linked.' });
+      router.push(`/resumes/edit-latex/${newResumeId}?user=${application.userId}`);
+      setOpen(false);
+    } catch (error) {
+      toast({ variant: 'destructive', title: 'Failed to create resume.', description: error instanceof Error ? error.message : 'Unknown error' });
+    } finally {
+      setIsManagingLatex(false);
+    }
+  };
+
+  const handleCopyLatexResume = async (resumeId: string) => {
+    setIsManagingLatex(resumeId);
+    try {
+      const newResumeId = await copyLatexResumeForApplication(resumeId, application.id, application.userId);
+      toast({ title: 'Resume copied and linked.' });
+      router.push(`/resumes/edit-latex/${newResumeId}?user=${application.userId}`);
+      setOpen(false);
+    } catch (error) {
+      toast({ variant: 'destructive', title: 'Failed to copy resume.', description: error instanceof Error ? error.message : 'Unknown error' });
+    } finally {
+      setIsManagingLatex(false);
+    }
+  };
+
+  const handleDetachLatexResume = async () => {
+    setIsManagingLatex('detach');
+    try {
+      await detachLatexResume(application.id);
+      toast({ title: 'Resume detached.' });
+    } catch (error) {
+      toast({ variant: 'destructive', title: 'Failed to detach resume.', description: error instanceof Error ? error.message : 'Unknown error' });
+    } finally {
+      setIsManagingLatex(false);
     }
   };
 
@@ -843,17 +892,69 @@ export function ApplicationDetailsDialog({ application, children }: ApplicationD
                 className="min-h-[100px] text-sm"
                 />
             </div>
+            
+            <Separator />
+            
+            <div className="space-y-4">
+              <h3 className="font-semibold">Customized LaTeX Resume</h3>
+              <div className="rounded-lg border p-4 space-y-4">
+                {application.customLatexResume ? (
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <FileJson className="h-5 w-5 text-primary" />
+                      <span className="font-medium">{application.customLatexResume.name}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Button variant="outline" size="sm" onClick={() => router.push(`/resumes/edit-latex/${application.latexResumeId}?user=${application.userId}`)}>
+                        <Pencil className="mr-2 h-4 w-4" />
+                        Edit
+                      </Button>
+                      <Button variant="destructive" size="sm" onClick={handleDetachLatexResume} disabled={isManagingLatex === 'detach'}>
+                        {isManagingLatex === 'detach' ? <Loader2 className="h-4 w-4 animate-spin" /> : <X className="mr-2 h-4 w-4" />}
+                        Detach
+                      </Button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    <p className="text-sm text-muted-foreground">No custom LaTeX resume linked. Create a new one or copy an existing one to tailor it for this application.</p>
+                     <Button size="sm" onClick={handleCreateNewLatexResume} disabled={!!isManagingLatex}>
+                      {isManagingLatex === 'create' ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <FilePlus className="mr-2 h-4 w-4" />}
+                      Create New Blank Resume
+                    </Button>
+                    {userLatexResumes.length > 0 && (
+                      <div className="space-y-2 pt-2">
+                        <p className="text-sm font-medium">Or copy an existing resume:</p>
+                        <div className="max-h-40 overflow-y-auto space-y-2 pr-2">
+                          {userLatexResumes.map(resume => (
+                            <div key={resume.id} className="flex items-center justify-between p-2 rounded-md bg-secondary/50">
+                                <span className="text-sm">{resume.name}</span>
+                                <Button size="sm" variant="outline" onClick={() => handleCopyLatexResume(resume.id)} disabled={!!isManagingLatex}>
+                                    {isManagingLatex === resume.id ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Copy className="mr-2 h-4 w-4" />}
+                                    Copy & Edit
+                                </Button>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <Separator />
 
             <div className="space-y-2">
-                <h3 className="font-semibold">Attach Resume</h3>
-                {userResumes.length > 0 ? (
+                <h3 className="font-semibold">Attach PDF Resume (for AI Scoring)</h3>
+                {userResumes.filter(r => r.resumeText).length > 0 ? (
                     <Select onValueChange={handleResumeChange} value={application.resumeId || "none"}>
                         <SelectTrigger>
                             <SelectValue placeholder="Select a resume" />
                         </SelectTrigger>
                         <SelectContent>
                             <SelectItem value="none">None (detach)</SelectItem>
-                            {userResumes.map(resume => (
+                            {userResumes.filter(r => r.resumeText).map(resume => (
                                 <SelectItem key={resume.id} value={resume.id}>
                                     {resume.name}
                                 </SelectItem>
@@ -861,13 +962,13 @@ export function ApplicationDetailsDialog({ application, children }: ApplicationD
                         </SelectContent>
                     </Select>
                 ) : (
-                    <p className="text-sm text-muted-foreground">This user has no resumes uploaded.</p>
+                    <p className="text-sm text-muted-foreground">This user has no PDF resumes uploaded.</p>
                 )}
             </div>
             
             <div className="space-y-2">
               <div className="flex items-center justify-between">
-                <h3 className="font-semibold">Resume Suggestions</h3>
+                <h3 className="font-semibold">Resume-to-Job Score</h3>
                 <TooltipProvider>
                   <Tooltip>
                     <TooltipTrigger asChild>

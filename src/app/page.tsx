@@ -56,7 +56,8 @@ export default async function Home({
                         }
                     }
                 }
-            }
+            },
+            customLatexResume: true,
         },
         orderBy: desc(applicationsSchema.createdAt)
     });
@@ -69,6 +70,7 @@ export default async function Home({
         ...score,
         resume: score.resume!
       })) as ResumeScore[],
+      customLatexResume: r.customLatexResume,
     }));
 
 

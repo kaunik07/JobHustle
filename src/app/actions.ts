@@ -185,7 +185,7 @@ export async function bulkAddApplications(applicationsData: Array<Omit<Applicati
 }
 
 export async function updateApplication(appId: string, data: Partial<Application>) {
-  const { locations, user, createdAt, ...rest } = data;
+  const { locations, user, createdAt, customLatexResume, ...rest } = data;
   const payload: Partial<typeof applications.$inferInsert> = {
     ...rest,
   };
@@ -293,22 +293,78 @@ export async function addResume(name: string, resumeDataUri: string, userId: str
   revalidatePath('/');
 }
 
-export async function saveLatexResume(data: { id?: string; name: string; latexContent: string; userId: string }) {
+export async function saveLatexResume(data: { id?: string; name: string; latexContent: string; userId: string; applicationId?: string }) {
+  let resumeId: string;
+
   if (data.id) {
     // Update existing
-    await db.update(resumes).set({
+    const [updatedResume] = await db.update(resumes).set({
       name: data.name,
       latexContent: data.latexContent,
-    }).where(eq(resumes.id, data.id));
+    }).where(eq(resumes.id, data.id)).returning({id: resumes.id});
+    resumeId = updatedResume.id;
   } else {
     // Create new
-    await db.insert(resumes).values({
+    const [newResume] = await db.insert(resumes).values({
       name: data.name,
       latexContent: data.latexContent,
       userId: data.userId,
-    });
+    }).returning({id: resumes.id});
+    resumeId = newResume.id;
+  }
+  
+  // If an applicationId is passed, attach this resume to it.
+  if (data.applicationId) {
+    await db.update(applications)
+      .set({ latexResumeId: resumeId })
+      .where(eq(applications.id, data.applicationId));
   }
   revalidatePath('/');
+}
+
+export async function createLatexResumeForApplication(applicationId: string, userId: string) {
+    const [app] = await db.select({ companyName: applications.companyName }).from(applications).where(eq(applications.id, applicationId));
+    if (!app) throw new Error('Application not found');
+
+    const [newResume] = await db.insert(resumes).values({
+        name: `Resume for ${app.companyName}`,
+        latexContent: `\\documentclass{article}\n\\title{Resume for ${app.companyName}}\n\\author{...}\n\\date{\\today}\n\\begin{document}\n\n\\maketitle\n\n\\section{Introduction}\nYour content here.\n\n\\end{document}}`,
+        userId: userId,
+    }).returning({ id: resumes.id });
+
+    await db.update(applications)
+      .set({ latexResumeId: newResume.id })
+      .where(eq(applications.id, applicationId));
+    
+    revalidatePath('/');
+    return newResume.id;
+}
+
+export async function copyLatexResumeForApplication(originalResumeId: string, applicationId: string, userId: string) {
+    const [originalResume] = await db.select().from(resumes).where(eq(resumes.id, originalResumeId));
+    const [app] = await db.select({ companyName: applications.companyName }).from(applications).where(eq(applications.id, applicationId));
+
+    if (!originalResume || !app) throw new Error('Original resume or application not found');
+
+    const [newResume] = await db.insert(resumes).values({
+        name: `${originalResume.name} - For ${app.companyName}`,
+        latexContent: originalResume.latexContent,
+        userId: userId,
+    }).returning({ id: resumes.id });
+
+    await db.update(applications)
+      .set({ latexResumeId: newResume.id })
+      .where(eq(applications.id, applicationId));
+    
+    revalidatePath('/');
+    return newResume.id;
+}
+
+export async function detachLatexResume(applicationId: string) {
+    await db.update(applications)
+        .set({ latexResumeId: null })
+        .where(eq(applications.id, applicationId));
+    revalidatePath('/');
 }
 
 

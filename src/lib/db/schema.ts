@@ -50,6 +50,7 @@ export const applications = pgTable('applications', {
     status: statusesEnum('status').notNull(),
     userId: text('user_id').references(() => users.id, { onDelete: 'cascade' }).notNull(),
     resumeId: text('resume_id').references(() => resumes.id, { onDelete: 'set null' }),
+    latexResumeId: text('latex_resume_id').references(() => resumes.id, { onDelete: 'set null' }),
     notes: text('notes'),
     appliedOn: timestamp('applied_on'),
     oaDueDate: timestamp('oa_due_date'),
@@ -104,6 +105,7 @@ export const resumesRelations = relations(resumes, ({ one, many }) => ({
 export const applicationsRelations = relations(applications, ({ one, many }) => ({
   user: one(users, { fields: [applications.userId], references: [users.id] }),
   attachedResume: one(resumes, { fields: [applications.resumeId], references: [resumes.id] }),
+  customLatexResume: one(resumes, { fields: [applications.latexResumeId], references: [resumes.id] }),
   resumeScores: many(applicationResumeScores),
 }));
 
