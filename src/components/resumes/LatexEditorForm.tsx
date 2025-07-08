@@ -16,7 +16,7 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, Save, Download, FileWarning, ArrowLeft, Eye } from 'lucide-react';
+import { Loader2, Save, Download, FileWarning, ArrowLeft, Eye, FileJson } from 'lucide-react';
 import { saveLatexResume, compileLatex } from '@/app/actions';
 import type { Resume, User } from '@/lib/types';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -184,11 +184,6 @@ Email: ${user.email}
                             {isCompiling ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Eye className="mr-2 h-4 w-4" />}
                             Compile & Preview
                         </Button>
-                         {pdfPreviewUrl && (
-                            <Button type="button" variant="outline" onClick={handleDownloadPdf}>
-                                <Download className="mr-2 h-4 w-4" /> Download PDF
-                            </Button>
-                        )}
                     </div>
                     <Button type="submit" disabled={isSubmitting}>
                         {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
@@ -217,14 +212,13 @@ Email: ${user.email}
                       name="latexContent"
                       render={({ field }) => (
                           <FormItem className="flex flex-col h-full">
-                            <FormLabel>LaTeX Code</FormLabel>
+                            <FormLabel>LaTeX (.tex) Code</FormLabel>
                             <FormControl>
                               <div className="rounded-md border h-[500px] lg:h-auto lg:min-h-[600px] flex-1 overflow-hidden">
                                 <CodeMirror
                                   value={field.value}
                                   height="100%"
                                   theme={vscodeDark}
-                                  extensions={[]}
                                   onChange={field.onChange}
                                   className="h-full"
                                 />
@@ -240,6 +234,11 @@ Email: ${user.email}
                   <div className="space-y-4">
                     <div className="flex justify-between items-center">
                       <Label className="text-lg font-medium">PDF Preview</Label>
+                      {pdfPreviewUrl && (
+                        <Button type="button" variant="outline" size="sm" onClick={handleDownloadPdf}>
+                          <Download className="mr-2 h-4 w-4" /> Download PDF
+                        </Button>
+                      )}
                     </div>
                     <div className="rounded-lg border bg-muted w-full aspect-[8.5/11] flex flex-col items-center justify-center">
                       {isCompiling ? (
