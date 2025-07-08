@@ -162,7 +162,7 @@ export function LatexEditorForm({ user, resume }: LatexEditorFormProps) {
                 <div className="flex flex-wrap gap-4 items-center justify-between w-full pb-6 border-b mb-6">
                     <div className="flex gap-2 flex-wrap">
                         <Button type="button" variant="outline" onClick={handleDownloadTex}>
-                            <Download className="mr-2 h-4 w-4" /> Download .tex
+                            <Download className="mr-2 h-4 w-4" /> Download .tex file
                         </Button>
                         <Button type="button" variant="secondary" onClick={handleCompile} disabled={isCompiling}>
                             {isCompiling ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Eye className="mr-2 h-4 w-4" />}
