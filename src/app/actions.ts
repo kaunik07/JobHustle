@@ -391,12 +391,8 @@ export async function deleteResume(resumeId: string) {
 }
 
 export async function compileLatex(latexContent: string): Promise<{ pdfBase64: string } | { error: string }> {
-  const endpoint = process.env.LATEX_COMPILER_ENDPOINT;
+  const endpoint = "https://latex-compiler-production.up.railway.app/compile";
 
-  if (!endpoint) {
-    return { error: 'LaTeX compiler endpoint is not configured. Please set LATEX_COMPILER_ENDPOINT in your environment variables.' };
-  }
-  
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), 90000); // 90 seconds timeout
 
