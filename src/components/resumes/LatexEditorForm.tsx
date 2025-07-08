@@ -17,7 +17,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, Save, Download, FileWarning, ArrowLeft } from 'lucide-react';
+import { Loader2, Save, Download, FileWarning, ArrowLeft, Eye } from 'lucide-react';
 import { saveLatexResume, compileLatex } from '@/app/actions';
 import type { Resume, User } from '@/lib/types';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -38,6 +38,7 @@ interface LatexEditorFormProps {
 export function LatexEditorForm({ user, resume }: LatexEditorFormProps) {
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [isCompiling, setIsCompiling] = React.useState(false);
+  const [pdfPreviewUrl, setPdfPreviewUrl] = React.useState<string | null>(null);
   const { toast } = useToast();
   const router = useRouter();
   
@@ -73,19 +74,14 @@ export function LatexEditorForm({ user, resume }: LatexEditorFormProps) {
     }
     
     setIsCompiling(true);
+    setPdfPreviewUrl(null);
     try {
         const result = await compileLatex(content);
         if ('error' in result) {
             toast({ variant: 'destructive', title: 'Compilation Failed', description: result.error, duration: 8000 });
         } else {
-            const name = form.getValues('name') || 'resume';
-            const link = document.createElement('a');
-            link.href = `data:application/pdf;base64,${result.pdfBase64}`;
-            link.download = `${name.replace(/ /g, '_')}.pdf`;
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-            toast({ title: 'Compilation Successful', description: 'Your PDF download has started.' });
+            setPdfPreviewUrl(`data:application/pdf;base64,${result.pdfBase64}`);
+            toast({ title: 'Compilation Successful', description: 'PDF preview has been updated.' });
         }
     } catch (e) {
         const errorMessage = e instanceof Error ? e.message : 'An unknown error occurred.';
@@ -93,6 +89,20 @@ export function LatexEditorForm({ user, resume }: LatexEditorFormProps) {
     } finally {
         setIsCompiling(false);
     }
+  };
+
+  const handleDownloadPdf = () => {
+    if (!pdfPreviewUrl) {
+      toast({ variant: 'destructive', title: 'No PDF to download', description: 'Please compile the resume first.' });
+      return;
+    }
+    const name = form.getValues('name') || 'resume';
+    const link = document.createElement('a');
+    link.href = pdfPreviewUrl;
+    link.download = `${name.replace(/ /g, '_')}.pdf`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   };
 
   async function onSubmit(values: FormValues) {
@@ -111,8 +121,7 @@ export function LatexEditorForm({ user, resume }: LatexEditorFormProps) {
       // Programmatically create a query string for the redirect
       const params = new URLSearchParams();
       params.set('user', user.id);
-      params.set('view', 'resumes');
-      router.push(`/?${params.toString()}`);
+      router.push(`/?${params.toString()}&view=resumes`);
       router.refresh(); 
     } catch (error) {
       console.error(error);
@@ -127,7 +136,7 @@ export function LatexEditorForm({ user, resume }: LatexEditorFormProps) {
   }
 
   return (
-    <Card className="max-w-4xl mx-auto">
+    <Card className="max-w-screen-xl mx-auto">
         <CardHeader>
             <Button variant="ghost" size="sm" className="mb-4 w-fit -ml-2" onClick={() => router.back()}>
                 <ArrowLeft className="mr-2 h-4 w-4" />
@@ -135,55 +144,93 @@ export function LatexEditorForm({ user, resume }: LatexEditorFormProps) {
             </Button>
             <CardTitle>{isEditMode ? 'Edit LaTeX Resume' : 'Create New LaTeX Resume'}</CardTitle>
             <CardDescription>
-                {isEditMode ? `Editing "${resume.name}".` : 'Create a new resume using LaTeX code.'}
+                {isEditMode ? `Editing "${resume.name}".` : 'Create a new resume using LaTeX code.'} Use the preview panel to see your compiled PDF.
             </CardDescription>
         </CardHeader>
         <CardContent>
             <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-                <FormField
-                control={form.control}
-                name="name"
-                render={({ field }) => (
-                    <FormItem>
-                    <FormLabel>Resume Name</FormLabel>
-                    <FormControl>
-                        <Input placeholder="e.g., Senior LaTeX Resume" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                    </FormItem>
-                )}
-                />
-                <FormField
-                control={form.control}
-                name="latexContent"
-                render={({ field }) => (
-                    <FormItem className="flex flex-col">
-                    <FormLabel>LaTeX Code</FormLabel>
-                    <FormControl>
-                        <Textarea
-                        placeholder="\\documentclass{article}..."
-                        className="font-mono resize-y min-h-[500px]"
-                        {...field}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                  {/* Left Column: Editor */}
+                  <div className="space-y-6">
+                    <FormField
+                      control={form.control}
+                      name="name"
+                      render={({ field }) => (
+                          <FormItem>
+                          <FormLabel>Resume Name</FormLabel>
+                          <FormControl>
+                              <Input placeholder="e.g., Senior LaTeX Resume" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                          </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="latexContent"
+                      render={({ field }) => (
+                          <FormItem className="flex flex-col h-full">
+                          <FormLabel>LaTeX Code</FormLabel>
+                          <FormControl>
+                              <Textarea
+                              placeholder="\\documentclass{article}..."
+                              className="font-mono resize-y min-h-[500px] flex-1"
+                              {...field}
+                              />
+                          </FormControl>
+                          <FormMessage />
+                          </FormItem>
+                      )}
+                    />
+                  </div>
+
+                  {/* Right Column: Previewer */}
+                  <div className="space-y-4">
+                    <div className="flex justify-between items-center">
+                      <Label className="text-lg font-medium">PDF Preview</Label>
+                      {pdfPreviewUrl && (
+                        <Button type="button" variant="outline" size="sm" onClick={handleDownloadPdf}>
+                          <Download className="mr-2 h-4 w-4" /> Download PDF
+                        </Button>
+                      )}
+                    </div>
+                    <div className="rounded-lg border bg-muted w-full aspect-[8.5/11] flex flex-col items-center justify-center">
+                      {isCompiling ? (
+                        <div className="flex flex-col gap-4 text-center">
+                          <Loader2 className="h-8 w-8 animate-spin text-primary mx-auto" />
+                          <p className="text-muted-foreground">Compiling...</p>
+                        </div>
+                      ) : pdfPreviewUrl ? (
+                        <iframe
+                          src={pdfPreviewUrl}
+                          className="w-full h-full rounded-md"
+                          title="PDF Preview"
                         />
-                    </FormControl>
-                    <FormMessage />
-                    </FormItem>
-                )}
-                />
-                <div className="flex justify-between w-full pt-4 border-t">
+                      ) : (
+                        <div className="flex flex-col gap-4 text-center p-4">
+                          <FileWarning className="h-10 w-10 text-muted-foreground mx-auto" />
+                          <p className="text-sm text-muted-foreground">Click "Compile & Preview" to see your PDF.</p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+                
+                {/* Action Buttons at the bottom */}
+                <div className="flex justify-between w-full pt-6 border-t">
                     <div className="flex gap-2">
                         <Button type="button" variant="outline" onClick={handleDownloadTex}>
                             <Download className="mr-2 h-4 w-4" /> Download .tex
                         </Button>
-                        <Button type="button" variant="outline" onClick={handleCompile} disabled={isCompiling}>
-                            {isCompiling ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <FileWarning className="mr-2 h-4 w-4" />}
-                            Compile to PDF
+                        <Button type="button" variant="secondary" onClick={handleCompile} disabled={isCompiling}>
+                            {isCompiling ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Eye className="mr-2 h-4 w-4" />}
+                            Compile & Preview
                         </Button>
                     </div>
                     <Button type="submit" disabled={isSubmitting}>
-                    {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
-                    Save Resume
+                        {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
+                        Save Resume
                     </Button>
                 </div>
             </form>
