@@ -323,6 +323,9 @@ export async function compileLatex(latexContent: string): Promise<{ pdfBase64: s
   if (!endpoint) {
     return { error: 'LaTeX compiler endpoint is not configured. Please set LATEX_COMPILER_ENDPOINT in your environment variables.' };
   }
+  
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 90000); // 90 seconds timeout
 
   try {
     const response = await fetch(endpoint, {
@@ -330,9 +333,11 @@ export async function compileLatex(latexContent: string): Promise<{ pdfBase64: s
       headers: {
         'Content-Type': 'application/json',
       },
-      // Your endpoint expects the key "code"
       body: JSON.stringify({ code: latexContent }),
+      signal: controller.signal, // Pass the abort signal to fetch
     });
+    
+    clearTimeout(timeoutId); // Clear the timeout if the request completes in time
 
     if (!response.ok) {
       const errorBody = await response.text();
@@ -340,7 +345,6 @@ export async function compileLatex(latexContent: string): Promise<{ pdfBase64: s
       return { error: `Compilation failed: ${errorBody || response.statusText}` };
     }
 
-    // The response is a raw PDF file, read it into a buffer and convert to base64
     const pdfBuffer = await response.arrayBuffer();
     const pdfBase64 = Buffer.from(pdfBuffer).toString('base64');
 
@@ -350,6 +354,11 @@ export async function compileLatex(latexContent: string): Promise<{ pdfBase64: s
 
     return { pdfBase64 };
   } catch (error) {
+    clearTimeout(timeoutId); // Also clear timeout on error
+    if (error instanceof Error && error.name === 'AbortError') {
+      console.error('LaTeX compilation timed out after 90 seconds.');
+      return { error: 'Compilation timed out after 90 seconds. The request was aborted.' };
+    }
     console.error('Error calling LaTeX compiler endpoint:', error);
     const errorMessage = error instanceof Error ? error.message : 'An unknown network error occurred.';
     return { error: `Failed to connect to the compiler service: ${errorMessage}` };
