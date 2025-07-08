@@ -22,7 +22,8 @@ import type { Resume, User } from '@/lib/types';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { useRouter } from 'next/navigation';
 import { Label } from '@/components/ui/label';
-import Editor from '@monaco-editor/react';
+import CodeMirror from '@uiw/react-codemirror';
+import { vscodeDark } from '@uiw/codemirror-theme-vscode';
 
 const formSchema = z.object({
   name: z.string().min(1, 'Resume name is required'),
@@ -218,19 +219,14 @@ Email: ${user.email}
                           <FormItem className="flex flex-col h-full">
                             <FormLabel>LaTeX Code</FormLabel>
                             <FormControl>
-                              <div className="rounded-md border h-[500px] lg:h-auto lg:min-h-[600px] flex-1">
-                                <Editor
-                                  height="100%"
-                                  language="latex"
-                                  theme="vs-dark"
+                              <div className="rounded-md border h-[500px] lg:h-auto lg:min-h-[600px] flex-1 overflow-hidden">
+                                <CodeMirror
                                   value={field.value}
+                                  height="100%"
+                                  theme={vscodeDark}
+                                  extensions={[]}
                                   onChange={field.onChange}
-                                  options={{
-                                    minimap: { enabled: false },
-                                    fontSize: 14,
-                                    wordWrap: 'on',
-                                    automaticLayout: true,
-                                  }}
+                                  className="h-full"
                                 />
                               </div>
                             </FormControl>
