@@ -22,16 +22,7 @@ import type { Resume, User } from '@/lib/types';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { useRouter } from 'next/navigation';
 import { Label } from '@/components/ui/label';
-import dynamic from 'next/dynamic';
-
-const Editor = dynamic(() => import('@monaco-editor/react'), {
-  ssr: false,
-  loading: () => (
-    <div className="flex h-full min-h-[600px] w-full items-center justify-center rounded-md border bg-muted">
-      <Loader2 className="h-8 w-8 animate-spin" />
-    </div>
-  ),
-});
+import Editor from '@monaco-editor/react';
 
 const formSchema = z.object({
   name: z.string().min(1, 'Resume name is required'),
@@ -58,7 +49,30 @@ export function LatexEditorForm({ user, resume }: LatexEditorFormProps) {
     resolver: zodResolver(formSchema),
     defaultValues: {
       name: resume?.name || '',
-      latexContent: resume?.latexContent || '',
+      latexContent: resume?.latexContent || `\\documentclass{article}
+\\usepackage{geometry}
+\\geometry{a4paper, margin=1in}
+\\author{${user.firstName} ${user.lastName}}
+\\title{Resume for ...}
+\\date{\\today}
+
+\\begin{document}
+
+\\maketitle
+
+\\section{Contact}
+Email: ${user.email}
+
+\\section{Education}
+
+\\section{Experience}
+
+\\section{Projects}
+
+\\section{Skills}
+
+\\end{document}
+`,
     },
   });
 
@@ -154,7 +168,7 @@ export function LatexEditorForm({ user, resume }: LatexEditorFormProps) {
             </Button>
             <CardTitle>{isEditMode ? 'Edit LaTeX Resume' : 'Create New LaTeX Resume'}</CardTitle>
             <CardDescription>
-                {isEditMode ? `Editing "${resume.name}".` : 'Create a new resume using LaTeX code.'} Use the preview panel to see your compiled PDF.
+                {isEditMode ? `Editing "${resume?.name}".` : 'Create a new resume using LaTeX code.'} Use the preview panel to see your compiled PDF.
             </CardDescription>
         </CardHeader>
         <CardContent>
