@@ -3,14 +3,14 @@
 
 import * as React from 'react';
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogFooter,
-  DialogTrigger,
-} from '@/components/ui/dialog';
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetDescription,
+  SheetFooter,
+  SheetTrigger,
+} from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { type Application, type ApplicationStatus, statuses, categories, type ApplicationCategory, type User, applicationTypes, type ApplicationType, workArrangements, type ApplicationWorkArrangement, type Resume } from '@/lib/types';
@@ -455,10 +455,10 @@ export function ApplicationDetailsDialog({ application, children }: ApplicationD
   const showOaSkipToggle = !['Yet to Apply', 'OA'].includes(application.status);
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>{children}</DialogTrigger>
-      <DialogContent className="sm:max-w-3xl max-h-[90vh] flex flex-col p-0 bg-card">
-        <DialogHeader className="p-6 pb-4 flex-shrink-0 border-b">
+    <Sheet open={open} onOpenChange={setOpen}>
+      <SheetTrigger asChild>{children}</SheetTrigger>
+      <SheetContent className="w-full sm:max-w-3xl flex flex-col p-0">
+        <SheetHeader className="p-6 pb-4 flex-shrink-0 border-b">
           <div className="flex items-start gap-4">
             <Avatar className="h-16 w-16 rounded-lg">
               <AvatarImage 
@@ -469,13 +469,13 @@ export function ApplicationDetailsDialog({ application, children }: ApplicationD
               <AvatarFallback className="rounded-lg text-2xl">{application.companyName.charAt(0)}</AvatarFallback>
             </Avatar>
             <div>
-              <DialogTitle className="text-2xl font-bold">{application.jobTitle}</DialogTitle>
-              <DialogDescription className="text-lg">
+              <SheetTitle className="text-2xl font-bold">{application.jobTitle}</SheetTitle>
+              <SheetDescription className="text-lg">
                 at {application.companyName}
-              </DialogDescription>
+              </SheetDescription>
             </div>
           </div>
-        </DialogHeader>
+        </SheetHeader>
 
         <div className="flex-1 min-h-0 overflow-y-auto">
           <div className="p-6 grid gap-6">
@@ -1011,7 +1011,7 @@ export function ApplicationDetailsDialog({ application, children }: ApplicationD
           </div>
         </div>
 
-        <DialogFooter className="p-6 pt-4 flex-shrink-0 border-t">
+        <SheetFooter className="p-6 pt-4 flex-shrink-0 border-t">
           <AlertDialog>
             <AlertDialogTrigger asChild>
               <Button variant="destructive" size="sm">
@@ -1034,8 +1034,8 @@ export function ApplicationDetailsDialog({ application, children }: ApplicationD
               </AlertDialogFooter>
             </AlertDialogContent>
           </AlertDialog>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+        </SheetFooter>
+      </SheetContent>
+    </Sheet>
   );
 }
