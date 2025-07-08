@@ -333,7 +333,8 @@ export async function compileLatex(latexContent: string): Promise<{ pdfBase64: s
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ latexContent }),
+      // Your endpoint expects the key "code"
+      body: JSON.stringify({ code: latexContent }),
     });
 
     if (!response.ok) {
@@ -342,12 +343,15 @@ export async function compileLatex(latexContent: string): Promise<{ pdfBase64: s
       return { error: `Compilation failed: ${errorBody || response.statusText}` };
     }
 
-    const result = await response.json();
-    if (!result.pdfBase64) {
-      return { error: 'Invalid response from compiler: missing pdfBase64 field.' };
+    // The response is a raw PDF file, read it into a buffer and convert to base64
+    const pdfBuffer = await response.arrayBuffer();
+    const pdfBase64 = Buffer.from(pdfBuffer).toString('base64');
+
+    if (!pdfBase64) {
+      return { error: 'Invalid response from compiler: received empty PDF.' };
     }
 
-    return { pdfBase64: result.pdfBase64 };
+    return { pdfBase64 };
   } catch (error) {
     console.error('Error calling LaTeX compiler endpoint:', error);
     const errorMessage = error instanceof Error ? error.message : 'An unknown network error occurred.';
