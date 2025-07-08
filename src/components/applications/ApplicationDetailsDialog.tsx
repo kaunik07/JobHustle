@@ -84,6 +84,7 @@ export function ApplicationDetailsDialog({ application, children }: ApplicationD
   const [currentLocations, setCurrentLocations] = React.useState(application.locations);
   const [locationInput, setLocationInput] = React.useState('');
   const [currentOaSkipped, setCurrentOaSkipped] = React.useState(application.oaSkipped);
+  const [currentJobDescription, setCurrentJobDescription] = React.useState(application.jobDescription || '');
 
   // State for OA date/time
   const [oaDueTime, setOaDueTime] = React.useState('23:59');
@@ -133,6 +134,7 @@ export function ApplicationDetailsDialog({ application, children }: ApplicationD
       setLocationInput('');
       setCurrentNotes(application.notes || '');
       setCurrentOaSkipped(application.oaSkipped);
+      setCurrentJobDescription(application.jobDescription || '');
       
       const initialTimezone = application.oaDueDateTimezone || Intl.DateTimeFormat().resolvedOptions().timeZone;
       setOaDueDateTimezone(initialTimezone);
@@ -255,6 +257,14 @@ export function ApplicationDetailsDialog({ application, children }: ApplicationD
     if (currentNotes !== (application.notes || '')) {
       if (await handleUpdate({ notes: currentNotes })) {
         toast({ title: "Notes updated." });
+      }
+    }
+  };
+
+  const handleJobDescriptionBlur = async () => {
+    if (currentJobDescription !== (application.jobDescription || '')) {
+      if (await handleUpdate({ jobDescription: currentJobDescription })) {
+        toast({ title: "Job description updated." });
       }
     }
   };
@@ -1104,12 +1114,22 @@ export function ApplicationDetailsDialog({ application, children }: ApplicationD
             )}
 
             <div className="space-y-2">
-                <h3 className="font-semibold">Job Description</h3>
+              <h3 className="font-semibold">Job Description</h3>
+              {application.status === 'Yet to Apply' ? (
+                <Textarea
+                  placeholder="Paste the job description here. It will be analyzed when the application is saved."
+                  value={currentJobDescription}
+                  onChange={(e) => setCurrentJobDescription(e.target.value)}
+                  onBlur={handleJobDescriptionBlur}
+                  className="min-h-[192px] text-sm"
+                />
+              ) : (
                 <ScrollArea className="h-48 rounded-md border p-4">
-                    <p className="text-sm text-muted-foreground">
-                        {application.jobDescription || 'No job description was fetched for this application.'}
-                    </p>
+                  <p className="text-sm text-muted-foreground whitespace-pre-wrap">
+                    {application.jobDescription || 'No job description was provided for this application.'}
+                  </p>
                 </ScrollArea>
+              )}
             </div>
           </div>
         </div>
