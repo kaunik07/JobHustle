@@ -30,6 +30,13 @@ import {
   ResizablePanel,
   ResizablePanelGroup,
 } from "@/components/ui/resizable";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 
 const formSchema = z.object({
   name: z.string().min(1, 'Resume name is required'),
@@ -47,6 +54,7 @@ export function LatexEditorForm({ user, resume }: LatexEditorFormProps) {
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [isCompiling, setIsCompiling] = React.useState(false);
   const [pdfPreviewUrl, setPdfPreviewUrl] = React.useState<string | null>(null);
+  const [fontSize, setFontSize] = React.useState(14);
   const { toast } = useToast();
   const router = useRouter();
   
@@ -182,7 +190,22 @@ Email: ${user.email}
                 </p>
               </div>
           </div>
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap items-center gap-4">
+            <div className="flex items-center gap-2">
+                <Label htmlFor="font-size-select" className="text-sm shrink-0">Font Size</Label>
+                <Select value={String(fontSize)} onValueChange={(value) => setFontSize(Number(value))}>
+                    <SelectTrigger id="font-size-select" className="w-[80px] h-9">
+                        <SelectValue placeholder="Size" />
+                    </SelectTrigger>
+                    <SelectContent>
+                        <SelectItem value="12">12px</SelectItem>
+                        <SelectItem value="14">14px</SelectItem>
+                        <SelectItem value="16">16px</SelectItem>
+                        <SelectItem value="18">18px</SelectItem>
+                        <SelectItem value="20">20px</SelectItem>
+                    </SelectContent>
+                </Select>
+            </div>
             <Button type="button" variant="outline" onClick={handleDownloadTex}>
               <Download className="mr-2 h-4 w-4" /> Download .tex
             </Button>
@@ -231,6 +254,7 @@ Email: ${user.email}
                           extensions={[StreamLanguage.define(stex)]}
                           onChange={field.onChange}
                           className="absolute inset-0"
+                          style={{ fontSize: `${fontSize}px` }}
                         />
                       </div>
                     </FormControl>
