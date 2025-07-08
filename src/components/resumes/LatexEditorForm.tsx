@@ -62,7 +62,7 @@ export function LatexEditorForm({ user, resume }: LatexEditorFormProps) {
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      name: resume?.name || '',
+      name: resume?.name || 'Untitled Resume',
       latexContent: resume?.latexContent || `\\documentclass{article}
 \\usepackage{geometry}
 \\geometry{a4paper, margin=1in}
@@ -177,17 +177,25 @@ Email: ${user.email}
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col h-full bg-background">
         <div className="p-4 border-b flex-shrink-0 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div className="flex items-center gap-2">
-              <Button variant="ghost" size="sm" onClick={() => router.back()} className="w-fit">
-                  <ArrowLeft className="mr-2 h-4 w-4" />
-                  Back
+          <div className="flex items-center gap-4">
+              <Button variant="ghost" size="icon" onClick={() => router.back()} className="h-9 w-9">
+                  <ArrowLeft className="h-4 w-4" />
               </Button>
-              <div>
-                <h1 className="text-xl font-bold">{isEditMode ? 'Edit LaTeX Resume' : 'Create New LaTeX Resume'}</h1>
-                <p className="text-sm text-muted-foreground">
-                    {isEditMode ? `Editing "${resume?.name}".` : 'Create a new resume using LaTeX code.'}
-                </p>
-              </div>
+              <FormField
+                control={form.control}
+                name="name"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormControl>
+                      <Input
+                        className="text-xl font-bold border-none shadow-none focus-visible:ring-0 focus-visible:ring-offset-0 p-0 h-auto"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
           </div>
           <div className="flex flex-wrap items-center gap-4">
             <Button type="button" variant="outline" onClick={handleDownloadTex}>
@@ -210,19 +218,6 @@ Email: ${user.email}
         >
           <ResizablePanel defaultSize={50} minSize={30}>
             <div className="flex h-full flex-col p-4 pt-2 space-y-4">
-              <FormField
-                control={form.control}
-                name="name"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Resume Name</FormLabel>
-                    <FormControl>
-                      <Input placeholder="e.g., Senior LaTeX Resume" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
               <FormField
                 control={form.control}
                 name="latexContent"
