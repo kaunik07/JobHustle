@@ -204,7 +204,7 @@ export function KanbanCard({ application, selectedUserId }: KanbanCardProps) {
             )}
           </div>
           
-          {application.status === 'Yet to Apply' && user?.emails && user.emails.length > 1 && (
+          {application.status === 'Yet to Apply' && user?.emailAddresses && user.emailAddresses.length > 1 && (
             <div className="flex items-center gap-2 pt-1" onClick={(e) => e.stopPropagation()}>
               <Mail className="h-4 w-4 text-muted-foreground flex-shrink-0" />
               <Select value={selectedEmail} onValueChange={handleEmailChange}>
@@ -212,7 +212,7 @@ export function KanbanCard({ application, selectedUserId }: KanbanCardProps) {
                   <SelectValue placeholder="Select email to apply with" />
                 </SelectTrigger>
                 <SelectContent>
-                  {user.emails.map(email => (
+                  {user.emailAddresses.map(email => (
                     <SelectItem key={email} value={email} className="text-xs">
                       {email}
                     </SelectItem>

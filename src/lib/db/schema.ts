@@ -20,7 +20,7 @@ export const users = pgTable('users', {
   id: text('id').$defaultFn(() => createId()).primaryKey(),
   firstName: varchar('first_name', { length: 255 }).notNull(),
   lastName: varchar('last_name', { length: 255 }).notNull(),
-  emails: text('emails').array().notNull(),
+  emailAddresses: text('email_addresses').array().notNull(),
   defaultEmail: text('default_email').notNull(),
   avatarUrl: text('avatar_url'),
 });

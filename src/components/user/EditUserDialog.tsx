@@ -34,9 +34,9 @@ import { ScrollArea } from '../ui/scroll-area';
 const formSchema = z.object({
   firstName: z.string().min(1, 'First name is required'),
   lastName: z.string().min(1, 'Last name is required'),
-  emails: z.array(z.string().email()).min(1, 'At least one email is required.'),
+  emailAddresses: z.array(z.string().email()).min(1, 'At least one email is required.'),
   defaultEmail: z.string().email('A default email is required.'),
-}).refine(data => data.emails.includes(data.defaultEmail), {
+}).refine(data => data.emailAddresses.includes(data.defaultEmail), {
   message: 'Default email must be in the email list.',
   path: ['defaultEmail'],
 });
@@ -59,7 +59,7 @@ export function EditUserDialog({ user, children }: EditUserDialogProps) {
     defaultValues: {
       firstName: user.firstName,
       lastName: user.lastName,
-      emails: user.emails,
+      emailAddresses: user.emailAddresses,
       defaultEmail: user.defaultEmail,
     },
   });
@@ -69,7 +69,7 @@ export function EditUserDialog({ user, children }: EditUserDialogProps) {
       form.reset({
         firstName: user.firstName,
         lastName: user.lastName,
-        emails: user.emails,
+        emailAddresses: user.emailAddresses,
         defaultEmail: user.defaultEmail,
       });
       setNewEmail('');
@@ -83,23 +83,23 @@ export function EditUserDialog({ user, children }: EditUserDialogProps) {
       toast({ variant: 'destructive', title: 'Invalid Email', description: 'Please enter a valid email address.' });
       return;
     }
-    const currentEmails = form.getValues('emails');
+    const currentEmails = form.getValues('emailAddresses');
     if (currentEmails.includes(newEmail)) {
         toast({ variant: 'destructive', title: 'Email exists', description: 'This email is already in the list.' });
         return;
     }
-    form.setValue('emails', [...currentEmails, newEmail]);
+    form.setValue('emailAddresses', [...currentEmails, newEmail]);
     setNewEmail('');
   };
   
   const handleRemoveEmail = (emailToRemove: string) => {
-    const currentEmails = form.getValues('emails');
+    const currentEmails = form.getValues('emailAddresses');
     if (currentEmails.length <= 1) {
         toast({ variant: 'destructive', title: 'Cannot remove', description: 'You must have at least one email.' });
         return;
     }
     const newEmails = currentEmails.filter(email => email !== emailToRemove);
-    form.setValue('emails', newEmails);
+    form.setValue('emailAddresses', newEmails);
 
     // If the default email was removed, set the first in the new list as default
     if (form.getValues('defaultEmail') === emailToRemove) {
@@ -186,7 +186,7 @@ export function EditUserDialog({ user, children }: EditUserDialogProps) {
                           value={field.value}
                           className="flex flex-col space-y-1"
                         >
-                          {form.watch('emails').map((email) => (
+                          {form.watch('emailAddresses').map((email) => (
                             <div key={email} className="flex items-center justify-between group">
                                 <FormItem className="flex items-center space-x-3 space-y-0">
                                     <FormControl>

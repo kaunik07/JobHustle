@@ -268,11 +268,11 @@ export async function reevaluateKeywords(applicationId: string) {
   }
 }
 
-export async function updateUser(userId: string, data: { firstName: string, lastName: string, emails: string[], defaultEmail: string }) {
-  if (!data.emails.includes(data.defaultEmail)) {
+export async function updateUser(userId: string, data: { firstName: string, lastName: string, emailAddresses: string[], defaultEmail: string }) {
+  if (!data.emailAddresses.includes(data.defaultEmail)) {
     throw new Error('Default email must be one of the emails in the list.');
   }
-  if (data.emails.length === 0) {
+  if (data.emailAddresses.length === 0) {
     throw new Error('User must have at least one email.');
   }
 
@@ -280,7 +280,7 @@ export async function updateUser(userId: string, data: { firstName: string, last
     .set({
       firstName: data.firstName,
       lastName: data.lastName,
-      emails: data.emails,
+      emailAddresses: data.emailAddresses,
       defaultEmail: data.defaultEmail,
     })
     .where(eq(users.id, userId));
@@ -292,7 +292,7 @@ export async function addUser(data: { firstName: string, lastName: string, email
   await db.insert(users).values({
     firstName: data.firstName,
     lastName: data.lastName,
-    emails: [data.email],
+    emailAddresses: [data.email],
     defaultEmail: data.email,
     avatarUrl: null,
   });

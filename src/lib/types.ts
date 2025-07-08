@@ -74,7 +74,7 @@ export interface User {
   id: string;
   firstName: string;
   lastName: string;
-  emails: string[];
+  emailAddresses: string[];
   defaultEmail: string;
   avatarUrl: string | null;
   resumes?: Resume[];
