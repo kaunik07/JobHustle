@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -75,7 +76,7 @@ export function LatexEditorForm({ user, resume }: LatexEditorFormProps) {
 \\maketitle
 
 \\section{Contact}
-Email: ${user.email}
+Email: ${user.defaultEmail}
 
 \\section{Education}
 

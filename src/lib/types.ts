@@ -1,8 +1,4 @@
 
-
-
-
-
 export type ApplicationStatus = 'Yet to Apply' | 'Applied' | 'OA' | 'Interview' | 'Offer' | 'Rejected';
 
 export const statuses: ApplicationStatus[] = ['Yet to Apply', 'Applied', 'OA', 'Interview', 'Offer', 'Rejected'];
@@ -78,7 +74,8 @@ export interface User {
   id: string;
   firstName: string;
   lastName: string;
-  email: string;
+  emails: string[];
+  defaultEmail: string;
   avatarUrl: string | null;
   resumes?: Resume[];
 }
@@ -122,6 +119,7 @@ export interface Application {
   customLatexResume?: Resume | null;
   notes?: string | null;
   appliedOn?: Date | null;
+  appliedWithEmail?: string | null;
   oaDueDate?: Date | null;
   oaDueDateTimezone?: string | null;
   oaCompletedOn?: Date | null;

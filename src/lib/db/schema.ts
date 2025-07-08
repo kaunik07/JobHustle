@@ -20,7 +20,8 @@ export const users = pgTable('users', {
   id: text('id').$defaultFn(() => createId()).primaryKey(),
   firstName: varchar('first_name', { length: 255 }).notNull(),
   lastName: varchar('last_name', { length: 255 }).notNull(),
-  email: varchar('email', { length: 255 }).notNull().unique(),
+  emails: text('emails').array().notNull(),
+  defaultEmail: text('default_email').notNull(),
   avatarUrl: text('avatar_url'),
 });
 
@@ -53,6 +54,7 @@ export const applications = pgTable('applications', {
     latexResumeId: text('latex_resume_id').references(() => resumes.id, { onDelete: 'set null' }),
     notes: text('notes'),
     appliedOn: timestamp('applied_on'),
+    appliedWithEmail: text('applied_with_email'),
     oaDueDate: timestamp('oa_due_date'),
     oaDueDateTimezone: varchar('oa_due_date_timezone', { length: 255 }),
     oaCompletedOn: timestamp('oa_completed_on'),

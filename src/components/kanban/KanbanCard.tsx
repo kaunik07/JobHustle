@@ -8,12 +8,13 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import type { Application, ApplicationCategory, ApplicationType, ApplicationWorkArrangement, Resume } from '@/lib/types';
 import { ApplicationDetailsDialog } from '@/components/applications/ApplicationDetailsDialog';
 import { formatDistanceToNow } from 'date-fns';
-import { Clock, MapPin, CheckCircle2, Sparkles } from 'lucide-react';
+import { Clock, MapPin, CheckCircle2, Sparkles, Mail } from 'lucide-react';
 import { cn, getUserColor } from '@/lib/utils';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { updateApplication } from '@/app/actions';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 interface KanbanCardProps {
   application: Application;
@@ -43,6 +44,28 @@ export function KanbanCard({ application, selectedUserId }: KanbanCardProps) {
   const companyDomain = application.companyName.toLowerCase().replace(/[^a-z0-9]/gi, '') + '.com';
   const { user } = application;
   const { toast } = useToast();
+  const [selectedEmail, setSelectedEmail] = React.useState(application.appliedWithEmail || user?.defaultEmail || '');
+
+  const handleEmailChange = async (newEmail: string) => {
+    if (!newEmail || newEmail === selectedEmail) return;
+
+    const originalEmail = selectedEmail;
+    setSelectedEmail(newEmail); // Optimistic update
+    try {
+      await updateApplication(application.id, { appliedWithEmail: newEmail });
+      toast({
+        title: 'Email Updated',
+        description: `Application will now use ${newEmail}.`,
+      });
+    } catch (error) {
+      setSelectedEmail(originalEmail); // Revert on failure
+      toast({
+        variant: 'destructive',
+        title: 'Update failed',
+        description: 'Could not update email. Please try again.',
+      });
+    }
+  };
 
   const handleApply = async (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -50,6 +73,7 @@ export function KanbanCard({ application, selectedUserId }: KanbanCardProps) {
       await updateApplication(application.id, {
         status: 'Applied',
         appliedOn: new Date(),
+        appliedWithEmail: selectedEmail || user?.defaultEmail,
       });
       toast({
         title: 'Application Updated',
@@ -180,11 +204,37 @@ export function KanbanCard({ application, selectedUserId }: KanbanCardProps) {
             )}
           </div>
           
+          {application.status === 'Yet to Apply' && user?.emails && user.emails.length > 1 && (
+            <div className="flex items-center gap-2 pt-1" onClick={(e) => e.stopPropagation()}>
+              <Mail className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+              <Select value={selectedEmail} onValueChange={handleEmailChange}>
+                <SelectTrigger className="h-8 text-xs flex-1 truncate">
+                  <SelectValue placeholder="Select email to apply with" />
+                </SelectTrigger>
+                <SelectContent>
+                  {user.emails.map(email => (
+                    <SelectItem key={email} value={email} className="text-xs">
+                      {email}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+
           <div className="flex justify-between items-center pt-2">
-            <p className="text-xs text-muted-foreground flex items-center gap-1">
-                <Clock className="h-3 w-3" />
-                {renderDate()}
-            </p>
+            <div className="flex flex-col gap-1 items-start">
+              <p className="text-xs text-muted-foreground flex items-center gap-1">
+                  <Clock className="h-3 w-3" />
+                  {renderDate()}
+              </p>
+              {application.status !== 'Yet to Apply' && application.appliedWithEmail && (
+                <p className="text-xs text-muted-foreground flex items-center gap-1" title={`Applied with ${application.appliedWithEmail}`}>
+                    <Mail className="h-3 w-3" />
+                    <span className="truncate max-w-[120px]">{application.appliedWithEmail}</span>
+                </p>
+              )}
+            </div>
             <div className="flex items-center gap-1">
               {application.status === 'Yet to Apply' && topResumeScore && (
                 <TooltipProvider>

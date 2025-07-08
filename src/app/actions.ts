@@ -54,7 +54,7 @@ async function scoreResumesForApplication(applicationId: string, userId: string,
   }
 }
 
-export async function addApplication(data: Omit<Application, 'id' | 'user' | 'appliedOn' | 'oaDueDate' | 'createdAt' | 'isUsCitizenOnly' | 'sponsorshipNotOffered' | 'keywords' | 'suggestions'>): Promise<Application[]> {
+export async function addApplication(data: Omit<Application, 'id' | 'user' | 'appliedOn' | 'oaDueDate' | 'createdAt' | 'isUsCitizenOnly' | 'sponsorshipNotOffered' | 'keywords' | 'suggestions' | 'appliedWithEmail'>): Promise<Application[]> {
   const usersToApplyFor = data.userId === 'all' 
     ? await db.select().from(users) 
     : await db.select().from(users).where(eq(users.id, data.userId));
@@ -77,6 +77,7 @@ export async function addApplication(data: Omit<Application, 'id' | 'user' | 'ap
       jobDescription: data.jobDescription,
       isUsCitizenOnly: false, // Default to false, AI will update it
       sponsorshipNotOffered: false, // Default to false, AI will update it
+      appliedWithEmail: user.defaultEmail,
     }).returning();
 
     // After creating the application, trigger analysis if a job description exists.
@@ -149,6 +150,7 @@ export async function bulkAddApplications(applicationsData: Array<Omit<Applicati
           jobDescription: data.jobDescription,
           isUsCitizenOnly: false,
           sponsorshipNotOffered: false,
+          appliedWithEmail: user.defaultEmail,
         }).returning();
 
         // After creating the application, trigger analysis if a job description exists.
@@ -266,11 +268,12 @@ export async function reevaluateKeywords(applicationId: string) {
   }
 }
 
-export async function addUser(data: Omit<User, 'id' | 'avatarUrl'>) {
+export async function addUser(data: { firstName: string, lastName: string, email: string }) {
   await db.insert(users).values({
     firstName: data.firstName,
     lastName: data.lastName,
-    email: data.email,
+    emails: [data.email],
+    defaultEmail: data.email,
     avatarUrl: null,
   });
   revalidatePath('/');
