@@ -1,8 +1,9 @@
+
 'use client';
 
 import * as React from 'react';
 import Link from 'next/link';
-import { Briefcase, Plus, Trash2, Paperclip } from 'lucide-react';
+import { Briefcase, Plus, Trash2, Paperclip, Pencil } from 'lucide-react';
 import { AddApplicationDialog } from '@/components/kanban/AddApplicationDialog';
 import type { User, Application } from '@/lib/types';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -22,6 +23,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { getUserColor } from '@/lib/utils';
 import { BulkAddDialog } from '../applications/BulkAddDialog';
+import { EditUserDialog } from '../user/EditUserDialog';
 
 interface HeaderProps {
   users: User[];
@@ -32,10 +34,11 @@ interface HeaderProps {
 }
 
 export function Header({ users, selectedUser, onUserChange, onUserRemoved, allLocations }: HeaderProps) {
+  const selectedUserDetails = users.find(u => u.id === selectedUser);
 
   return (
     <header className="sticky top-0 z-30 flex h-16 items-center gap-4 border-b bg-background/95 px-4 backdrop-blur-sm md:px-6">
-      <Link href="/" className="flex items-center gap-2 text-foreground no-underline">
+      <Link href="/?user=all" className="flex items-center gap-2 text-foreground no-underline">
         <Briefcase className="h-8 w-8 text-primary" />
         <h1 className="font-headline text-2xl font-bold">JobTrackr</h1>
       </Link>
@@ -73,9 +76,18 @@ export function Header({ users, selectedUser, onUserChange, onUserRemoved, allLo
 
         <AddUserDialog />
 
+        {selectedUserDetails && (
+          <EditUserDialog user={selectedUserDetails}>
+            <Button variant="outline" size="icon" className="rounded-full h-10 w-10">
+              <Pencil className="h-4 w-4" />
+              <span className="sr-only">Edit User</span>
+            </Button>
+          </EditUserDialog>
+        )}
+
         <AlertDialog>
           <AlertDialogTrigger asChild>
-            <Button variant="destructive" size="icon" className="rounded-full h-10 w-10" disabled={!onUserRemoved || !users.some(u => u.id === selectedUser) || selectedUser === 'all'}>
+            <Button variant="destructive" size="icon" className="rounded-full h-10 w-10" disabled={!onUserRemoved || !selectedUserDetails}>
               <Trash2 className="h-4 w-4" />
               <span className="sr-only">Remove Selected User</span>
             </Button>

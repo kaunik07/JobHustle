@@ -233,7 +233,7 @@ export async function reevaluateScores(applicationId: string) {
     // scoreResumesForApplication now handles deleting old scores internally
     await scoreResumesForApplication(applicationId, application.userId, application.jobDescription, true);
     
-    revalidatePath('/'); // This will trigger a re-fetch on the client
+    revalidatePath('/');
   } catch (error) {
     console.error("Error re-evaluating resume scores:", error);
     // Let the client know something went wrong
@@ -266,6 +266,26 @@ export async function reevaluateKeywords(applicationId: string) {
     console.error("Error re-evaluating keywords:", error);
     throw new Error('Failed to re-evaluate keywords.');
   }
+}
+
+export async function updateUser(userId: string, data: { firstName: string, lastName: string, emails: string[], defaultEmail: string }) {
+  if (!data.emails.includes(data.defaultEmail)) {
+    throw new Error('Default email must be one of the emails in the list.');
+  }
+  if (data.emails.length === 0) {
+    throw new Error('User must have at least one email.');
+  }
+
+  await db.update(users)
+    .set({
+      firstName: data.firstName,
+      lastName: data.lastName,
+      emails: data.emails,
+      defaultEmail: data.defaultEmail,
+    })
+    .where(eq(users.id, userId));
+  
+  revalidatePath('/');
 }
 
 export async function addUser(data: { firstName: string, lastName: string, email: string }) {
