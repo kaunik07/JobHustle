@@ -14,7 +14,6 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2, Save, Download, FileWarning, ArrowLeft, Eye } from 'lucide-react';
 import { saveLatexResume, compileLatex } from '@/app/actions';
@@ -22,6 +21,7 @@ import type { Resume, User } from '@/lib/types';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { useRouter } from 'next/navigation';
 import { Label } from '@/components/ui/label';
+import Editor from '@monaco-editor/react';
 
 const formSchema = z.object({
   name: z.string().min(1, 'Resume name is required'),
@@ -192,15 +192,25 @@ export function LatexEditorForm({ user, resume }: LatexEditorFormProps) {
                       name="latexContent"
                       render={({ field }) => (
                           <FormItem className="flex flex-col h-full">
-                          <FormLabel>LaTeX Code</FormLabel>
-                          <FormControl>
-                              <Textarea
-                              placeholder="\\documentclass{article}..."
-                              className="font-mono resize-y min-h-[500px] flex-1"
-                              {...field}
-                              />
-                          </FormControl>
-                          <FormMessage />
+                            <FormLabel>LaTeX Code</FormLabel>
+                            <FormControl>
+                              <div className="rounded-md border h-[500px] lg:h-auto lg:min-h-[600px] flex-1">
+                                <Editor
+                                  height="100%"
+                                  language="latex"
+                                  theme="vs-dark"
+                                  value={field.value}
+                                  onChange={field.onChange}
+                                  options={{
+                                    minimap: { enabled: false },
+                                    fontSize: 14,
+                                    wordWrap: 'on',
+                                    automaticLayout: true,
+                                  }}
+                                />
+                              </div>
+                            </FormControl>
+                            <FormMessage />
                           </FormItem>
                       )}
                     />
