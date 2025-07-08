@@ -24,7 +24,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Separator } from '@/components/ui/separator';
-import { LatexResumeEditorDialog } from './LatexResumeEditorDialog';
+import Link from 'next/link';
 
 interface ResumesPageProps {
   user: User;
@@ -56,7 +56,11 @@ export function ResumesPage({ user, resumes, onFilterByResume }: ResumesPageProp
         </div>
         <div className="flex gap-2">
           <AddResumeDialog user={user} />
-          <LatexResumeEditorDialog user={user} />
+           <Link href={`/resumes/new-latex?user=${user.id}`}>
+            <Button variant="outline">
+                <FileJson className="mr-2 h-4 w-4" /> Create LaTeX Resume
+            </Button>
+          </Link>
         </div>
       </div>
 
@@ -85,12 +89,12 @@ export function ResumesPage({ user, resumes, onFilterByResume }: ResumesPageProp
                   </p>
                 </CardContent>
                 <CardFooter className="flex justify-between">
-                  <LatexResumeEditorDialog user={user} resume={resume}>
+                  <Link href={`/resumes/edit-latex/${resume.id}?user=${user.id}`}>
                      <Button variant="outline" size="sm">
                        <Pencil className="mr-2 h-4 w-4" />
                        Edit
                      </Button>
-                  </LatexResumeEditorDialog>
+                  </Link>
                    <AlertDialog>
                       <AlertDialogTrigger asChild>
                         <Button variant="destructive" size="sm">
@@ -124,7 +128,11 @@ export function ResumesPage({ user, resumes, onFilterByResume }: ResumesPageProp
             <p className="mb-4 mt-2 text-sm text-muted-foreground">
               Create your first LaTeX resume to get started.
             </p>
-            <LatexResumeEditorDialog user={user} />
+            <Link href={`/resumes/new-latex?user=${user.id}`}>
+                <Button variant="outline">
+                    <FileJson className="mr-2 h-4 w-4" /> Create LaTeX Resume
+                </Button>
+            </Link>
           </div>
         )}
       </div>
