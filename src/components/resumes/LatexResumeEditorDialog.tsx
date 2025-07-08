@@ -27,7 +27,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2, FileJson, Save, Download, FileWarning } from 'lucide-react';
-import { saveLatexResume } from '@/app/actions';
+import { saveLatexResume, compileLatex } from '@/app/actions';
 import type { Resume, User } from '@/lib/types';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../ui/tooltip';
 
@@ -47,6 +47,7 @@ interface LatexResumeEditorDialogProps {
 export function LatexResumeEditorDialog({ user, resume, children }: LatexResumeEditorDialogProps) {
   const [open, setOpen] = React.useState(false);
   const [isSubmitting, setIsSubmitting] = React.useState(false);
+  const [isCompiling, setIsCompiling] = React.useState(false);
   const { toast } = useToast();
   
   const isEditMode = !!resume;
@@ -80,6 +81,36 @@ export function LatexResumeEditorDialog({ user, resume, children }: LatexResumeE
     link.click();
     document.body.removeChild(link);
     URL.revokeObjectURL(url);
+  };
+  
+  const handleCompile = async () => {
+    const content = form.getValues('latexContent');
+    if (!content.trim()) {
+        toast({ variant: 'destructive', title: 'Cannot compile empty content.' });
+        return;
+    }
+    
+    setIsCompiling(true);
+    try {
+        const result = await compileLatex(content);
+        if ('error' in result) {
+            toast({ variant: 'destructive', title: 'Compilation Failed', description: result.error, duration: 8000 });
+        } else {
+            const name = form.getValues('name') || 'resume';
+            const link = document.createElement('a');
+            link.href = `data:application/pdf;base64,${result.pdfBase64}`;
+            link.download = `${name.replace(/ /g, '_')}.pdf`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            toast({ title: 'Compilation Successful', description: 'Your PDF download has started.' });
+        }
+    } catch (e) {
+        const errorMessage = e instanceof Error ? e.message : 'An unknown error occurred.';
+        toast({ variant: 'destructive', title: 'Error', description: errorMessage });
+    } finally {
+        setIsCompiling(false);
+    }
   };
 
   async function onSubmit(values: FormValues) {
@@ -162,21 +193,10 @@ export function LatexResumeEditorDialog({ user, resume, children }: LatexResumeE
                     <Button type="button" variant="outline" onClick={handleDownloadTex}>
                         <Download className="mr-2 h-4 w-4" /> Download .tex
                     </Button>
-                    <TooltipProvider>
-                        <Tooltip>
-                            <TooltipTrigger asChild>
-                                <span tabIndex={0}>
-                                    <Button type="button" variant="outline" disabled>
-                                        <FileWarning className="mr-2 h-4 w-4" /> Compile to PDF
-                                    </Button>
-                                </span>
-                            </TooltipTrigger>
-                            <TooltipContent>
-                                <p>PDF compilation requires external tools not available here.</p>
-                                <p>Download the .tex file and compile it on your local machine.</p>
-                            </TooltipContent>
-                        </Tooltip>
-                    </TooltipProvider>
+                    <Button type="button" variant="outline" onClick={handleCompile} disabled={isCompiling}>
+                        {isCompiling ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <FileWarning className="mr-2 h-4 w-4" />}
+                        Compile to PDF
+                    </Button>
                 </div>
                 <Button type="submit" disabled={isSubmitting}>
                   {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}

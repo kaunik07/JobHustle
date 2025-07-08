@@ -319,3 +319,38 @@ export async function deleteResume(resumeId: string) {
   await db.delete(resumes).where(eq(resumes.id, resumeId));
   revalidatePath('/');
 }
+
+export async function compileLatex(latexContent: string): Promise<{ pdfBase64: string } | { error: string }> {
+  const endpoint = process.env.LATEX_COMPILER_ENDPOINT;
+
+  if (!endpoint) {
+    return { error: 'LaTeX compiler endpoint is not configured. Please set LATEX_COMPILER_ENDPOINT in your environment variables.' };
+  }
+
+  try {
+    const response = await fetch(endpoint, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ latexContent }),
+    });
+
+    if (!response.ok) {
+      const errorBody = await response.text();
+      console.error(`LaTeX compilation failed with status ${response.status}:`, errorBody);
+      return { error: `Compilation failed: ${errorBody || response.statusText}` };
+    }
+
+    const result = await response.json();
+    if (!result.pdfBase64) {
+      return { error: 'Invalid response from compiler: missing pdfBase64 field.' };
+    }
+
+    return { pdfBase64: result.pdfBase64 };
+  } catch (error) {
+    console.error('Error calling LaTeX compiler endpoint:', error);
+    const errorMessage = error instanceof Error ? error.message : 'An unknown network error occurred.';
+    return { error: `Failed to connect to the compiler service: ${errorMessage}` };
+  }
+}
