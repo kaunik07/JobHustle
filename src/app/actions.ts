@@ -4,7 +4,7 @@
 import { revalidatePath } from 'next/cache';
 import { db } from '@/lib/db';
 import { applications, users, resumes, applicationResumeScores } from '@/lib/db/schema';
-import { eq, and, isNotNull } from 'drizzle-orm';
+import { eq, and, isNotNull, or } from 'drizzle-orm';
 import type { Application, User, Resume } from '@/lib/types';
 import { extractResumeText } from '@/ai/flows/extract-resume-text';
 import { scoreResume } from '@/ai/flows/score-resume';
@@ -14,13 +14,20 @@ import { extractKeywords } from '@/ai/flows/extract-keywords';
 // This function will be called to score resumes against a job description.
 async function scoreResumesForApplication(applicationId: string, userId: string, jobDescription: string) {
   try {
-    const userResumes = await db.select().from(resumes).where(and(eq(resumes.userId, userId), isNotNull(resumes.resumeText)));
+    // Delete existing scores for this application to ensure a fresh evaluation
+    await db.delete(applicationResumeScores).where(eq(applicationResumeScores.applicationId, applicationId));
+
+    const userResumes = await db.select().from(resumes).where(and(eq(resumes.userId, userId), or(isNotNull(resumes.resumeText), isNotNull(resumes.latexContent))));
     if (userResumes.length === 0 || !jobDescription) {
       return;
     }
 
     const scorePromises = userResumes.map(resume => 
-      scoreResume({ resumeText: resume.resumeText!, jobDescription }).then(score => ({
+      scoreResume({ 
+        resumeText: resume.resumeText ?? undefined,
+        latexContent: resume.latexContent ?? undefined,
+        jobDescription 
+      }).then(score => ({
         ...score,
         resumeId: resume.id,
       }))
@@ -218,10 +225,7 @@ export async function reevaluateScores(applicationId: string) {
       return;
     }
 
-    // Delete existing scores to ensure a fresh evaluation
-    await db.delete(applicationResumeScores).where(eq(applicationResumeScores.applicationId, applicationId));
-
-    // Reuse the existing scoring logic
+    // scoreResumesForApplication now handles deleting old scores internally
     await scoreResumesForApplication(applicationId, application.userId, application.jobDescription);
     
     revalidatePath('/'); // This will trigger a re-fetch on the client
@@ -319,6 +323,19 @@ export async function saveLatexResume(data: { id?: string; name: string; latexCo
       .set({ latexResumeId: resumeId })
       .where(eq(applications.id, data.applicationId));
   }
+
+  // Re-score all applications for this user since this resume might be a better fit
+  const userApplications = await db
+    .select({ id: applications.id, jobDescription: applications.jobDescription })
+    .from(applications)
+    .where(and(eq(applications.userId, data.userId), isNotNull(applications.jobDescription)));
+
+  for (const app of userApplications) {
+    if (app.jobDescription) {
+      await scoreResumesForApplication(app.id, data.userId, app.jobDescription);
+    }
+  }
+
   revalidatePath('/');
 }
 
