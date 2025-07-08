@@ -44,13 +44,15 @@ async function scoreResumesForApplication(applicationId: string, userId: string,
   }
 }
 
-export async function addApplication(data: Omit<Application, 'id' | 'user' | 'appliedOn' | 'oaDueDate' | 'createdAt' | 'isUsCitizenOnly' | 'sponsorshipNotOffered' | 'keywords' | 'suggestions'>) {
+export async function addApplication(data: Omit<Application, 'id' | 'user' | 'appliedOn' | 'oaDueDate' | 'createdAt' | 'isUsCitizenOnly' | 'sponsorshipNotOffered' | 'keywords' | 'suggestions'>): Promise<Application[]> {
   const usersToApplyFor = data.userId === 'all' 
     ? await db.select().from(users) 
     : await db.select().from(users).where(eq(users.id, data.userId));
   
+  const createdApplications: Application[] = [];
+
   for (const user of usersToApplyFor) {
-    const [newApplication] = await db.insert(applications).values({
+    const [newApplicationRecord] = await db.insert(applications).values({
       companyName: data.companyName,
       jobTitle: data.jobTitle,
       jobUrl: data.jobUrl,
@@ -65,12 +67,12 @@ export async function addApplication(data: Omit<Application, 'id' | 'user' | 'ap
       jobDescription: data.jobDescription,
       isUsCitizenOnly: false, // Default to false, AI will update it
       sponsorshipNotOffered: false, // Default to false, AI will update it
-    }).returning({ id: applications.id });
+    }).returning();
 
     // After creating the application, trigger analysis if a job description exists.
     if (data.jobDescription) {
       const jd = data.jobDescription;
-      const scoringPromise = scoreResumesForApplication(newApplication.id, user.id, jd);
+      const scoringPromise = scoreResumesForApplication(newApplicationRecord.id, user.id, jd);
       
       const jobRequirementsPromise = fetchJobDescription({ jobDescription: jd })
         .then(result => {
@@ -80,7 +82,7 @@ export async function addApplication(data: Omit<Application, 'id' | 'user' | 'ap
                   isUsCitizenOnly: result.isUsCitizenOnly,
                   sponsorshipNotOffered: result.sponsorshipNotOffered,
               })
-              .where(eq(applications.id, newApplication.id));
+              .where(eq(applications.id, newApplicationRecord.id));
           }
         }).catch(err => console.error("Job requirements analysis failed:", err));
 
@@ -89,30 +91,39 @@ export async function addApplication(data: Omit<Application, 'id' | 'user' | 'ap
           if (result) {
             return db.update(applications)
               .set({ keywords: result.keywords, suggestions: result.suggestions })
-              .where(eq(applications.id, newApplication.id));
+              .where(eq(applications.id, newApplicationRecord.id));
           }
         }).catch(err => console.error("Keyword extraction failed:", err));
 
       // Await all background tasks
       await Promise.all([scoringPromise, jobRequirementsPromise, keywordPromise]);
     }
+    
+    const fullApplication: Application = {
+        ...newApplicationRecord,
+        user: user,
+    };
+    createdApplications.push(fullApplication);
   }
   revalidatePath('/');
+  return createdApplications;
 }
 
-export async function bulkAddApplications(applicationsData: Array<Omit<Application, 'id' | 'user' | 'appliedOn' | 'oaDueDate' | 'createdAt' | 'userId' | 'status' | 'locations'> & { location: string }>) {
+export async function bulkAddApplications(applicationsData: Array<Omit<Application, 'id' | 'user' | 'appliedOn' | 'oaDueDate' | 'createdAt' | 'userId' | 'status' | 'locations'> & { location: string }>): Promise<Application[]> {
   const allUsers = await db.select().from(users);
   
   if (allUsers.length === 0) {
     throw new Error("No users exist in the system. Please add a user before bulk importing.");
   }
 
+  const createdApplications: Application[] = [];
+
   for (const data of applicationsData) {
     const locationsArray = data.location.split(',').map(l => l.trim()).filter(Boolean);
     if (locationsArray.length === 0) continue; // Skip rows with no location
 
     for (const user of allUsers) {
-        const [newApplication] = await db.insert(applications).values({
+        const [newApplicationRecord] = await db.insert(applications).values({
           companyName: data.companyName,
           jobTitle: data.jobTitle,
           jobUrl: data.jobUrl,
@@ -127,12 +138,12 @@ export async function bulkAddApplications(applicationsData: Array<Omit<Applicati
           jobDescription: data.jobDescription,
           isUsCitizenOnly: false,
           sponsorshipNotOffered: false,
-        }).returning({ id: applications.id });
+        }).returning();
 
         // After creating the application, trigger analysis if a job description exists.
         if (data.jobDescription) {
             const jd = data.jobDescription;
-            const scoringPromise = scoreResumesForApplication(newApplication.id, user.id, jd);
+            const scoringPromise = scoreResumesForApplication(newApplicationRecord.id, user.id, jd);
             
             const jobRequirementsPromise = fetchJobDescription({ jobDescription: jd })
             .then(result => {
@@ -142,7 +153,7 @@ export async function bulkAddApplications(applicationsData: Array<Omit<Applicati
                         isUsCitizenOnly: result.isUsCitizenOnly,
                         sponsorshipNotOffered: result.sponsorshipNotOffered,
                     })
-                    .where(eq(applications.id, newApplication.id));
+                    .where(eq(applications.id, newApplicationRecord.id));
                 }
             }).catch(err => console.error("Job requirements analysis failed for bulk add:", err));
 
@@ -151,17 +162,24 @@ export async function bulkAddApplications(applicationsData: Array<Omit<Applicati
                 if (result) {
                   return db.update(applications)
                     .set({ keywords: result.keywords, suggestions: result.suggestions })
-                    .where(eq(applications.id, newApplication.id));
+                    .where(eq(applications.id, newApplicationRecord.id));
                 }
               }).catch(err => console.error("Keyword extraction failed for bulk add:", err));
 
             // Await both background tasks for this application before moving to the next
             await Promise.all([scoringPromise, jobRequirementsPromise, keywordPromise]);
         }
+        
+        const fullApplication: Application = {
+            ...newApplicationRecord,
+            user: user,
+        };
+        createdApplications.push(fullApplication);
     }
   }
 
   revalidatePath('/');
+  return createdApplications;
 }
 
 export async function updateApplication(appId: string, data: Partial<Application>) {
