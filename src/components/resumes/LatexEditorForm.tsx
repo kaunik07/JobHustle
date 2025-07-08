@@ -21,7 +21,16 @@ import type { Resume, User } from '@/lib/types';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { useRouter } from 'next/navigation';
 import { Label } from '@/components/ui/label';
-import Editor from '@monaco-editor/react';
+import dynamic from 'next/dynamic';
+
+const Editor = dynamic(() => import('@monaco-editor/react'), {
+  ssr: false,
+  loading: () => (
+    <div className="flex h-full min-h-[600px] w-full items-center justify-center rounded-md border bg-muted">
+      <Loader2 className="h-8 w-8 animate-spin" />
+    </div>
+  ),
+});
 
 const formSchema = z.object({
   name: z.string().min(1, 'Resume name is required'),
