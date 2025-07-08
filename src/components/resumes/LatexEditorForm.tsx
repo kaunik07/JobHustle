@@ -16,7 +16,7 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, Save, Download, FileWarning, ArrowLeft, Eye, FileJson } from 'lucide-react';
+import { Loader2, Save, Download, FileWarning, ArrowLeft, Eye } from 'lucide-react';
 import { saveLatexResume, compileLatex } from '@/app/actions';
 import type { Resume, User } from '@/lib/types';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -24,6 +24,8 @@ import { useRouter } from 'next/navigation';
 import { Label } from '@/components/ui/label';
 import CodeMirror from '@uiw/react-codemirror';
 import { vscodeDark } from '@uiw/codemirror-theme-vscode';
+import { stex } from '@codemirror/legacy-modes/mode/stex';
+import { StreamLanguage } from '@codemirror/language';
 
 const formSchema = z.object({
   name: z.string().min(1, 'Resume name is required'),
@@ -219,6 +221,7 @@ Email: ${user.email}
                                   value={field.value}
                                   height="100%"
                                   theme={vscodeDark}
+                                  extensions={[StreamLanguage.define(stex)]}
                                   onChange={field.onChange}
                                   className="h-full"
                                 />
