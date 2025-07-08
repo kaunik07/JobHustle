@@ -108,12 +108,15 @@ export async function bulkAddApplications(applicationsData: Array<Omit<Applicati
   }
 
   for (const data of applicationsData) {
+    const locationsArray = data.location.split(',').map(l => l.trim()).filter(Boolean);
+    if (locationsArray.length === 0) continue; // Skip rows with no location
+
     for (const user of allUsers) {
         const [newApplication] = await db.insert(applications).values({
           companyName: data.companyName,
           jobTitle: data.jobTitle,
           jobUrl: data.jobUrl,
-          locations: [data.location],
+          locations: locationsArray,
           type: data.type,
           category: data.category,
           workArrangement: data.workArrangement,

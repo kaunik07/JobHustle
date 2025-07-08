@@ -166,7 +166,7 @@ export function BulkAddDialog() {
                     <ul className="pl-5 space-y-1 list-disc text-muted-foreground">
                         <li><strong>companyName</strong>: The name of the company.</li>
                         <li><strong>jobTitle</strong>: The job position.</li>
-                        <li><strong>location</strong>: The job location.</li>
+                        <li><strong>location</strong>: The job location. For a single job with multiple locations, use a comma-separated list (e.g., "New York, NY, San Francisco, CA").</li>
                         <li><strong>jobUrl</strong>: The URL to the job posting.</li>
                         <li><strong>type</strong>: Must be one of: <code className="bg-muted px-1 rounded">{applicationTypes.join(', ')}</code>.</li>
                         <li><strong>category</strong>: Must be one of: <code className="bg-muted px-1 rounded">{categories.join(', ')}</code>.</li>
