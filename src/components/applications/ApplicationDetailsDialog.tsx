@@ -917,13 +917,13 @@ export function ApplicationDetailsDialog({ application, children }: ApplicationD
                       <span className="font-medium">{application.customLatexResume.name}</span>
                     </div>
                     <div className="flex items-center gap-2">
+                      <Button variant="outline" size="sm" onClick={() => handleCopyLatexResume(application.customLatexResume!.id)} disabled={isManagingLatex === application.customLatexResume!.id}>
+                        {isManagingLatex === application.customLatexResume!.id ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Copy className="mr-2 h-4 w-4" />}
+                        Copy & Edit
+                      </Button>
                       <Button variant="outline" size="sm" onClick={() => router.push(`/resumes/edit-latex/${application.latexResumeId}?user=${application.userId}`)}>
                         <Pencil className="mr-2 h-4 w-4" />
                         Edit
-                      </Button>
-                       <Button variant="outline" size="sm" onClick={() => handleCopyLatexResume(application.customLatexResume!.id)} disabled={isManagingLatex === application.customLatexResume!.id}>
-                        {isManagingLatex === application.customLatexResume!.id ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Copy className="mr-2 h-4 w-4" />}
-                        Copy & Edit
                       </Button>
                       <Button variant="destructive" size="sm" onClick={handleDetachLatexResume} disabled={isManagingLatex === 'detach'}>
                         {isManagingLatex === 'detach' ? <Loader2 className="h-4 w-4 animate-spin" /> : <X className="mr-2 h-4 w-4" />}
