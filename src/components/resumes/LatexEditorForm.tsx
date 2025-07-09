@@ -55,21 +55,38 @@ interface LatexEditorFormProps {
 const boldText = (view: EditorView): boolean => {
   view.dispatch(view.state.changeByRange(range => {
     const text = view.state.sliceDoc(range.from, range.to);
-    const newText = `\\textbf{${text}}`;
+    
+    // Check if the selection is already wrapped in \textbf{...}
+    const isBold = 
+      !range.empty &&
+      view.state.sliceDoc(range.from - 7, range.from) === '\\textbf{' &&
+      view.state.sliceDoc(range.to, range.to + 1) === '}';
 
-    if (range.empty) {
-      // If no text is selected, insert the wrapper and place the cursor in the middle
+    if (isBold) {
+      // It's bold, so un-bold it by replacing the wrapped text with the inner text.
       return {
-          changes: { from: range.from, insert: newText },
-          range: EditorSelection.cursor(range.from + 7) // `\textbf{` is 7 chars
+        changes: { from: range.from - 7, to: range.to + 1, insert: text },
+        // re-select the text that was just un-bolded
+        range: EditorSelection.range(range.from - 7, (range.from - 7) + text.length)
+      };
+    } else {
+      // It's not bold (or nothing is selected), so bold it.
+      const newText = `\\textbf{${text}}`;
+
+      if (range.empty) {
+        // If no text is selected, insert the wrapper and place the cursor in the middle
+        return {
+            changes: { from: range.from, insert: newText },
+            range: EditorSelection.cursor(range.from + 7) // `\textbf{` is 7 chars
+        };
+      }
+      
+      // If text is selected, wrap it and re-select the original text
+      return {
+          changes: { from: range.from, to: range.to, insert: newText },
+          range: EditorSelection.range(range.from + 7, range.from + 7 + text.length)
       };
     }
-    
-    // If text is selected, wrap it and re-select the original text
-    return {
-        changes: { from: range.from, to: range.to, insert: newText },
-        range: EditorSelection.range(range.from + 7, range.to + 7)
-    };
   }));
   return true; // Indicates the command was handled
 };
