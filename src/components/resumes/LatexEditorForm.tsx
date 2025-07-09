@@ -58,15 +58,17 @@ const boldText = (view: EditorView): boolean => {
 
     // UN-BOLDING LOGIC
     // Case 1: The user selected the text *inside* `\textbf{...}`.
-    const textBefore = view.state.doc.sliceString(Math.max(0, range.from - 7), range.from);
-    const textAfter = view.state.doc.sliceString(range.to, range.to + 1);
-    if (!range.empty && textBefore === '\\textbf{' && textAfter === '}') {
-      const from = range.from - 7;
-      const to = range.to + 1;
-      return {
-        changes: { from, to, insert: selection },
-        range: EditorSelection.range(from, from + selection.length)
-      };
+    if (!range.empty) {
+        const extendedFrom = Math.max(0, range.from - 7);
+        const extendedTo = range.to + 1;
+        const surroundingText = view.state.doc.sliceString(extendedFrom, extendedTo);
+
+        if (surroundingText === `\\textbf{${selection}}`) {
+            return {
+                changes: { from: extendedFrom, to: extendedTo, insert: selection },
+                range: EditorSelection.range(extendedFrom, extendedFrom + selection.length)
+            };
+        }
     }
 
     // Case 2: The user selected the *entire* `\textbf{...}` command.
