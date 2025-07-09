@@ -52,63 +52,6 @@ interface LatexEditorFormProps {
   resume?: Resume;
 }
 
-const boldText = (view: EditorView): boolean => {
-  view.dispatch(view.state.changeByRange(range => {
-    const selection = view.state.doc.sliceString(range.from, range.to);
-
-    // UN-BOLDING LOGIC
-    // Case 1: The user selected the text *inside* `\textbf{...}`.
-    if (!range.empty) {
-        const extendedFrom = Math.max(0, range.from - 8);
-        const extendedTo = range.to + 1;
-        const surroundingText = view.state.doc.sliceString(extendedFrom, extendedTo);
-
-        if (surroundingText === `\\textbf{${selection}}`) {
-            return {
-                changes: { from: extendedFrom, to: extendedTo, insert: selection },
-                range: EditorSelection.range(extendedFrom, extendedFrom + selection.length)
-            };
-        }
-    }
-
-    // Case 2: The user selected the *entire* `\textbf{...}` command.
-    if (selection.startsWith('\\textbf{') && selection.endsWith('}')) {
-      const unwrappedText = selection.substring(8, selection.length - 1);
-      return {
-        changes: { from: range.from, to: range.to, insert: unwrappedText },
-        range: EditorSelection.range(range.from, range.from + unwrappedText.length)
-      };
-    }
-
-    // BOLDING LOGIC: If not un-bolding, then we bold the text.
-    const newText = `\\textbf{${selection}}`;
-
-    if (range.empty) {
-      // If no text is selected, insert wrapper and place cursor inside.
-      return {
-        changes: { from: range.from, insert: newText },
-        range: EditorSelection.cursor(range.from + 8),
-      };
-    }
-    
-    // If text is selected, wrap it and select the inner text.
-    return {
-      changes: { from: range.from, to: range.to, insert: newText },
-      range: EditorSelection.range(range.from + 8, range.from + 8 + selection.length),
-    };
-  }));
-  return true; // Indicates the command was handled
-};
-
-
-const customKeymap = [
-  {
-    key: 'Mod-b', // 'Mod' maps to Cmd on macOS and Ctrl on other systems
-    run: boldText,
-  },
-];
-
-
 export function LatexEditorForm({ user, resume }: LatexEditorFormProps) {
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [isCompiling, setIsCompiling] = React.useState(false);
@@ -151,12 +94,69 @@ Email: ${user.defaultEmail}
     },
   });
 
+  const toggleBold = React.useCallback((view: EditorView | null): boolean => {
+    if (!view) return false;
+
+    view.dispatch(view.state.changeByRange(range => {
+      const selection = view.state.doc.sliceString(range.from, range.to);
+
+      // UN-BOLDING LOGIC
+      // Case 1: The user selected the text *inside* `\textbf{...}`.
+      if (!range.empty) {
+          const extendedFrom = Math.max(0, range.from - 8);
+          const extendedTo = range.to + 1;
+          const surroundingText = view.state.doc.sliceString(extendedFrom, extendedTo);
+
+          if (surroundingText === `\\textbf{${selection}}`) {
+              return {
+                  changes: { from: extendedFrom, to: extendedTo, insert: selection },
+                  range: EditorSelection.range(extendedFrom, extendedFrom + selection.length)
+              };
+          }
+      }
+
+      // Case 2: The user selected the *entire* `\textbf{...}` command.
+      if (selection.startsWith('\\textbf{') && selection.endsWith('}')) {
+        const unwrappedText = selection.substring(8, selection.length - 1);
+        return {
+          changes: { from: range.from, to: range.to, insert: unwrappedText },
+          range: EditorSelection.range(range.from, range.from + unwrappedText.length)
+        };
+      }
+
+      // BOLDING LOGIC: If not un-bolding, then we bold the text.
+      const newText = `\\textbf{${selection}}`;
+
+      if (range.empty) {
+        // If no text is selected, insert wrapper and place cursor inside.
+        return {
+          changes: { from: range.from, insert: newText },
+          range: EditorSelection.cursor(range.from + 8),
+        };
+      }
+      
+      // If text is selected, wrap it and select the inner text.
+      return {
+        changes: { from: range.from, to: range.to, insert: newText },
+        range: EditorSelection.range(range.from + 8, range.from + 8 + selection.length),
+      };
+    }));
+
+    view.focus();
+    return true; // Indicates the command was handled
+  }, []);
+
   const handleBoldButtonClick = () => {
-    if (editorViewRef.current) {
-      boldText(editorViewRef.current);
-      editorViewRef.current.focus();
-    }
+    toggleBold(editorViewRef.current);
   };
+  
+  const customKeymap = React.useMemo(() => [
+    {
+      key: 'Mod-b', // 'Mod' maps to Cmd on macOS and Ctrl on other systems
+      run: (view: EditorView) => toggleBold(view),
+    },
+  ], [toggleBold]);
+
 
   const handleDownloadTex = () => {
     const content = form.getValues('latexContent');
