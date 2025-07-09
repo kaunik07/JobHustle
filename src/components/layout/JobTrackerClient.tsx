@@ -46,7 +46,8 @@ export function JobTrackerClient({
   const { toast } = useToast();
 
   const [sidebarOpen, setSidebarOpen] = React.useState(false);
-  const [view, setView] = React.useState<'board' | 'resumes'>('board');
+  const initialView = searchParams.get('view') === 'resumes' ? 'resumes' : 'board';
+  const [view, setView] = React.useState<'board' | 'resumes'>(initialView);
   const [locationQuery, setLocationQuery] = React.useState(selectedLocation);
   const [companyQuery, setCompanyQuery] = React.useState(selectedCompany);
   
@@ -84,6 +85,10 @@ export function JobTrackerClient({
   const handleUserChange = (userId: string) => {
     if (userId === 'all') {
       setView('board');
+      // If switching to all users, remove the view param to default to board
+      if (searchParams.has('view')) {
+        updateQuery('view', '');
+      }
     }
     updateQuery('user', userId);
     if (searchParams.has('resume')) {
@@ -102,6 +107,11 @@ export function JobTrackerClient({
   const handleFilterByResume = (resumeId: string) => {
     setView('board');
     updateQuery('resume', resumeId);
+  };
+  
+  const handleViewChange = (newView: 'board' | 'resumes') => {
+    setView(newView);
+    updateQuery('view', newView === 'board' ? '' : newView);
   };
 
   const handleRemoveUser = async (userIdToRemove: string) => {
@@ -168,7 +178,7 @@ export function JobTrackerClient({
         isOpen={sidebarOpen}
         onToggle={() => setSidebarOpen(p => !p)}
         currentView={view}
-        onViewChange={setView}
+        onViewChange={handleViewChange}
         selectedUserId={selectedUserId}
         selectedType={selectedType}
         onTypeChange={handleTypeChange}

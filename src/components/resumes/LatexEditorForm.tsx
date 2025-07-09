@@ -94,7 +94,8 @@ Email: ${user.defaultEmail}
     },
   });
 
-  const toggleBold = React.useCallback((view: EditorView | null): boolean => {
+  const toggleBold = React.useCallback((): boolean => {
+    const view = editorViewRef.current;
     if (!view) return false;
 
     view.dispatch(view.state.changeByRange(range => {
@@ -147,13 +148,16 @@ Email: ${user.defaultEmail}
   }, []);
 
   const handleBoldButtonClick = () => {
-    toggleBold(editorViewRef.current);
+    toggleBold();
   };
   
   const customKeymap = React.useMemo(() => [
     {
       key: 'Mod-b', // 'Mod' maps to Cmd on macOS and Ctrl on other systems
-      run: (view) => toggleBold(view),
+      run: (view) => {
+        toggleBold();
+        return true;
+      },
     },
   ], [toggleBold]);
 
