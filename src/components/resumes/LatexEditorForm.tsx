@@ -54,33 +54,33 @@ interface LatexEditorFormProps {
 
 const boldText = (view: EditorView): boolean => {
   view.dispatch(view.state.changeByRange(range => {
-    const originalSelection = view.state.sliceDoc(range.from, range.to);
+    const selection = view.state.doc.sliceString(range.from, range.to);
 
-    // Case 1: The user has selected the entire \textbf{...} block.
-    if (originalSelection.startsWith('\\textbf{') && originalSelection.endsWith('}')) {
-      const unwrappedText = originalSelection.substring(7, originalSelection.length - 1);
+    // UN-BOLDING LOGIC
+    // Case 1: The user selected the text *inside* `\textbf{...}`.
+    const textBefore = view.state.doc.sliceString(Math.max(0, range.from - 7), range.from);
+    const textAfter = view.state.doc.sliceString(range.to, range.to + 1);
+    if (!range.empty && textBefore === '\\textbf{' && textAfter === '}') {
+      const from = range.from - 7;
+      const to = range.to + 1;
+      return {
+        changes: { from, to, insert: selection },
+        range: EditorSelection.range(from, from + selection.length)
+      };
+    }
+
+    // Case 2: The user selected the *entire* `\textbf{...}` command.
+    if (selection.startsWith('\\textbf{') && selection.endsWith('}')) {
+      const unwrappedText = selection.substring(7, selection.length - 1);
       return {
         changes: { from: range.from, to: range.to, insert: unwrappedText },
-        range: EditorSelection.range(range.from, range.from + unwrappedText.length),
+        range: EditorSelection.range(range.from, range.from + unwrappedText.length)
       };
     }
 
-    // Case 2: The user has selected just the text inside a \textbf{...} block.
-    const isWrapped =
-      !range.empty &&
-      view.state.sliceDoc(Math.max(0, range.from - 7), range.from) === '\\textbf{' &&
-      view.state.sliceDoc(range.to, range.to + 1) === '}';
+    // BOLDING LOGIC: If not un-bolding, then we bold the text.
+    const newText = `\\textbf{${selection}}`;
 
-    if (isWrapped) {
-      const innerText = view.state.sliceDoc(range.from, range.to);
-      return {
-        changes: { from: range.from - 7, to: range.to + 1, insert: innerText },
-        range: EditorSelection.range(range.from - 7, range.from - 7 + innerText.length),
-      };
-    }
-
-    // Case 3: The text is not bold, so we make it bold.
-    const newText = `\\textbf{${originalSelection}}`;
     if (range.empty) {
       // If no text is selected, insert wrapper and place cursor inside.
       return {
@@ -89,10 +89,10 @@ const boldText = (view: EditorView): boolean => {
       };
     }
     
-    // If text is selected, wrap it.
+    // If text is selected, wrap it and select the inner text.
     return {
       changes: { from: range.from, to: range.to, insert: newText },
-      range: EditorSelection.range(range.from + 7, range.from + 7 + originalSelection.length),
+      range: EditorSelection.range(range.from + 7, range.from + 7 + selection.length),
     };
   }));
   return true; // Indicates the command was handled
