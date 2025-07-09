@@ -16,7 +16,7 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, Save, Download, FileWarning, ArrowLeft, Eye } from 'lucide-react';
+import { Loader2, Save, Download, FileWarning, ArrowLeft, Eye, Bold } from 'lucide-react';
 import { saveLatexResume, compileLatex } from '@/app/actions';
 import type { Resume, User } from '@/lib/types';
 import { useRouter } from 'next/navigation';
@@ -89,6 +89,7 @@ export function LatexEditorForm({ user, resume }: LatexEditorFormProps) {
   const [fontSize, setFontSize] = React.useState(12);
   const { toast } = useToast();
   const router = useRouter();
+  const editorViewRef = React.useRef<EditorView | null>(null);
   
   const isEditMode = !!resume;
 
@@ -122,6 +123,13 @@ Email: ${user.defaultEmail}
 `,
     },
   });
+
+  const handleBoldButtonClick = () => {
+    if (editorViewRef.current) {
+      boldText(editorViewRef.current);
+      editorViewRef.current.focus();
+    }
+  };
 
   const handleDownloadTex = () => {
     const content = form.getValues('latexContent');
@@ -259,6 +267,9 @@ Email: ${user.defaultEmail}
                     <div className="flex items-center justify-between mb-2">
                         <FormLabel>LaTeX (.tex) Code</FormLabel>
                         <div className="flex items-center gap-2">
+                            <Button type="button" variant="outline" size="icon" className="h-8 w-8" onClick={handleBoldButtonClick} title="Bold (Cmd/Ctrl + B)">
+                                <Bold className="h-4 w-4" />
+                            </Button>
                             <Label htmlFor="font-size-select" className="text-xs text-muted-foreground">Font Size</Label>
                             <Select value={String(fontSize)} onValueChange={(value) => setFontSize(Number(value))}>
                                 <SelectTrigger id="font-size-select" className="w-[80px] h-8 text-xs">
@@ -287,6 +298,9 @@ Email: ${user.defaultEmail}
                           onChange={field.onChange}
                           className="absolute inset-0"
                           style={{ fontSize: `${fontSize}px` }}
+                          onCreateEditor={(view) => {
+                            editorViewRef.current = view;
+                          }}
                         />
                       </div>
                     </FormControl>
