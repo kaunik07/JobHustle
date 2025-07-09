@@ -60,7 +60,6 @@ export function LatexEditorForm({ user, resume }: LatexEditorFormProps) {
   const { toast } = useToast();
   const router = useRouter();
   const editorViewRef = React.useRef<EditorView | null>(null);
-  const boldButtonRef = React.useRef<HTMLButtonElement>(null);
   
   const isEditMode = !!resume;
 
@@ -154,12 +153,9 @@ Email: ${user.defaultEmail}
   const customKeymap = React.useMemo(() => [
     {
       key: 'Mod-b', // 'Mod' maps to Cmd on macOS and Ctrl on other systems
-      run: () => {
-        boldButtonRef.current?.click();
-        return true;
-      },
+      run: (view) => toggleBold(view),
     },
-  ], []);
+  ], [toggleBold]);
 
 
   const handleDownloadTex = () => {
@@ -298,7 +294,7 @@ Email: ${user.defaultEmail}
                     <div className="flex items-center justify-between mb-2">
                         <FormLabel>LaTeX (.tex) Code</FormLabel>
                         <div className="flex items-center gap-2">
-                            <Button ref={boldButtonRef} type="button" variant="outline" size="icon" className="h-8 w-8" onClick={handleBoldButtonClick} title="Bold (Cmd/Ctrl + B)">
+                            <Button type="button" variant="outline" size="icon" className="h-8 w-8" onClick={handleBoldButtonClick} title="Bold (Cmd/Ctrl + B)">
                                 <Bold className="h-4 w-4" />
                             </Button>
                             <Label htmlFor="font-size-select" className="text-xs text-muted-foreground">Font Size</Label>
