@@ -59,7 +59,7 @@ const boldText = (view: EditorView): boolean => {
     // UN-BOLDING LOGIC
     // Case 1: The user selected the text *inside* `\textbf{...}`.
     if (!range.empty) {
-        const extendedFrom = Math.max(0, range.from - 7);
+        const extendedFrom = Math.max(0, range.from - 8);
         const extendedTo = range.to + 1;
         const surroundingText = view.state.doc.sliceString(extendedFrom, extendedTo);
 
@@ -73,7 +73,7 @@ const boldText = (view: EditorView): boolean => {
 
     // Case 2: The user selected the *entire* `\textbf{...}` command.
     if (selection.startsWith('\\textbf{') && selection.endsWith('}')) {
-      const unwrappedText = selection.substring(7, selection.length - 1);
+      const unwrappedText = selection.substring(8, selection.length - 1);
       return {
         changes: { from: range.from, to: range.to, insert: unwrappedText },
         range: EditorSelection.range(range.from, range.from + unwrappedText.length)
@@ -87,14 +87,14 @@ const boldText = (view: EditorView): boolean => {
       // If no text is selected, insert wrapper and place cursor inside.
       return {
         changes: { from: range.from, insert: newText },
-        range: EditorSelection.cursor(range.from + 7),
+        range: EditorSelection.cursor(range.from + 8),
       };
     }
     
     // If text is selected, wrap it and select the inner text.
     return {
       changes: { from: range.from, to: range.to, insert: newText },
-      range: EditorSelection.range(range.from + 7, range.from + 7 + selection.length),
+      range: EditorSelection.range(range.from + 8, range.from + 8 + selection.length),
     };
   }));
   return true; // Indicates the command was handled
