@@ -25,6 +25,7 @@ import CodeMirror from '@uiw/react-codemirror';
 import { vscodeDark } from '@uiw/codemirror-theme-vscode';
 import { stex } from '@codemirror/legacy-modes/mode/stex';
 import { StreamLanguage } from '@codemirror/language';
+import { EditorView, keymap } from '@codemirror/view';
 import {
   ResizableHandle,
   ResizablePanel,
@@ -49,6 +50,38 @@ interface LatexEditorFormProps {
   user: User;
   resume?: Resume;
 }
+
+const boldText = (view: EditorView): boolean => {
+  view.dispatch(view.state.changeByRange(range => {
+    const text = view.state.sliceDoc(range.from, range.to);
+    const newText = `\\textbf{${text}}`;
+    
+    if (range.from === range.to) {
+        return {
+            changes: { from: range.from, insert: newText },
+            range: { anchor: range.from + '\\textbf{'.length }
+        };
+    }
+
+    return {
+      changes: { from: range.from, to: range.to, insert: newText },
+      range: { 
+          anchor: range.from + '\\textbf{'.length,
+          head: range.to + '\\textbf{'.length
+      }
+    };
+  }));
+
+  return true;
+};
+
+const customKeymap = [
+  {
+    key: 'Mod-b', // 'Mod' maps to Cmd on macOS and Ctrl on other systems
+    run: boldText,
+  },
+];
+
 
 export function LatexEditorForm({ user, resume }: LatexEditorFormProps) {
   const [isSubmitting, setIsSubmitting] = React.useState(false);
@@ -248,7 +281,10 @@ Email: ${user.defaultEmail}
                           value={field.value}
                           height="100%"
                           theme={vscodeDark}
-                          extensions={[StreamLanguage.define(stex)]}
+                          extensions={[
+                            StreamLanguage.define(stex),
+                            keymap.of(customKeymap),
+                          ]}
                           onChange={field.onChange}
                           className="absolute inset-0"
                           style={{ fontSize: `${fontSize}px` }}
