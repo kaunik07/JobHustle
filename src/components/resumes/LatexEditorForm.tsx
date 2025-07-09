@@ -26,6 +26,7 @@ import { vscodeDark } from '@uiw/codemirror-theme-vscode';
 import { stex } from '@codemirror/legacy-modes/mode/stex';
 import { StreamLanguage } from '@codemirror/language';
 import { EditorView, keymap } from '@codemirror/view';
+import { EditorSelection } from '@codemirror/state';
 import {
   ResizableHandle,
   ResizablePanel,
@@ -55,24 +56,22 @@ const boldText = (view: EditorView): boolean => {
   view.dispatch(view.state.changeByRange(range => {
     const text = view.state.sliceDoc(range.from, range.to);
     const newText = `\\textbf{${text}}`;
-    
-    if (range.from === range.to) {
-        return {
-            changes: { from: range.from, insert: newText },
-            range: { anchor: range.from + '\\textbf{'.length }
-        };
-    }
 
+    if (range.empty) {
+      // If no text is selected, insert the wrapper and place the cursor in the middle
+      return {
+          changes: { from: range.from, insert: newText },
+          range: EditorSelection.cursor(range.from + 7) // `\textbf{` is 7 chars
+      };
+    }
+    
+    // If text is selected, wrap it and re-select the original text
     return {
-      changes: { from: range.from, to: range.to, insert: newText },
-      range: { 
-          anchor: range.from + '\\textbf{'.length,
-          head: range.to + '\\textbf{'.length
-      }
+        changes: { from: range.from, to: range.to, insert: newText },
+        range: EditorSelection.range(range.from + 7, range.to + 7)
     };
   }));
-
-  return true;
+  return true; // Indicates the command was handled
 };
 
 const customKeymap = [
