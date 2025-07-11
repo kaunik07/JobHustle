@@ -52,6 +52,7 @@ export function AddResumeDialog({ user }: AddResumeDialogProps) {
     resolver: zodResolver(formSchema),
     defaultValues: {
       name: '',
+      file: undefined,
     },
   });
 
@@ -117,7 +118,7 @@ export function AddResumeDialog({ user }: AddResumeDialogProps) {
             <FormField
               control={form.control}
               name="file"
-              render={({ field: { onChange, ...fieldProps } }) => (
+              render={({ field: { onChange, onBlur, name, ref } }) => (
                 <FormItem>
                   <FormLabel>Resume PDF</FormLabel>
                    <FormControl>
@@ -127,9 +128,10 @@ export function AddResumeDialog({ user }: AddResumeDialogProps) {
                           type="file"
                           accept="application/pdf"
                           ref={fileInputRef}
+                          onBlur={onBlur}
+                          name={name}
                           onChange={(e) => onChange(e.target.files?.[0])}
                           className="pl-10"
-                          {...fieldProps}
                       />
                       <FileText className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
                     </div>
