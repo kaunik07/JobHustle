@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import * as React from 'react';
@@ -16,7 +17,7 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, Save, Download, FileWarning, ArrowLeft, Eye, Bold } from 'lucide-react';
+import { Loader2, Save, Download, FileWarning, ArrowLeft, Eye, Bold, Check, ChevronsUpDown, X, Plus, Languages } from 'lucide-react';
 import { saveLatexResume, compileLatex } from '@/app/actions';
 import type { Resume, User } from '@/lib/types';
 import { useRouter } from 'next/navigation';
@@ -39,6 +40,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { technicalSkills } from '@/lib/types';
+import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
+import { cn } from '@/lib/utils';
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '../ui/command';
+import { Badge } from '../ui/badge';
+import { ScrollArea } from '../ui/scroll-area';
 
 const formSchema = z.object({
   name: z.string().min(1, 'Resume name is required'),
@@ -60,6 +67,10 @@ export function LatexEditorForm({ user, resume }: LatexEditorFormProps) {
   const { toast } = useToast();
   const router = useRouter();
   const editorViewRef = React.useRef<EditorView | null>(null);
+
+  // For skills management
+  const [skillsPopoverOpen, setSkillsPopoverOpen] = React.useState(false);
+  const [selectedSkills, setSelectedSkills] = React.useState<string[]>([]);
   
   const isEditMode = !!resume;
 
@@ -94,7 +105,7 @@ Email: ${user.defaultEmail}
     },
   });
 
-  const toggleBold = React.useCallback((): boolean => {
+  const toggleBold = React.useCallback(() => {
     const view = editorViewRef.current;
     if (!view) return false;
 
@@ -104,16 +115,16 @@ Email: ${user.defaultEmail}
       // UN-BOLDING LOGIC
       // Case 1: The user selected the text *inside* `\textbf{...}`.
       if (!range.empty) {
-          const extendedFrom = Math.max(0, range.from - 8);
-          const extendedTo = range.to + 1;
-          const surroundingText = view.state.doc.sliceString(extendedFrom, extendedTo);
-
-          if (surroundingText === `\\textbf{${selection}}`) {
-              return {
-                  changes: { from: extendedFrom, to: extendedTo, insert: selection },
-                  range: EditorSelection.range(extendedFrom, extendedFrom + selection.length)
-              };
-          }
+        const textBefore = view.state.doc.sliceString(Math.max(0, range.from - 8), range.from);
+        const textAfter = view.state.doc.sliceString(range.to, range.to + 1);
+        if (textBefore === '\\textbf{' && textAfter === '}') {
+          const from = range.from - 8;
+          const to = range.to + 1;
+          return {
+            changes: { from, to, insert: selection },
+            range: EditorSelection.range(from, from + selection.length)
+          };
+        }
       }
 
       // Case 2: The user selected the *entire* `\textbf{...}` command.
@@ -215,6 +226,34 @@ Email: ${user.defaultEmail}
     document.body.removeChild(link);
   };
 
+  const insertSkills = () => {
+    const view = editorViewRef.current;
+    if (!view) return;
+
+    const skillsString = selectedSkills.join(', ');
+    if (!skillsString) {
+      toast({ variant: 'destructive', title: 'No skills selected.' });
+      return;
+    }
+
+    view.dispatch(view.state.changeByRange(range => {
+      return {
+        changes: { from: range.from, to: range.to, insert: skillsString },
+        range: EditorSelection.range(range.from, range.from + skillsString.length)
+      };
+    }));
+    view.focus();
+    toast({ title: 'Skills inserted.' });
+  };
+
+  const handleSkillSelect = (skill: string) => {
+    setSelectedSkills(current =>
+      current.includes(skill)
+        ? current.filter(s => s !== skill)
+        : [...current, skill]
+    );
+  };
+
   async function onSubmit(values: FormValues) {
     setIsSubmitting(true);
     try {
@@ -231,7 +270,8 @@ Email: ${user.defaultEmail}
       // Programmatically create a query string for the redirect
       const params = new URLSearchParams();
       params.set('user', user.id);
-      router.push(`/?${params.toString()}&view=resumes`);
+      params.set('view', 'resumes');
+      router.push(`/?${params.toString()}`);
       router.refresh(); 
     } catch (error) {
       console.error(error);
@@ -298,6 +338,53 @@ Email: ${user.defaultEmail}
                     <div className="flex items-center justify-between mb-2">
                         <FormLabel>LaTeX (.tex) Code</FormLabel>
                         <div className="flex items-center gap-2">
+                            <Popover open={skillsPopoverOpen} onOpenChange={setSkillsPopoverOpen}>
+                              <PopoverTrigger asChild>
+                                  <Button type="button" variant="outline" size="sm">
+                                      <Languages className="mr-2 h-4 w-4" /> Manage Skills
+                                  </Button>
+                              </PopoverTrigger>
+                              <PopoverContent className="w-80 p-0">
+                                <Command>
+                                  <CommandInput placeholder="Search skills..." />
+                                  <CommandList>
+                                    <CommandEmpty>No skill found.</CommandEmpty>
+                                    <CommandGroup>
+                                      <ScrollArea className="h-48">
+                                      {technicalSkills.map((skill) => (
+                                        <CommandItem
+                                          key={skill}
+                                          value={skill}
+                                          onSelect={() => handleSkillSelect(skill)}
+                                        >
+                                          <Check
+                                            className={cn(
+                                              "mr-2 h-4 w-4",
+                                              selectedSkills.includes(skill) ? "opacity-100" : "opacity-0"
+                                            )}
+                                          />
+                                          {skill}
+                                        </CommandItem>
+                                      ))}
+                                      </ScrollArea>
+                                    </CommandGroup>
+                                  </CommandList>
+                                </Command>
+                                <div className="p-2 border-t">
+                                  <p className="text-xs font-medium mb-2">Selected Skills ({selectedSkills.length})</p>
+                                  <div className="flex flex-wrap gap-1 mb-2 min-h-[20px]">
+                                    {selectedSkills.map(skill => (
+                                        <Badge key={skill} variant="secondary" className="cursor-pointer" onClick={() => handleSkillSelect(skill)}>
+                                            {skill} <X className="ml-1 h-3 w-3" />
+                                        </Badge>
+                                    ))}
+                                  </div>
+                                  <Button size="sm" className="w-full" onClick={insertSkills}>
+                                    <Plus className="mr-2 h-4 w-4" /> Insert Selected Skills
+                                  </Button>
+                                </div>
+                              </PopoverContent>
+                            </Popover>
                             <Button type="button" variant="outline" size="icon" className="h-8 w-8" onClick={handleBoldButtonClick} title="Bold (Cmd/Ctrl + B)">
                                 <Bold className="h-4 w-4" />
                             </Button>
@@ -325,6 +412,7 @@ Email: ${user.defaultEmail}
                           extensions={[
                             StreamLanguage.define(stex),
                             keymap.of(customKeymap),
+                            EditorView.contentAttributes.of({spellcheck: "true"})
                           ]}
                           onChange={field.onChange}
                           className="absolute inset-0"
