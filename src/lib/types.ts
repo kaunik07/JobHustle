@@ -70,6 +70,29 @@ export const suggestedLocations: string[] = [
     'Lincoln, NE',
 ];
 
+export const technicalSkills: string[] = [
+    // Programming Languages
+    'JavaScript', 'TypeScript', 'Python', 'Java', 'C#', 'C++', 'Go', 'Rust', 'PHP', 'Ruby', 'Swift', 'Kotlin', 'SQL', 'NoSQL',
+    // Frontend
+    'HTML', 'CSS', 'React', 'Angular', 'Vue.js', 'Next.js', 'Gatsby', 'Svelte', 'Tailwind CSS', 'Bootstrap', 'Sass/SCSS', 'Webpack', 'Vite',
+    // Backend
+    'Node.js', 'Express.js', 'Django', 'Flask', 'Ruby on Rails', 'ASP.NET', 'Spring Boot', 'Gin',
+    // Databases
+    'PostgreSQL', 'MySQL', 'MongoDB', 'Redis', 'SQLite', 'Firebase', 'DynamoDB',
+    // DevOps & SRE
+    'Docker', 'Kubernetes', 'Terraform', 'Ansible', 'Jenkins', 'Git', 'GitHub Actions', 'CI/CD', 'Prometheus', 'Grafana', 'Datadog',
+    // Cloud
+    'AWS', 'Google Cloud (GCP)', 'Microsoft Azure',
+    // Systems & Networking
+    'Linux', 'Bash Scripting', 'Networking', 'TCP/IP',
+    // Data Science & ML
+    'Pandas', 'NumPy', 'Scikit-learn', 'TensorFlow', 'PyTorch', 'Jupyter', 'R', 'Matplotlib',
+    // Quant
+    'Financial Modeling', 'Quantitative Analysis', 'Machine Learning', 'Statistics', 'Time Series Analysis',
+    // Other
+    'GraphQL', 'REST APIs', 'gRPC', 'Agile', 'Scrum'
+];
+
 export interface User {
   id: string;
   firstName: string;
