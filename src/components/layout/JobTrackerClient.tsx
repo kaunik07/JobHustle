@@ -20,6 +20,7 @@ import { cn } from '@/lib/utils';
 import { Button } from '../ui/button';
 import { Badge } from '../ui/badge';
 import { X } from 'lucide-react';
+import { NotApplicableList } from '../applications/NotApplicableList';
 
 
 interface JobTrackerClientProps {
@@ -147,6 +148,7 @@ export function JobTrackerClient({
   const yetToApplyApplications = filteredApplications.filter(app => app.status === 'Yet to Apply');
   const kanbanApplications = filteredApplications.filter(app => kanbanStatuses.includes(app.status));
   const rejectedApplications = filteredApplications.filter(app => app.status === 'Rejected');
+  const notApplicableApplications = filteredApplications.filter(app => app.status === 'Not Applicable');
   
   const selectedUser = users.find(u => u.id === selectedUserId);
   const selectedResumeName = selectedResumeId ? resumes.find(r => r.id === selectedResumeId)?.name : null;
@@ -222,6 +224,8 @@ export function JobTrackerClient({
                 <KanbanBoard applications={kanbanApplications} selectedUserId={selectedUserId} />
                 <Separator />
                 <RejectedList applications={rejectedApplications} selectedUserId={selectedUserId} />
+                <Separator />
+                <NotApplicableList applications={notApplicableApplications} selectedUserId={selectedUserId} />
               </div>
             ) : (
                 <>
