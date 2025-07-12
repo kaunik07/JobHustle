@@ -63,6 +63,7 @@ export function AnalyticsOverview({ applications }: AnalyticsOverviewProps) {
       Interview: applications.filter(a => a.status === 'Interview').length,
       Offer: applications.filter(a => a.status === 'Offer').length,
       Rejected: applications.filter(a => a.status === 'Rejected').length,
+      Missed: applications.filter(a => a.status === 'Missed').length,
     };
   }, [applications]);
 
@@ -73,7 +74,7 @@ export function AnalyticsOverview({ applications }: AnalyticsOverviewProps) {
     { title: 'OA', value: stats.OA, icon: BarChart, color: 'text-chart-4' },
     { title: 'Interview', value: stats.Interview, icon: Users, color: 'text-chart-1' },
     { title: 'Offers', value: stats.Offer, icon: Award, color: 'text-chart-2' },
-    { title: 'Rejected', value: stats.Rejected, icon: XCircle, color: 'text-destructive' },
+    { title: 'Rejections & Misses', value: { rejected: stats.Rejected, missed: stats.Missed }, icon: XCircle, color: 'text-destructive' },
   ];
 
   const firstItem = statItems[0];
@@ -109,7 +110,7 @@ export function AnalyticsOverview({ applications }: AnalyticsOverviewProps) {
       
       {/* Other items */}
       {otherItems.map(item => {
-        if (item.title === 'OA' && typeof item.value === 'object' && 'due' in item.value && 'completed' in item.value && 'missed' in item.value) {
+        if (typeof item.value === 'object') {
             return (
                 <Card key={item.title}>
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -117,22 +118,36 @@ export function AnalyticsOverview({ applications }: AnalyticsOverviewProps) {
                         <item.icon className={`h-4 w-4 ${item.color}`} />
                     </CardHeader>
                     <CardContent className="pt-2">
-                        <div className="flex items-center justify-around">
-                            <div className="text-center">
-                                <div className="text-2xl font-bold">{item.value.due}</div>
-                                <p className="text-xs text-muted-foreground">Due</p>
+                        {'due' in item.value ? (
+                            <div className="flex items-center justify-around">
+                                <div className="text-center">
+                                    <div className="text-2xl font-bold">{item.value.due}</div>
+                                    <p className="text-xs text-muted-foreground">Due</p>
+                                </div>
+                                <div className="text-2xl font-light text-muted-foreground">|</div>
+                                <div className="text-center">
+                                    <div className="text-2xl font-bold">{item.value.completed}</div>
+                                    <p className="text-xs text-muted-foreground">Completed</p>
+                                </div>
+                                <div className="text-2xl font-light text-muted-foreground">|</div>
+                                <div className="text-center">
+                                    <div className="text-2xl font-bold text-destructive">{item.value.missed}</div>
+                                    <p className="text-xs text-muted-foreground">Missed</p>
+                                </div>
                             </div>
-                            <div className="text-2xl font-light text-muted-foreground">|</div>
-                            <div className="text-center">
-                                <div className="text-2xl font-bold">{item.value.completed}</div>
-                                <p className="text-xs text-muted-foreground">Completed</p>
+                        ) : (
+                            <div className="flex items-center justify-around">
+                                <div className="text-center">
+                                    <div className="text-2xl font-bold text-destructive">{item.value.rejected}</div>
+                                    <p className="text-xs text-muted-foreground">Rejected</p>
+                                </div>
+                                <div className="text-2xl font-light text-muted-foreground">|</div>
+                                <div className="text-center">
+                                    <div className="text-2xl font-bold">{item.value.missed}</div>
+                                    <p className="text-xs text-muted-foreground">Missed</p>
+                                </div>
                             </div>
-                            <div className="text-2xl font-light text-muted-foreground">|</div>
-                            <div className="text-center">
-                                <div className="text-2xl font-bold text-destructive">{item.value.missed}</div>
-                                <p className="text-xs text-muted-foreground">Missed</p>
-                            </div>
-                        </div>
+                        )}
                     </CardContent>
                 </Card>
             );
