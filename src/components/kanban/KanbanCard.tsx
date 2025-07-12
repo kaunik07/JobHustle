@@ -7,8 +7,8 @@ import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import type { Application, ApplicationCategory, ApplicationType, ApplicationWorkArrangement, Resume } from '@/lib/types';
 import { ApplicationDetailsDialog } from '@/components/applications/ApplicationDetailsDialog';
-import { formatDistanceToNow } from 'date-fns';
-import { Clock, MapPin, CheckCircle2, Sparkles, Mail } from 'lucide-react';
+import { formatDistanceToNow, isPast, format } from 'date-fns';
+import { Clock, MapPin, CheckCircle2, Sparkles, Mail, AlertTriangle } from 'lucide-react';
 import { cn, getUserColor } from '@/lib/utils';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Button } from '@/components/ui/button';
@@ -89,6 +89,26 @@ export function KanbanCard({ application, selectedUserId }: KanbanCardProps) {
   };
 
   const renderDate = () => {
+    if (application.status === 'Yet to Apply' && application.applyByDate) {
+      const applyBy = new Date(application.applyByDate);
+      const isOverdue = isPast(applyBy);
+      return (
+        <TooltipProvider>
+            <Tooltip>
+                <TooltipTrigger asChild>
+                    <span className={cn("flex items-center gap-1", isOverdue && "text-destructive")}>
+                        {isOverdue && <AlertTriangle className="h-3 w-3" />}
+                        Apply by {format(applyBy, 'MMM d')}
+                    </span>
+                </TooltipTrigger>
+                <TooltipContent>
+                    <p>{isOverdue ? 'Application is overdue' : `Due in ${formatDistanceToNow(applyBy)}`}</p>
+                </TooltipContent>
+            </Tooltip>
+        </TooltipProvider>
+      );
+    }
+    
     if (application.status === 'Interview') {
       const interviewDates = [
         application.interviewDate1,

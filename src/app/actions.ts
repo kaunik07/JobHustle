@@ -74,6 +74,7 @@ export async function addApplication(data: Omit<Application, 'id' | 'user' | 'ap
       notes: data.notes,
       userId: user.id,
       appliedOn: data.status !== 'Yet to Apply' ? new Date() : null,
+      applyByDate: data.applyByDate,
       jobDescription: data.jobDescription,
       isUsCitizenOnly: false, // Default to false, AI will update it
       sponsorshipNotOffered: false, // Default to false, AI will update it

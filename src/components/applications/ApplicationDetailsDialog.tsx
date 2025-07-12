@@ -323,6 +323,12 @@ export function ApplicationDetailsDialog({ application, children }: ApplicationD
       toast({ title: `Applied date updated.` });
     }
   };
+
+  const handleApplyByDateChange = async (date: Date | undefined) => {
+    if (await handleUpdate({ applyByDate: date })) {
+      toast({ title: `Last date to apply updated.` });
+    }
+  };
   
   const handleOADueDateChange = React.useCallback(async (
     newDate?: Date,
@@ -810,6 +816,33 @@ export function ApplicationDetailsDialog({ application, children }: ApplicationD
                               />
                           </PopoverContent>
                       </Popover>
+                  </div>
+                )}
+                 {application.status === 'Yet to Apply' && (
+                  <div className="space-y-1">
+                    <Label>Last Date to Apply</Label>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant={"outline"}
+                          className={cn(
+                            "w-full justify-start text-left font-normal",
+                            !application.applyByDate && "text-muted-foreground"
+                          )}
+                        >
+                          <CalendarIcon className="mr-2 h-4 w-4" />
+                          {application.applyByDate ? format(new Date(application.applyByDate), "PPP") : <span>Pick a date</span>}
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0">
+                        <Calendar
+                          mode="single"
+                          selected={application.applyByDate ? new Date(application.applyByDate) : undefined}
+                          onSelect={handleApplyByDateChange}
+                          initialFocus
+                        />
+                      </PopoverContent>
+                    </Popover>
                   </div>
                 )}
                 {application.status === 'OA' && (

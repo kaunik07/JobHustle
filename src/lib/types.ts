@@ -142,6 +142,7 @@ export interface Application {
   customLatexResume?: Resume | null;
   notes?: string | null;
   appliedOn?: Date | null;
+  applyByDate?: Date | null;
   appliedWithEmail?: string | null;
   oaDueDate?: Date | null;
   oaDueDateTimezone?: string | null;

@@ -54,6 +54,7 @@ export const applications = pgTable('applications', {
     latexResumeId: text('latex_resume_id').references(() => resumes.id, { onDelete: 'set null' }),
     notes: text('notes'),
     appliedOn: timestamp('applied_on'),
+    applyByDate: timestamp('apply_by_date'),
     appliedWithEmail: text('applied_with_email'),
     oaDueDate: timestamp('oa_due_date'),
     oaDueDateTimezone: varchar('oa_due_date_timezone', { length: 255 }),

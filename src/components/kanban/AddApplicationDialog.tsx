@@ -33,13 +33,15 @@ import {
 } from '@/components/ui/select';
 import { User, categories, statuses, applicationTypes, suggestedLocations, workArrangements } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, ChevronsUpDown, Check, X, Plus } from 'lucide-react';
+import { Loader2, ChevronsUpDown, Check, X, Plus, CalendarIcon } from 'lucide-react';
 import { Textarea } from '@/components/ui/textarea';
 import { addApplication as addApplicationAction } from '@/app/actions';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
+import { Calendar } from '../ui/calendar';
+import { format } from 'date-fns';
 
 const formSchema = z.object({
   companyName: z.string().min(2, 'Company name is required'),
@@ -53,6 +55,7 @@ const formSchema = z.object({
   status: z.enum(statuses),
   userId: z.string().min(1, 'User is required'),
   notes: z.string().optional(),
+  applyByDate: z.date().optional(),
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -85,8 +88,11 @@ export function AddApplicationDialog({ children, users, selectedUserId, allLocat
       status: 'Yet to Apply',
       userId: selectedUserId,
       notes: '',
+      applyByDate: undefined,
     },
   });
+
+  const watchStatus = form.watch('status');
 
   React.useEffect(() => {
     form.setValue('userId', selectedUserId);
@@ -114,6 +120,7 @@ export function AddApplicationDialog({ children, users, selectedUserId, allLocat
         status: 'Yet to Apply',
         workArrangement: 'On-site',
         type: 'Full-Time',
+        applyByDate: undefined,
       });
     } catch (error) {
       toast({
@@ -427,6 +434,51 @@ export function AddApplicationDialog({ children, users, selectedUserId, allLocat
                     )}
                   />
               </div>
+
+              {watchStatus === 'Yet to Apply' && (
+                <FormField
+                  control={form.control}
+                  name="applyByDate"
+                  render={({ field }) => (
+                    <FormItem className="flex flex-col">
+                      <FormLabel>Last Date to Apply (Optional)</FormLabel>
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <FormControl>
+                            <Button
+                              variant={"outline"}
+                              className={cn(
+                                "w-full pl-3 text-left font-normal",
+                                !field.value && "text-muted-foreground"
+                              )}
+                            >
+                              {field.value ? (
+                                format(field.value, "PPP")
+                              ) : (
+                                <span>Pick a date</span>
+                              )}
+                              <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                            </Button>
+                          </FormControl>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0" align="start">
+                          <Calendar
+                            mode="single"
+                            selected={field.value}
+                            onSelect={field.onChange}
+                            disabled={(date) =>
+                              date < new Date(new Date().setHours(0,0,0,0))
+                            }
+                            initialFocus
+                          />
+                        </PopoverContent>
+                      </Popover>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              )}
+
               <FormField
                 control={form.control}
                 name="notes"
