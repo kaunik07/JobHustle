@@ -40,19 +40,32 @@ export function Header({ users, selectedUser, onUserChange, onUserRemoved, allLo
   const selectedUserDetails = users.find(u => u.id === selectedUser);
 
   const handleExport = () => {
-    const dataToExport = applications.map(app => ({
-      companyName: app.companyName,
-      jobTitle: app.jobTitle,
-      locations: app.locations.join(', '),
-      status: app.status,
-      jobUrl: app.jobUrl,
-      appliedOn: app.appliedOn ? format(new Date(app.appliedOn), 'yyyy-MM-dd') : '',
-      notes: app.notes,
-      category: app.category,
-      type: app.type,
-      workArrangement: app.workArrangement,
-      appliedBy: `${app.user?.firstName || ''} ${app.user?.lastName || ''}`.trim(),
-    }));
+    const dataToExport = applications.map(app => {
+        const baseData: Record<string, any> = {
+          companyName: app.companyName,
+          jobTitle: app.jobTitle,
+          locations: app.locations.join(', '),
+          status: app.status,
+          jobUrl: app.jobUrl,
+          appliedOn: app.appliedOn ? format(new Date(app.appliedOn), 'yyyy-MM-dd') : '',
+          oaDueDate: app.oaDueDate ? format(new Date(app.oaDueDate), 'yyyy-MM-dd') : '',
+          oaCompletedOn: app.oaCompletedOn ? format(new Date(app.oaCompletedOn), 'yyyy-MM-dd') : '',
+          notes: app.notes,
+          category: app.category,
+          type: app.type,
+          workArrangement: app.workArrangement,
+          appliedBy: `${app.user?.firstName || ''} ${app.user?.lastName || ''}`.trim(),
+        };
+
+        // Add interview dates dynamically
+        for (let i = 1; i <= 10; i++) {
+            const dateKey = `interviewDate${i}` as keyof Application;
+            const interviewDate = app[dateKey] as Date | null | undefined;
+            baseData[`interviewDate${i}`] = interviewDate ? format(new Date(interviewDate), 'yyyy-MM-dd') : '';
+        }
+
+        return baseData;
+    });
 
     const csv = Papa.unparse(dataToExport);
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
