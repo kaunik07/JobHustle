@@ -74,7 +74,7 @@ export function AnalyticsOverview({ applications }: AnalyticsOverviewProps) {
     { title: 'OA', value: stats.OA, icon: BarChart, color: 'text-chart-4' },
     { title: 'Interview', value: stats.Interview, icon: Users, color: 'text-chart-1' },
     { title: 'Offers', value: stats.Offer, icon: Award, color: 'text-chart-2' },
-    { title: 'Rejections & Misses', value: { rejected: stats.Rejected, missed: stats.Missed }, icon: XCircle, color: 'text-destructive' },
+    { title: 'Rejections & Misses', value: { rejected: stats.Rejected, missed: stats.Missed }, icon: XCircle, color: 'text-muted-foreground' },
   ];
 
   const firstItem = statItems[0];
@@ -138,12 +138,12 @@ export function AnalyticsOverview({ applications }: AnalyticsOverviewProps) {
                         ) : (
                             <div className="flex items-center justify-around">
                                 <div className="text-center">
-                                    <div className="text-2xl font-bold text-destructive">{item.value.rejected}</div>
+                                    <div className="text-2xl font-bold text-orange-500">{item.value.rejected}</div>
                                     <p className="text-xs text-muted-foreground">Rejected</p>
                                 </div>
                                 <div className="text-2xl font-light text-muted-foreground">|</div>
                                 <div className="text-center">
-                                    <div className="text-2xl font-bold">{item.value.missed}</div>
+                                    <div className="text-2xl font-bold text-destructive">{item.value.missed}</div>
                                     <p className="text-xs text-muted-foreground">Missed</p>
                                 </div>
                             </div>

@@ -14,7 +14,7 @@ export function MissedList({ applications, selectedUserId }: MissedListProps) {
     return (
         <div className="space-y-4">
             <div className="flex items-center gap-2">
-                <CalendarX className="h-6 w-6 text-orange-500" />
+                <CalendarX className="h-6 w-6 text-destructive" />
                 <h2 className="text-2xl font-bold tracking-tight">Missed ({applications.length})</h2>
             </div>
             {applications.length > 0 ? (
