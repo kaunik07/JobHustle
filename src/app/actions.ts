@@ -241,30 +241,39 @@ export async function reevaluateScores(applicationId: string) {
   }
 }
 
-export async function reevaluateKeywords(applicationId: string) {
+export async function reevaluateAiAnalysis(applicationId: string) {
   try {
     const [application] = await db
-      .select({
-        jobDescription: applications.jobDescription,
-      })
+      .select({ jobDescription: applications.jobDescription })
       .from(applications)
       .where(eq(applications.id, applicationId));
 
     if (!application || !application.jobDescription) {
-      console.warn(`Keyword re-evaluation skipped: Application ${applicationId} has no job description.`);
+      console.warn(`AI analysis skipped: Application ${applicationId} has no job description.`);
       return;
     }
 
-    const { keywords, suggestions } = await extractKeywords({ jobDescription: application.jobDescription });
+    const jd = application.jobDescription;
+
+    // Run both AI analyses concurrently
+    const [keywordsResult, requirementsResult] = await Promise.all([
+      extractKeywords({ jobDescription: jd }),
+      fetchJobDescription({ jobDescription: jd }),
+    ]);
 
     await db.update(applications)
-      .set({ keywords, suggestions })
+      .set({ 
+        keywords: keywordsResult.keywords,
+        suggestions: keywordsResult.suggestions,
+        isUsCitizenOnly: requirementsResult.isUsCitizenOnly,
+        sponsorshipNotOffered: requirementsResult.sponsorshipNotOffered,
+      })
       .where(eq(applications.id, applicationId));
     
     revalidatePath('/');
   } catch (error) {
-    console.error("Error re-evaluating keywords:", error);
-    throw new Error('Failed to re-evaluate keywords.');
+    console.error("Error re-evaluating AI analysis:", error);
+    throw new Error('Failed to re-evaluate AI analysis.');
   }
 }
 

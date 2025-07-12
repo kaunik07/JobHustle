@@ -38,7 +38,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
-import { updateApplication, deleteApplication, reevaluateScores, reevaluateKeywords, createLatexResumeForApplication, copyLatexResumeForApplication, detachLatexResume } from '@/app/actions';
+import { updateApplication, deleteApplication, reevaluateScores, reevaluateAiAnalysis, createLatexResumeForApplication, copyLatexResumeForApplication, detachLatexResume } from '@/app/actions';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { useRouter } from 'next/navigation';
 import { Separator } from '../ui/separator';
@@ -71,8 +71,8 @@ const workArrangementStyles: Record<ApplicationWorkArrangement, string> = {
 export function ApplicationDetailsDialog({ application, children }: ApplicationDetailsDialogProps) {
   const [open, setOpen] = React.useState(false);
   const { toast } = useToast();
-  const [isReevaluating, setIsReevaluating] = React.useState(false);
-  const [isReevaluatingKeywords, setIsReevaluatingKeywords] = React.useState(false);
+  const [isReevaluatingScores, setIsReevaluatingScores] = React.useState(false);
+  const [isReevaluatingAnalysis, setIsReevaluatingAnalysis] = React.useState(false);
   const [isManagingLatex, setIsManagingLatex] = React.useState<string | boolean>(false); // Can be a resume ID for copy action
   const router = useRouter();
   
@@ -420,37 +420,37 @@ export function ApplicationDetailsDialog({ application, children }: ApplicationD
     }
   };
   
-  const handleReevaluate = async () => {
+  const handleReevaluateScores = async () => {
     if (!application.jobDescription) {
         toast({ variant: 'destructive', title: 'Cannot Re-evaluate', description: 'A job description is required to score resumes.' });
         return;
     }
-    setIsReevaluating(true);
+    setIsReevaluatingScores(true);
     try {
       await reevaluateScores(application.id);
-      toast({ title: "Re-evaluation complete", description: "The resume scores have been updated based on the current job description." });
+      toast({ title: "Re-evaluation complete", description: "The resume scores have been updated." });
       router.refresh();
     } catch (error) {
       toast({ variant: 'destructive', title: 'Re-evaluation Failed', description: error instanceof Error ? error.message : 'An unknown error occurred.' });
     } finally {
-      setIsReevaluating(false);
+      setIsReevaluatingScores(false);
     }
   };
 
-  const handleReevaluateKeywords = async () => {
+  const handleReevaluateAnalysis = async () => {
     if (!application.jobDescription) {
-        toast({ variant: 'destructive', title: 'Cannot Re-evaluate', description: 'A job description is required to extract keywords.' });
+        toast({ variant: 'destructive', title: 'Cannot Re-evaluate', description: 'A job description is required for AI analysis.' });
         return;
     }
-    setIsReevaluatingKeywords(true);
+    setIsReevaluatingAnalysis(true);
     try {
-      await reevaluateKeywords(application.id);
-      toast({ title: "Re-evaluation complete", description: "The keywords and suggestions have been updated." });
+      await reevaluateAiAnalysis(application.id);
+      toast({ title: "Re-evaluation complete", description: "AI analysis has been updated." });
       router.refresh();
     } catch (error) {
-      toast({ variant: 'destructive', title: 'Keyword Extraction Failed', description: error instanceof Error ? error.message : 'An unknown error occurred.' });
+      toast({ variant: 'destructive', title: 'AI Analysis Failed', description: error instanceof Error ? error.message : 'An unknown error occurred.' });
     } finally {
-      setIsReevaluatingKeywords(false);
+      setIsReevaluatingAnalysis(false);
     }
   };
 
@@ -991,11 +991,11 @@ export function ApplicationDetailsDialog({ application, children }: ApplicationD
                       <Button
                         variant="ghost"
                         size="icon"
-                        onClick={handleReevaluate}
-                        disabled={isReevaluating || !application.jobDescription}
+                        onClick={handleReevaluateScores}
+                        disabled={isReevaluatingScores || !application.jobDescription}
                         className="h-7 w-7"
                       >
-                        {isReevaluating ? (
+                        {isReevaluatingScores ? (
                           <Loader2 className="h-4 w-4 animate-spin" />
                         ) : (
                           <RefreshCw className="h-4 w-4" />
@@ -1060,20 +1060,20 @@ export function ApplicationDetailsDialog({ application, children }: ApplicationD
                                 <Button
                                     variant="ghost"
                                     size="icon"
-                                    onClick={handleReevaluateKeywords}
-                                    disabled={isReevaluatingKeywords || !application.jobDescription}
+                                    onClick={handleReevaluateAnalysis}
+                                    disabled={isReevaluatingAnalysis || !application.jobDescription}
                                     className="h-7 w-7"
                                 >
-                                    {isReevaluatingKeywords ? (
+                                    {isReevaluatingAnalysis ? (
                                         <Loader2 className="h-4 w-4 animate-spin" />
                                     ) : (
                                         <RefreshCw className="h-4 w-4" />
                                     )}
-                                    <span className="sr-only">Re-evaluate Keywords</span>
+                                    <span className="sr-only">Re-evaluate AI Analysis</span>
                                 </Button>
                             </TooltipTrigger>
                             <TooltipContent>
-                                <p>{!application.jobDescription ? "Add a job description to enable analysis" : "Re-analyze keywords & suggestions"}</p>
+                                <p>{!application.jobDescription ? "Add a job description to enable analysis" : "Re-run all AI analysis"}</p>
                             </TooltipContent>
                         </Tooltip>
                     </TooltipProvider>
