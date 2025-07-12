@@ -147,18 +147,6 @@ export function AddApplicationDialog({ children, users, selectedUserId, allLocat
     form.setValue('locations', newLocations, { shouldValidate: true });
     setInputValue('');
   };
-  
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
-    if (e.key === 'Enter' && inputValue) {
-        e.preventDefault();
-        handleLocationSelect(inputValue);
-    }
-  };
-
-  const handleItemSelect = (location: string) => {
-    handleLocationSelect(location);
-    setInputValue('');
-  };
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -229,7 +217,7 @@ export function AddApplicationDialog({ children, users, selectedUserId, allLocat
                                       onPointerDown={(e) => {
                                         e.preventDefault();
                                         e.stopPropagation();
-                                        handleItemSelect(location)
+                                        handleLocationSelect(location)
                                       }}
                                     >
                                       {location}
@@ -245,7 +233,7 @@ export function AddApplicationDialog({ children, users, selectedUserId, allLocat
                           </FormControl>
                         </PopoverTrigger>
                         <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
-                           <Command onKeyDown={handleKeyDown}>
+                           <Command>
                             <CommandInput 
                               placeholder="Search location..."
                               value={inputValue}
@@ -260,7 +248,7 @@ export function AddApplicationDialog({ children, users, selectedUserId, allLocat
                                     <CommandItem
                                       key={location}
                                       value={location}
-                                      onSelect={() => handleItemSelect(location)}
+                                      onSelect={handleLocationSelect}
                                     >
                                       <Check
                                         className={cn(
@@ -276,7 +264,7 @@ export function AddApplicationDialog({ children, users, selectedUserId, allLocat
                                     <CommandItem
                                         key={inputValue}
                                         value={inputValue}
-                                        onSelect={() => handleItemSelect(inputValue)}
+                                        onSelect={handleLocationSelect}
                                     >
                                         <Plus className="mr-2 h-4 w-4" />
                                         Add "{inputValue}"
