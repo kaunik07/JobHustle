@@ -3,7 +3,7 @@
 
 import * as React from 'react';
 import Link from 'next/link';
-import { Briefcase, Plus, Trash2, Paperclip, Pencil } from 'lucide-react';
+import { Briefcase, Plus, Trash2, Paperclip, Pencil, Download } from 'lucide-react';
 import { AddApplicationDialog } from '@/components/kanban/AddApplicationDialog';
 import type { User, Application } from '@/lib/types';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -24,6 +24,8 @@ import {
 import { getUserColor } from '@/lib/utils';
 import { BulkAddDialog } from '../applications/BulkAddDialog';
 import { EditUserDialog } from '../user/EditUserDialog';
+import Papa from 'papaparse';
+import { format } from 'date-fns';
 
 interface HeaderProps {
   users: User[];
@@ -31,10 +33,39 @@ interface HeaderProps {
   onUserChange?: (userId: string) => void;
   onUserRemoved?: (userId: string) => void;
   allLocations: string[];
+  applications: Application[];
 }
 
-export function Header({ users, selectedUser, onUserChange, onUserRemoved, allLocations }: HeaderProps) {
+export function Header({ users, selectedUser, onUserChange, onUserRemoved, allLocations, applications }: HeaderProps) {
   const selectedUserDetails = users.find(u => u.id === selectedUser);
+
+  const handleExport = () => {
+    const dataToExport = applications.map(app => ({
+      companyName: app.companyName,
+      jobTitle: app.jobTitle,
+      locations: app.locations.join(', '),
+      status: app.status,
+      jobUrl: app.jobUrl,
+      appliedOn: app.appliedOn ? format(new Date(app.appliedOn), 'yyyy-MM-dd') : '',
+      notes: app.notes,
+      category: app.category,
+      type: app.type,
+      workArrangement: app.workArrangement,
+      appliedBy: `${app.user?.firstName || ''} ${app.user?.lastName || ''}`.trim(),
+    }));
+
+    const csv = Papa.unparse(dataToExport);
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    const userName = selectedUserDetails ? `${selectedUserDetails.firstName}_${selectedUserDetails.lastName}` : 'all_users';
+    link.setAttribute('download', `applications_${userName}_${format(new Date(), 'yyyy-MM-dd')}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
 
   return (
     <header className="sticky top-0 z-30 flex h-16 items-center gap-4 border-b bg-background/95 px-4 backdrop-blur-sm md:px-6">
@@ -110,6 +141,10 @@ export function Header({ users, selectedUser, onUserChange, onUserRemoved, allLo
       </div>
 
       <div className="flex items-center gap-2">
+        <Button variant="outline" onClick={handleExport} disabled={applications.length === 0}>
+          <Download className="mr-2 h-4 w-4" />
+          Export CSV
+        </Button>
         <BulkAddDialog />
         <AddApplicationDialog users={users} selectedUserId={selectedUser} allLocations={allLocations} />
       </div>

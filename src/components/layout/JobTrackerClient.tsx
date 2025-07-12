@@ -70,7 +70,7 @@ export function JobTrackerClient({
         }
     }, 500);
     return () => clearTimeout(handler);
-  }, [locationQuery, selectedLocation]);
+  }, [locationQuery, selectedLocation, updateQuery]);
 
   React.useEffect(() => {
     const handler = setTimeout(() => {
@@ -79,7 +79,7 @@ export function JobTrackerClient({
         }
     }, 500);
     return () => clearTimeout(handler);
-  }, [companyQuery, selectedCompany]);
+  }, [companyQuery, selectedCompany, updateQuery]);
 
 
   const handleUserChange = (userId: string) => {
@@ -196,6 +196,7 @@ export function JobTrackerClient({
           onUserChange={handleUserChange}
           onUserRemoved={handleRemoveUser}
           allLocations={allLocations}
+          applications={filteredApplications}
         />
         <main className="flex-1 p-4 md:p-6 lg:p-8">
             {selectedResumeId && selectedResumeName && (
