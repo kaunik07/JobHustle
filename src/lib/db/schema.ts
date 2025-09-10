@@ -24,7 +24,7 @@ export const users = pgTable('users', {
   emailAddresses: text('email_addresses').array().notNull(),
   defaultEmail: text('default_email').notNull(),
   avatarUrl: text('avatar_url'),
-  password: text('password').notNull().default('password'),
+  password: text('password').notNull(),
 });
 
 export const resumes = pgTable('resumes', {
