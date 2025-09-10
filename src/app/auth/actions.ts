@@ -19,7 +19,7 @@ const loginSchema = z.object({
 });
 
 const signupSchema = z.object({
-  username: z.string(),
+  username: z.string().min(1, 'Username is required'),
   email: z.string().email(),
   password: z.string(),
 });
@@ -117,4 +117,3 @@ export async function getSession() {
     return { isLoggedIn: false };
   }
 }
-
