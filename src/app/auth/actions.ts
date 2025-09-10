@@ -27,16 +27,16 @@ const signupSchema = z.object({
 
 export async function login(credentials: z.infer<typeof loginSchema>) {
   try {
-    if (!secretKey) {
-        throw new Error('SESSION_SECRET environment variable is not set.');
-    }
-    const key = new TextEncoder().encode(secretKey);
-
     const validatedCredentials = loginSchema.safeParse(credentials);
     if (!validatedCredentials.success) {
       return { success: false, error: 'Invalid credentials format.' };
     }
     const { username, password } = validatedCredentials.data;
+    
+    if (!secretKey) {
+        throw new Error('SESSION_SECRET environment variable is not set.');
+    }
+    const key = new TextEncoder().encode(secretKey);
 
     const user = await db.query.users.findFirst({
       where: eq(users.username, username),
@@ -129,7 +129,7 @@ export async function getSession() {
     const { payload } = await jwtVerify(sessionCookie, key, {
       algorithms: ['HS256'],
     });
-    return { isLoggedIn: true, user: payload as { id: string; username: string; firstName: string; lastName: string } };
+    return { isLoggedIn: true, user: payload as { id: string; username: string; firstName: string; lastName: string; } };
   } catch (error) {
     return { isLoggedIn: false };
   }
