@@ -18,7 +18,7 @@ export const workArrangementEnum = pgEnum('work_arrangement', ['On-site', 'Remot
 
 export const users = pgTable('users', {
   id: text('id').$defaultFn(() => createId()).primaryKey(),
-  username: varchar('username', { length: 255 }).notNull().unique(),
+  username: varchar('username', { length: 255 }).notNull(),
   firstName: varchar('first_name', { length: 255 }).notNull(),
   lastName: varchar('last_name', { length: 255 }).notNull(),
   emailAddresses: text('email_addresses').array().notNull(),
