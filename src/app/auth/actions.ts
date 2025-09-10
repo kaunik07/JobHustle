@@ -11,7 +11,6 @@ import { eq } from 'drizzle-orm';
 import { redirect } from 'next/navigation';
 
 const secretKey = process.env.SESSION_SECRET;
-const key = new TextEncoder().encode(secretKey);
 
 const loginSchema = z.object({
   username: z.string(),
@@ -26,6 +25,11 @@ const signupSchema = z.object({
 
 export async function login(credentials: z.infer<typeof loginSchema>) {
   try {
+    if (!secretKey) {
+        throw new Error('SESSION_SECRET environment variable is not set.');
+    }
+    const key = new TextEncoder().encode(secretKey);
+
     const validatedCredentials = loginSchema.safeParse(credentials);
     if (!validatedCredentials.success) {
       return { success: false, error: 'Invalid credentials format.' };
@@ -109,6 +113,10 @@ export async function getSession() {
   if (!sessionCookie) return { isLoggedIn: false };
 
   try {
+    if (!secretKey) {
+        throw new Error('SESSION_SECRET environment variable is not set for getSession.');
+    }
+    const key = new TextEncoder().encode(secretKey);
     const { payload } = await jwtVerify(sessionCookie, key, {
       algorithms: ['HS256'],
     });
