@@ -86,3 +86,14 @@ body {
     @apply bg-background text-foreground;
   }
 }
+
+@layer utilities {
+  @keyframes move-background {
+    from {
+      transform: translate(0, 0);
+    }
+    to {
+      transform: translate(var(--bg-size), var(--bg-size));
+    }
+  }
+}
