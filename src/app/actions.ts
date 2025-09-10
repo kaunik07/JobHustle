@@ -4,7 +4,7 @@
 import { revalidatePath } from 'next/cache';
 import { db } from '@/lib/db';
 import { applications, users, resumes, applicationResumeScores } from '@/lib/db/schema';
-import { eq, and, isNotNull, or } from 'drizzle-orm';
+import { eq, and, isNotNull, or, inArray } from 'drizzle-orm';
 import type { Application, User, Resume } from '@/lib/types';
 import { extractResumeText } from '@/ai/flows/extract-resume-text';
 import { scoreResume } from '@/ai/flows/score-resume';
@@ -56,10 +56,16 @@ async function scoreResumesForApplication(applicationId: string, userId: string,
 }
 
 export async function addApplication(data: Omit<Application, 'id' | 'user' | 'appliedOn' | 'oaDueDate' | 'createdAt' | 'isUsCitizenOnly' | 'sponsorshipNotOffered' | 'keywords' | 'suggestions' | 'appliedWithEmail'>): Promise<Application[]> {
-  const usersToApplyFor = data.userId === 'all' 
-    ? await db.select().from(users) 
-    : await db.select().from(users).where(eq(users.id, data.userId));
-  
+  let usersToApplyFor: User[];
+
+  if (data.userId === 'all') {
+    usersToApplyFor = await db.select().from(users);
+  } else if (data.userId === 'manvi-and-kaunik') {
+    usersToApplyFor = await db.select().from(users).where(inArray(users.firstName, ['Manvi', 'Kaunik']));
+  } else {
+    usersToApplyFor = await db.select().from(users).where(eq(users.id, data.userId));
+  }
+
   const createdApplications: Application[] = [];
 
   for (const user of usersToApplyFor) {

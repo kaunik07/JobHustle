@@ -77,6 +77,7 @@ export function AddApplicationDialog({ children, users, selectedUserId, allLocat
   const { toast } = useToast();
 
   const isMasterUser = session.user?.firstName.toLowerCase() === 'kaunik';
+  const isSpecialUser = session.user?.firstName.toLowerCase() === 'manvi';
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -109,7 +110,7 @@ export function AddApplicationDialog({ children, users, selectedUserId, allLocat
 
       toast({
         title: 'Application Added',
-        description: `${values.jobTitle} at ${values.companyName} has been added for ${values.locations.length} location(s).`,
+        description: `${values.jobTitle} at ${values.companyName} has been added.`,
       });
       setOpen(false);
       form.reset({
@@ -159,7 +160,55 @@ export function AddApplicationDialog({ children, users, selectedUserId, allLocat
     setInputValue('');
   };
   
-  const currentUser = users.find(u => u.id === selectedUserId);
+  const currentUser = users.find(u => u.id === session.user?.id);
+  const kaunikUser = users.find(u => u.firstName.toLowerCase() === 'kaunik');
+  const manviUser = users.find(u => u.firstName.toLowerCase() === 'manvi');
+
+  const renderUserSelector = () => {
+    if (isMasterUser) {
+      return (
+        <Select onValueChange={field => form.setValue('userId', field)} defaultValue={form.getValues('userId')}>
+            <FormControl>
+            <SelectTrigger>
+                <SelectValue placeholder="Select user" />
+            </SelectTrigger>
+            </FormControl>
+            <SelectContent>
+            <SelectItem value="all">All Users</SelectItem>
+            {users.map(user => (
+                <SelectItem key={user.id} value={user.id}>{`${user.firstName} ${user.lastName}`.trim()}</SelectItem>
+            ))}
+            </SelectContent>
+        </Select>
+      );
+    }
+
+    if (isSpecialUser && manviUser && kaunikUser) {
+       return (
+        <Select onValueChange={field => form.setValue('userId', field)} defaultValue={manviUser.id}>
+            <FormControl>
+                <SelectTrigger>
+                    <SelectValue placeholder="Select user" />
+                </SelectTrigger>
+            </FormControl>
+            <SelectContent>
+                <SelectItem value={manviUser.id}>Manvi (Self)</SelectItem>
+                <SelectItem value={kaunikUser.id}>Kaunik</SelectItem>
+                <SelectItem value="manvi-and-kaunik">Manvi & Kaunik</SelectItem>
+            </SelectContent>
+        </Select>
+       );
+    }
+
+    return (
+      <div className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm">
+          <div className="flex items-center gap-2">
+              <UserIcon className="h-4 w-4 text-muted-foreground" />
+              <span>{currentUser ? `${currentUser.firstName} ${currentUser.lastName}`.trim() : 'Current User'}</span>
+          </div>
+      </div>
+    );
+  };
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -400,28 +449,7 @@ export function AddApplicationDialog({ children, users, selectedUserId, allLocat
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>User</FormLabel>
-                      {isMasterUser ? (
-                        <Select onValueChange={field.onChange} defaultValue={field.value}>
-                            <FormControl>
-                            <SelectTrigger>
-                                <SelectValue placeholder="Select user" />
-                            </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                            <SelectItem value="all">All Users</SelectItem>
-                            {users.map(user => (
-                                <SelectItem key={user.id} value={user.id}>{`${user.firstName} ${user.lastName}`.trim()}</SelectItem>
-                            ))}
-                            </SelectContent>
-                        </Select>
-                      ) : (
-                        <div className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm">
-                            <div className="flex items-center gap-2">
-                                <UserIcon className="h-4 w-4 text-muted-foreground" />
-                                <span>{currentUser ? `${currentUser.firstName} ${currentUser.lastName}`.trim() : 'Current User'}</span>
-                            </div>
-                        </div>
-                      )}
+                      {renderUserSelector()}
                       <FormMessage />
                     </FormItem>
                   )}
