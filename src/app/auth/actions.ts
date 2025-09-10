@@ -31,11 +31,15 @@ export async function login(credentials: z.infer<typeof loginSchema>) {
     if (!validatedCredentials.success) {
       return { success: false, error: 'Invalid credentials format.' };
     }
+
+    const secretKey = process.env.SESSION_SECRET;
+    if (!secretKey) {
+        // This is the critical check. Return a specific error for easier debugging in production.
+        return { success: false, error: 'The SESSION_SECRET environment variable is not set on the server.' };
+    }
+    
     const { username, password } = validatedCredentials.data;
     
-    if (!secretKey) {
-        throw new Error('SESSION_SECRET environment variable is not set.');
-    }
     const key = new TextEncoder().encode(secretKey);
 
     const user = await db.query.users.findFirst({
@@ -123,7 +127,9 @@ export async function getSession() {
 
   try {
     if (!secretKey) {
-        throw new Error('SESSION_SECRET environment variable is not set for getSession.');
+        // This is a safeguard, but the main login flow is the most critical part.
+        console.error('SESSION_SECRET is not set for getSession.');
+        return { isLoggedIn: false };
     }
     const key = new TextEncoder().encode(secretKey);
     const { payload } = await jwtVerify(sessionCookie, key, {
@@ -131,6 +137,8 @@ export async function getSession() {
     });
     return { isLoggedIn: true, user: payload as { id: string; username: string; firstName: string; lastName: string; } };
   } catch (error) {
+    // This can happen if the token is invalid or expired
+    console.log('Session validation error:', error);
     return { isLoggedIn: false };
   }
 }
