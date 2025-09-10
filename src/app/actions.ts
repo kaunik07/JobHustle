@@ -10,6 +10,7 @@ import { extractResumeText } from '@/ai/flows/extract-resume-text';
 import { scoreResume } from '@/ai/flows/score-resume';
 import { fetchJobDescription } from '@/ai/flows/fetch-job-description';
 import { extractKeywords } from '@/ai/flows/extract-keywords';
+import { getSession } from './auth/actions';
 
 // This function will be called to score resumes against a job description.
 async function scoreResumesForApplication(applicationId: string, userId: string, jobDescription: string, throwOnError = false) {
@@ -299,17 +300,32 @@ export async function updateUser(userId: string, data: { firstName: string, last
 }
 
 export async function addUser(data: { firstName: string, lastName: string, email: string }) {
+  const session = await getSession();
+  if (!session.isLoggedIn || session.user?.firstName.toLowerCase() !== 'kaunik') {
+    throw new Error('Unauthorized');
+  }
+
   await db.insert(users).values({
     firstName: data.firstName,
     lastName: data.lastName,
     emailAddresses: [data.email],
     defaultEmail: data.email,
     avatarUrl: null,
+    // You should add a way to set a password securely.
+    // For now, setting a default, but this is NOT secure.
+    password: 'password', 
   });
   revalidatePath('/');
 }
 
 export async function deleteUser(userId: string) {
+    const session = await getSession();
+    if (!session.isLoggedIn || session.user?.firstName.toLowerCase() !== 'kaunik') {
+      throw new Error('Unauthorized');
+    }
+    if (session.user.id === userId) {
+      throw new Error('Cannot delete your own user account.');
+    }
     await db.delete(users).where(eq(users.id, userId));
     revalidatePath('/');
 }

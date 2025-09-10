@@ -4,7 +4,7 @@
 import * as React from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Header } from '@/components/layout/Header';
-import type { Application, User, Resume } from '@/lib/types';
+import type { Application, User, Resume, Session } from '@/lib/types';
 import { KanbanBoard } from '@/components/kanban/KanbanBoard';
 import { YetToApplyList } from '@/components/applications/YetToApplyList';
 import { Separator } from '@/components/ui/separator';
@@ -25,6 +25,7 @@ import { MissedList } from '../applications/MissedList';
 
 
 interface JobTrackerClientProps {
+    session: Session;
     users: User[];
     applications: Application[];
     resumes: Resume[];
@@ -38,7 +39,7 @@ interface JobTrackerClientProps {
 }
 
 export function JobTrackerClient({ 
-    users, applications, resumes,
+    session, users, applications, resumes,
     selectedUserId, selectedType, selectedCategory, selectedLocation, selectedCompany,
     selectedResumeId,
     allLocations 
@@ -195,6 +196,7 @@ export function JobTrackerClient({
       />
       <div className={cn("flex flex-col transition-all duration-300", sidebarOpen ? "md:pl-64" : "md:pl-16")}>
         <Header 
+          session={session}
           users={users} 
           selectedUser={selectedUserId} 
           onUserChange={handleUserChange}

@@ -7,31 +7,44 @@ import { JobTrackerClient } from '@/components/layout/JobTrackerClient';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { AlertCircle } from 'lucide-react';
 import { suggestedLocations } from '@/lib/types';
+import { getSession } from '@/app/auth/actions';
+import { redirect } from 'next/navigation';
 
 export default async function Home({
   searchParams,
 }: {
   searchParams: { user?: string; type?: string; category?: string; location?: string; company?: string, resume?: string };
 }) {
+  const session = await getSession();
+  if (!session.isLoggedIn) {
+    redirect('/login');
+  }
+
   try {
     const allUsers: User[] = await db.query.users.findMany();
 
     if (allUsers.length === 0) {
       // If there are no users, we can show the main screen with a prompt to add one.
-      return <JobTrackerClient users={[]} applications={[]} resumes={[]} selectedUserId="all" selectedType="all" selectedCategory="all" selectedLocation="" selectedCompany="" selectedResumeId="" allLocations={suggestedLocations} />;
+      return <JobTrackerClient users={[]} applications={[]} resumes={[]} selectedUserId="all" selectedType="all" selectedCategory="all" selectedLocation="" selectedCompany="" selectedResumeId="" allLocations={suggestedLocations} session={session}/>;
     }
     
     // Determine the selected user ID
-    const userParam = searchParams.user;
     let selectedUserId: string;
-
-    if (!userParam || userParam === 'all') {
-      selectedUserId = 'all';
-    } else {
-      const userExists = allUsers.some(u => u.id === userParam);
-      selectedUserId = userExists ? userParam : 'all';
-    }
+    const userParam = searchParams.user;
     
+    // Master user logic
+    if (session.user?.firstName.toLowerCase() === 'kaunik') {
+      if (!userParam || userParam === 'all') {
+        selectedUserId = 'all';
+      } else {
+        const userExists = allUsers.some(u => u.id === userParam);
+        selectedUserId = userExists ? userParam : 'all';
+      }
+    } else {
+      // Non-master user can only see their own data
+      selectedUserId = session.user.id;
+    }
+
     const selectedType = searchParams.type || 'all';
     const selectedCategory = searchParams.category || 'all';
     const selectedLocation = searchParams.location || '';
@@ -80,15 +93,15 @@ export default async function Home({
     let resumesForUser: Resume[] = [];
     if (selectedUserId !== 'all') {
       resumesForUser = await db.select().from(resumesSchema).where(eq(resumesSchema.userId, selectedUserId)).orderBy(desc(resumesSchema.createdAt));
-    } else {
-      // If 'all' users are selected, we can fetch all resumes to have them ready if the user switches,
-      // but the Resumes tab will be disabled anyway. So fetching them for the selected user is sufficient.
-      // Or we can decide not to fetch any. Let's stick to fetching only for a specific user.
+    } else if (session.user) {
+      // For master user viewing "All", we can load their own resumes
+      resumesForUser = await db.select().from(resumesSchema).where(eq(resumesSchema.userId, session.user.id)).orderBy(desc(resumesSchema.createdAt));
     }
 
 
     return (
       <JobTrackerClient
+        session={session}
         users={allUsers}
         applications={applicationsForClient}
         resumes={resumesForUser}

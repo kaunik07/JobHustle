@@ -101,6 +101,16 @@ export interface User {
   defaultEmail: string;
   avatarUrl: string | null;
   resumes?: Resume[];
+  password?: string;
+}
+
+export interface Session {
+    isLoggedIn: boolean;
+    user?: {
+        id: string;
+        firstName: string;
+        lastName: string;
+    };
 }
 
 export interface Resume {
