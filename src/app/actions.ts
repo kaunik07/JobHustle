@@ -61,7 +61,7 @@ export async function addApplication(data: Omit<Application, 'id' | 'user' | 'ap
   if (data.userId === 'all') {
     usersToApplyFor = await db.select().from(users);
   } else if (data.userId === 'manvi-and-kaunik') {
-    usersToApplyFor = await db.select().from(users).where(inArray(users.firstName, ['Manvi', 'Kaunik']));
+    usersToApplyFor = await db.select().from(users).where(inArray(users.username, ['manvi', 'kaunik']));
   } else {
     usersToApplyFor = await db.select().from(users).where(eq(users.id, data.userId));
   }
@@ -305,13 +305,14 @@ export async function updateUser(userId: string, data: { firstName: string, last
   revalidatePath('/');
 }
 
-export async function addUser(data: { firstName: string, lastName: string, email: string }) {
+export async function addUser(data: { username: string; firstName: string, lastName: string, email: string }) {
   const session = await getSession();
-  if (!session.isLoggedIn || session.user?.firstName.toLowerCase() !== 'kaunik') {
+  if (!session.isLoggedIn || session.user?.username.toLowerCase() !== 'kaunik') {
     throw new Error('Unauthorized');
   }
 
   await db.insert(users).values({
+    username: data.username,
     firstName: data.firstName,
     lastName: data.lastName,
     emailAddresses: [data.email],
@@ -326,7 +327,7 @@ export async function addUser(data: { firstName: string, lastName: string, email
 
 export async function deleteUser(userId: string) {
     const session = await getSession();
-    if (!session.isLoggedIn || session.user?.firstName.toLowerCase() !== 'kaunik') {
+    if (!session.isLoggedIn || session.user?.username.toLowerCase() !== 'kaunik') {
       throw new Error('Unauthorized');
     }
     if (session.user.id === userId) {

@@ -76,8 +76,8 @@ export function AddApplicationDialog({ children, users, selectedUserId, allLocat
   const [inputValue, setInputValue] = React.useState('');
   const { toast } = useToast();
 
-  const isMasterUser = session.user?.firstName.toLowerCase() === 'kaunik';
-  const isSpecialUser = session.user?.firstName.toLowerCase() === 'manvi';
+  const isMasterUser = session.user?.username.toLowerCase() === 'kaunik';
+  const isSpecialUser = session.user?.username.toLowerCase() === 'manvi';
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -161,8 +161,8 @@ export function AddApplicationDialog({ children, users, selectedUserId, allLocat
   };
   
   const currentUser = users.find(u => u.id === session.user?.id);
-  const kaunikUser = users.find(u => u.firstName.toLowerCase() === 'kaunik');
-  const manviUser = users.find(u => u.firstName.toLowerCase() === 'manvi');
+  const kaunikUser = users.find(u => u.username.toLowerCase() === 'kaunik');
+  const manviUser = users.find(u => u.username.toLowerCase() === 'manvi');
 
   const renderUserSelector = () => {
     if (isMasterUser) {

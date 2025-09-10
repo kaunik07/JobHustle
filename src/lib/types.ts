@@ -95,6 +95,7 @@ export const technicalSkills: string[] = [
 
 export interface User {
   id: string;
+  username: string;
   firstName: string;
   lastName: string;
   emailAddresses: string[];
@@ -108,6 +109,7 @@ export interface Session {
     isLoggedIn: boolean;
     user?: {
         id: string;
+        username: string;
         firstName: string;
         lastName: string;
     };

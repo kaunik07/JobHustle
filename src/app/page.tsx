@@ -33,7 +33,7 @@ export default async function Home({
     const userParam = searchParams.user;
     
     // Master user logic
-    if (session.user?.firstName.toLowerCase() === 'kaunik') {
+    if (session.user?.username.toLowerCase() === 'kaunik') {
       if (!userParam || userParam === 'all') {
         selectedUserId = 'all';
       } else {

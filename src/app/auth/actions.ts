@@ -7,7 +7,7 @@ import { SignJWT, jwtVerify } from 'jose';
 import { cookies } from 'next/headers';
 import { db } from '@/lib/db';
 import { users } from '@/lib/db/schema';
-import { eq } from 'drizzle-orm';
+import { eq, or } from 'drizzle-orm';
 import { redirect } from 'next/navigation';
 
 const secretKey = process.env.SESSION_SECRET;
@@ -18,7 +18,9 @@ const loginSchema = z.object({
 });
 
 const signupSchema = z.object({
-  username: z.string().min(1, 'Username is required'),
+  firstName: z.string().min(1, 'First name is required'),
+  lastName: z.string().min(1, 'Last name is required'),
+  username: z.string().min(3, 'Username is required'),
   email: z.string().email(),
   password: z.string(),
 });
@@ -37,7 +39,7 @@ export async function login(credentials: z.infer<typeof loginSchema>) {
     const { username, password } = validatedCredentials.data;
 
     const user = await db.query.users.findFirst({
-      where: eq(users.firstName, username),
+      where: eq(users.username, username),
     });
 
     if (!user) {
@@ -53,6 +55,7 @@ export async function login(credentials: z.infer<typeof loginSchema>) {
     const expires = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
     const session = await new SignJWT({
         id: user.id,
+        username: user.username,
         firstName: user.firstName,
         lastName: user.lastName,
     })
@@ -77,20 +80,26 @@ export async function signup(data: z.infer<typeof signupSchema>) {
       return { success: false, error: 'Invalid data format.' };
     }
 
-    const { username, email, password } = validatedData.data;
+    const { firstName, lastName, username, email, password } = validatedData.data;
 
     const existingUser = await db.query.users.findFirst({
-      where: eq(users.defaultEmail, email),
+      where: or(eq(users.defaultEmail, email), eq(users.username, username)),
     });
 
     if (existingUser) {
-      return { success: false, error: 'A user with this email already exists.' };
+      if (existingUser.username === username) {
+        return { success: false, error: 'A user with this username already exists.' };
+      }
+      if (existingUser.defaultEmail === email) {
+        return { success: false, error: 'A user with this email already exists.' };
+      }
     }
 
     // In a real app, hash the password before saving
     await db.insert(users).values({
-      firstName: username,
-      lastName: username,
+      username,
+      firstName,
+      lastName,
       emailAddresses: [email],
       defaultEmail: email,
       password, // Storing plain text as requested
@@ -120,7 +129,7 @@ export async function getSession() {
     const { payload } = await jwtVerify(sessionCookie, key, {
       algorithms: ['HS256'],
     });
-    return { isLoggedIn: true, user: payload as { id: string; firstName: string; lastName: string } };
+    return { isLoggedIn: true, user: payload as { id: string; username: string; firstName: string; lastName: string } };
   } catch (error) {
     return { isLoggedIn: false };
   }

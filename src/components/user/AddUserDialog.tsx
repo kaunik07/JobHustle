@@ -31,6 +31,7 @@ import { addUser as addUserAction } from '@/app/actions';
 const formSchema = z.object({
   firstName: z.string().min(1, 'First name is required'),
   lastName: z.string().min(1, 'Last name is required'),
+  username: z.string().min(3, 'Username must be at least 3 characters long'),
   email: z.string().email('Please enter a valid email'),
 });
 
@@ -50,6 +51,7 @@ export function AddUserDialog({ children }: AddUserDialogProps) {
     defaultValues: {
       firstName: '',
       lastName: '',
+      username: '',
       email: '',
     },
   });
@@ -86,7 +88,7 @@ export function AddUserDialog({ children }: AddUserDialogProps) {
           </Button>
         )}
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle className="font-headline">Add New User</DialogTitle>
           <DialogDescription>
@@ -123,6 +125,19 @@ export function AddUserDialog({ children }: AddUserDialogProps) {
                 )}
               />
             </div>
+            <FormField
+              control={form.control}
+              name="username"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Username</FormLabel>
+                  <FormControl>
+                    <Input placeholder="johndoe" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
             <FormField
               control={form.control}
               name="email"

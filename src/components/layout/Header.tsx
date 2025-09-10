@@ -40,7 +40,7 @@ interface HeaderProps {
 
 export function Header({ session, users, selectedUser, onUserChange, onUserRemoved, allLocations, applications }: HeaderProps) {
   const selectedUserDetails = users.find(u => u.id === selectedUser);
-  const isMasterUser = session.user?.firstName.toLowerCase() === 'kaunik';
+  const isMasterUser = session.user?.username.toLowerCase() === 'kaunik';
 
   const handleExport = () => {
     const dataToExport = applications.map(app => {

@@ -56,6 +56,7 @@ export default function LoginPage() {
       if (result.success) {
         toast({ title: 'Login Successful' });
         router.push('/');
+        router.refresh(); // Force a refresh to update session state
       } else {
         toast({
           variant: 'destructive',
@@ -93,7 +94,7 @@ export default function LoginPage() {
                   <FormItem>
                     <FormLabel>Username</FormLabel>
                     <FormControl>
-                      <Input placeholder="e.g. John" {...field} />
+                      <Input placeholder="e.g. jdoe" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
