@@ -19,10 +19,9 @@ const loginSchema = z.object({
 });
 
 const signupSchema = z.object({
-  firstName: z.string(),
-  lastName: z.string(),
+  username: z.string(),
   email: z.string().email(),
-  password: z.string().min(6),
+  password: z.string(),
 });
 
 export async function login(credentials: z.infer<typeof loginSchema>) {
@@ -74,7 +73,7 @@ export async function signup(data: z.infer<typeof signupSchema>) {
       return { success: false, error: 'Invalid data format.' };
     }
 
-    const { firstName, lastName, email, password } = validatedData.data;
+    const { username, email, password } = validatedData.data;
 
     const existingUser = await db.query.users.findFirst({
       where: eq(users.defaultEmail, email),
@@ -86,8 +85,8 @@ export async function signup(data: z.infer<typeof signupSchema>) {
 
     // In a real app, hash the password before saving
     await db.insert(users).values({
-      firstName,
-      lastName,
+      firstName: username,
+      lastName: username,
       emailAddresses: [email],
       defaultEmail: email,
       password, // Storing plain text as requested
