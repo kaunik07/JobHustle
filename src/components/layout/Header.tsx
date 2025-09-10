@@ -175,7 +175,7 @@ export function Header({ session, users, selectedUser, onUserChange, onUserRemov
                 <BulkAddDialog />
             </>
         )}
-        <AddApplicationDialog users={users} selectedUserId={selectedUser} allLocations={allLocations} />
+        <AddApplicationDialog users={users} selectedUserId={selectedUser} allLocations={allLocations} session={session} />
         <form action={logout}>
           <Button type="submit" variant="outline">
             <LogOut className="mr-2 h-4 w-4" />

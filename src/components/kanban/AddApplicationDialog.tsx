@@ -32,9 +32,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { User, categories, statuses, applicationTypes, suggestedLocations, workArrangements } from '@/lib/types';
+import { User, categories, statuses, applicationTypes, suggestedLocations, workArrangements, Session } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, ChevronsUpDown, Check, X, Plus, CalendarIcon } from 'lucide-react';
+import { Loader2, ChevronsUpDown, Check, X, Plus, CalendarIcon, User as UserIcon } from 'lucide-react';
 import { Textarea } from '@/components/ui/textarea';
 import { addApplication as addApplicationAction } from '@/app/actions';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -66,14 +66,17 @@ interface AddApplicationDialogProps {
   users: User[];
   selectedUserId: string;
   allLocations: string[];
+  session: Session;
 }
 
-export function AddApplicationDialog({ children, users, selectedUserId, allLocations }: AddApplicationDialogProps) {
+export function AddApplicationDialog({ children, users, selectedUserId, allLocations, session }: AddApplicationDialogProps) {
   const [open, setOpen] = React.useState(false);
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [locationsPopoverOpen, setLocationsPopoverOpen] = React.useState(false);
   const [inputValue, setInputValue] = React.useState('');
   const { toast } = useToast();
+
+  const isMasterUser = session.user?.firstName.toLowerCase() === 'kaunik';
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -155,6 +158,8 @@ export function AddApplicationDialog({ children, users, selectedUserId, allLocat
     form.setValue('locations', newLocations, { shouldValidate: true });
     setInputValue('');
   };
+  
+  const currentUser = users.find(u => u.id === selectedUserId);
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -395,19 +400,28 @@ export function AddApplicationDialog({ children, users, selectedUserId, allLocat
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>User</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select user" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectItem value="all">All Users</SelectItem>
-                          {users.map(user => (
-                            <SelectItem key={user.id} value={user.id}>{`${user.firstName} ${user.lastName}`.trim()}</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                      {isMasterUser ? (
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                            <FormControl>
+                            <SelectTrigger>
+                                <SelectValue placeholder="Select user" />
+                            </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                            <SelectItem value="all">All Users</SelectItem>
+                            {users.map(user => (
+                                <SelectItem key={user.id} value={user.id}>{`${user.firstName} ${user.lastName}`.trim()}</SelectItem>
+                            ))}
+                            </SelectContent>
+                        </Select>
+                      ) : (
+                        <div className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm">
+                            <div className="flex items-center gap-2">
+                                <UserIcon className="h-4 w-4 text-muted-foreground" />
+                                <span>{currentUser ? `${currentUser.firstName} ${currentUser.lastName}`.trim() : 'Current User'}</span>
+                            </div>
+                        </div>
+                      )}
                       <FormMessage />
                     </FormItem>
                   )}
