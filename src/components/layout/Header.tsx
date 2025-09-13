@@ -3,7 +3,7 @@
 
 import * as React from 'react';
 import Link from 'next/link';
-import { Briefcase, Plus, Trash2, Paperclip, Pencil, Download, LogOut } from 'lucide-react';
+import { Briefcase, Plus, Trash2, Paperclip, Pencil, Download, LogOut, Users } from 'lucide-react';
 import { AddApplicationDialog } from '@/components/kanban/AddApplicationDialog';
 import type { User, Application, Session } from '@/lib/types';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -119,6 +119,29 @@ export function Header({ session, users, selectedUser, onUserChange, onUserRemov
                         </Button>
                     </TooltipTrigger>
                     <TooltipContent><p>All Users</p></TooltipContent>
+                </Tooltip>
+              )}
+               {(isKaunik || isManvi) && (
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className={cn(
+                        'rounded-full h-10 w-10',
+                        selectedUser === 'kaunik-and-manvi' && 'ring-2 ring-primary ring-offset-2 ring-offset-background'
+                      )}
+                      onClick={() => onUserChange?.('kaunik-and-manvi')}
+                      disabled={!onUserChange}
+                    >
+                      <Avatar className="h-10 w-10">
+                        <AvatarFallback className="bg-foreground text-background">
+                            <Users className="h-5 w-5" />
+                        </AvatarFallback>
+                      </Avatar>
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent><p>Combined View</p></TooltipContent>
                 </Tooltip>
               )}
               {usersToShow.map(user => (

@@ -86,9 +86,9 @@ export function JobTrackerClient({
 
 
   const handleUserChange = (userId: string) => {
-    if (userId === 'all') {
+    if (userId === 'all' || userId === 'kaunik-and-manvi') {
       setView('board');
-      // If switching to all users, remove the view param to default to board
+      // If switching to a combined view, remove the view param to default to board
       if (searchParams.has('view')) {
         updateQuery('view', '');
       }
@@ -134,7 +134,7 @@ export function JobTrackerClient({
   };
 
   const filteredApplications = applications.filter(app => {
-    const userMatch = selectedUserId === 'all' || app.userId === selectedUserId;
+    const userMatch = selectedUserId === 'all' || selectedUserId === 'kaunik-and-manvi' || app.userId === selectedUserId;
     const typeMatch = selectedType === 'all' || app.type === selectedType;
     const categoryMatch = selectedCategory === 'all' || app.category === selectedCategory;
     const locationMatch = !selectedLocation || (app.locations && app.locations.some(loc => loc.toLowerCase().includes(selectedLocation.toLowerCase())));
@@ -145,7 +145,8 @@ export function JobTrackerClient({
 
   const usersForAnalytics = selectedUserId === 'all' 
     ? users 
-    : users.filter(u => u.id === selectedUserId);
+    : (selectedUserId === 'kaunik-and-manvi' ? users.filter(u => ['kaunik', 'manvi'].includes(u.username.toLowerCase())) : users.filter(u => u.id === selectedUserId));
+
 
   const yetToApplyApplications = filteredApplications.filter(app => app.status === 'Yet to Apply');
   const kanbanApplications = filteredApplications.filter(app => kanbanStatuses.includes(app.status));
@@ -158,7 +159,7 @@ export function JobTrackerClient({
 
 
   const resumesWithCounts = React.useMemo(() => {
-    if (!resumes || resumes.length === 0 || selectedUserId === 'all') {
+    if (!resumes || resumes.length === 0 || selectedUserId === 'all' || selectedUserId === 'kaunik-and-manvi') {
         return resumes;
     }
 

@@ -53,11 +53,15 @@ export default async function Home({
         const peerUsers = allUsers.filter(u => peerUsernames.includes(u.username.toLowerCase()));
         const peerUserIds = peerUsers.map(u => u.id);
         
-        if (userParam && peerUserIds.includes(userParam)) {
+        if (!userParam || userParam === 'kaunik-and-manvi') {
+            selectedUserId = 'kaunik-and-manvi';
+            applicationFilter = inArray(applicationsSchema.userId, peerUserIds);
+        } else if (userParam && peerUserIds.includes(userParam)) {
             selectedUserId = userParam;
             applicationFilter = eq(applicationsSchema.userId, selectedUserId);
         } else {
-            selectedUserId = session.user.id;
+            // Fallback to combined view if user param is invalid for them
+            selectedUserId = 'kaunik-and-manvi';
             applicationFilter = inArray(applicationsSchema.userId, peerUserIds);
         }
     } else {
@@ -113,10 +117,10 @@ export default async function Home({
     const allLocations = [...new Set([...suggestedLocations, ...dbLocations])];
 
     let resumesForUser: Resume[] = [];
-    if (selectedUserId !== 'all') {
+    if (selectedUserId !== 'all' && selectedUserId !== 'kaunik-and-manvi') {
       resumesForUser = await db.select().from(resumesSchema).where(eq(resumesSchema.userId, selectedUserId)).orderBy(desc(resumesSchema.createdAt));
     } else if (session.user) {
-      // For master user viewing "All", we can load their own resumes
+      // For master user viewing "All", or peer users, we can load their own resumes for now
       resumesForUser = await db.select().from(resumesSchema).where(eq(resumesSchema.userId, session.user.id)).orderBy(desc(resumesSchema.createdAt));
     }
 

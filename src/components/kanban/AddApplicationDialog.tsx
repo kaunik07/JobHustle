@@ -104,7 +104,10 @@ export function AddApplicationDialog({ children, users, selectedUserId, allLocat
   React.useEffect(() => {
     if (open) {
       let defaultUserId = selectedUserId;
-      if (isManvi) {
+      // For peer users, if they are on the combined view, default to adding for both.
+      if ((isManvi || isKaunik) && selectedUserId === 'kaunik-and-manvi') {
+        defaultUserId = 'kaunik-and-manvi';
+      } else if (isManvi) {
         defaultUserId = users.find(u => u.username.toLowerCase() === 'manvi')?.id || selectedUserId;
       } else if (isKaunik) {
         defaultUserId = users.find(u => u.username.toLowerCase() === 'kaunik')?.id || selectedUserId;

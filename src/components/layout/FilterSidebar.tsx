@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -35,6 +36,8 @@ export function FilterSidebar({
   locationQuery, onLocationChange,
   companyQuery, onCompanyChange
 }: FilterSidebarProps) {
+
+  const canViewResumes = selectedUserId !== 'all' && selectedUserId !== 'kaunik-and-manvi';
 
   return (
     <aside className={cn(
@@ -120,7 +123,7 @@ export function FilterSidebar({
                     <LayoutDashboard className="h-5 w-5" />
                     <span className={cn("ml-4", !isOpen && "hidden")}>Job Board</span>
                 </Button>
-                {selectedUserId !== 'all' && (
+                {canViewResumes && (
                     <Button 
                         variant={currentView === 'resumes' ? 'secondary' : 'ghost'} 
                         className="justify-start"
