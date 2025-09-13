@@ -175,7 +175,7 @@ export function Header({ session, users, selectedUser, onUserChange, onUserRemov
           </EditUserDialog>
         )}
 
-        {(isAdmin || isKaunik) && (
+        {(isAdmin || isKaunik) && selectedUserDetails && (
           <AlertDialog>
             <AlertDialogTrigger asChild>
               <Button variant="destructive" size="icon" className="rounded-full h-10 w-10" disabled={!onUserRemoved || !selectedUserDetails || selectedUserDetails.id === session.user?.id}>
@@ -187,7 +187,7 @@ export function Header({ session, users, selectedUser, onUserChange, onUserRemov
               <AlertDialogHeader>
                 <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
                 <AlertDialogDescription>
-                  This action cannot be undone. This will permanently delete the selected user and all of their applications.
+                  This action cannot be undone. This will permanently delete the selected user ({selectedUserDetails.firstName}) and all of their applications.
                 </AlertDialogDescription>
               </AlertDialogHeader>
               <AlertDialogFooter>
@@ -222,5 +222,3 @@ export function Header({ session, users, selectedUser, onUserChange, onUserRemov
     </header>
   );
 }
-
-    

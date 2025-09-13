@@ -4,7 +4,7 @@
 import { revalidatePath } from 'next/cache';
 import { db } from '@/lib/db';
 import { applications, users, resumes, applicationResumeScores } from '@/lib/db/schema';
-import { eq, and, isNotNull, or, inArray, not } from 'drizzle-orm';
+import { eq, and, isNotNull, or, inArray, not, sql } from 'drizzle-orm';
 import type { Application, User, Resume } from '@/lib/types';
 import { extractResumeText } from '@/ai/flows/extract-resume-text';
 import { scoreResume } from '@/ai/flows/score-resume';
@@ -342,7 +342,7 @@ export async function deleteUser(userId: string) {
     if (!session.isLoggedIn || (session.user?.username.toLowerCase() !== 'admin' && session.user?.username.toLowerCase() !== 'kaunik')) {
         throw new Error('Unauthorized');
     }
-    if (session.user.id === userId) {
+    if (session.user?.id === userId) {
       throw new Error('Cannot delete your own user account.');
     }
     await db.delete(users).where(eq(users.id, userId));
@@ -504,5 +504,3 @@ export async function compileLatex(latexContent: string): Promise<{ pdfBase64: s
     return { error: `Failed to connect to the compiler service: ${errorMessage}` };
   }
 }
-
-    
