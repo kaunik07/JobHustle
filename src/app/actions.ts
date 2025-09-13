@@ -56,14 +56,27 @@ async function scoreResumesForApplication(applicationId: string, userId: string,
 }
 
 export async function addApplication(data: Omit<Application, 'id' | 'user' | 'appliedOn' | 'oaDueDate' | 'createdAt' | 'isUsCitizenOnly' | 'sponsorshipNotOffered' | 'keywords' | 'suggestions' | 'appliedWithEmail'>): Promise<Application[]> {
-  let usersToApplyFor: User[];
+  let usersToApplyFor: User[] = [];
 
   if (data.userId === 'all') {
     usersToApplyFor = await db.select().from(users);
   } else if (data.userId === 'manvi-and-kaunik') {
-    usersToApplyFor = await db.select().from(users).where(inArray(users.username, ['manvi', 'kaunik']));
+    // Correctly find Manvi and Kaunik by their usernames.
+    const manviAndKaunikUsers = await db
+      .select()
+      .from(users)
+      .where(inArray(users.username, ['manvi', 'kaunik']));
+      
+    if (manviAndKaunikUsers.length < 2) {
+      throw new Error("Could not find both 'manvi' and 'kaunik' users.");
+    }
+    usersToApplyFor = manviAndKaunikUsers;
   } else {
-    usersToApplyFor = await db.select().from(users).where(eq(users.id, data.userId));
+    const foundUser = await db.select().from(users).where(eq(users.id, data.userId));
+    if (!foundUser || foundUser.length === 0) {
+        throw new Error(`User with ID ${data.userId} not found.`);
+    }
+    usersToApplyFor = foundUser;
   }
 
   const createdApplications: Application[] = [];

@@ -100,8 +100,25 @@ export function AddApplicationDialog({ children, users, selectedUserId, allLocat
   const watchStatus = form.watch('status');
 
   React.useEffect(() => {
-    form.setValue('userId', selectedUserId);
-  }, [selectedUserId, form]);
+    // When the dialog opens, reset the form and set the correct default userId
+    if (open) {
+      const defaultUserId = isSpecialUser ? (users.find(u => u.username.toLowerCase() === 'manvi')?.id || selectedUserId) : selectedUserId;
+      form.reset({
+        companyName: '',
+        jobTitle: '',
+        jobUrl: '',
+        locations: [],
+        jobDescription: '',
+        type: 'Full-Time',
+        category: 'SWE',
+        workArrangement: 'On-site',
+        status: 'Yet to Apply',
+        userId: defaultUserId,
+        notes: '',
+        applyByDate: undefined,
+      });
+    }
+  }, [open, form, isSpecialUser, selectedUserId, users]);
 
   async function onSubmit(values: FormValues) {
     setIsSubmitting(true);
@@ -113,25 +130,12 @@ export function AddApplicationDialog({ children, users, selectedUserId, allLocat
         description: `${values.jobTitle} at ${values.companyName} has been added.`,
       });
       setOpen(false);
-      form.reset({
-        ...form.getValues(),
-        companyName: '',
-        jobTitle: '',
-        jobUrl: '',
-        locations: [],
-        notes: '',
-        jobDescription: '',
-        userId: selectedUserId,
-        status: 'Yet to Apply',
-        workArrangement: 'On-site',
-        type: 'Full-Time',
-        applyByDate: undefined,
-      });
     } catch (error) {
-      toast({
+       const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred.';
+       toast({
         variant: 'destructive',
-        title: 'Error',
-        description: 'Failed to add application.',
+        title: 'Error Adding Application',
+        description: <pre className="mt-2 w-[340px] rounded-md bg-slate-950 p-4"><code className="text-white whitespace-pre-wrap">{errorMessage}</code></pre>,
       });
     } finally {
       setIsSubmitting(false);
@@ -167,7 +171,7 @@ export function AddApplicationDialog({ children, users, selectedUserId, allLocat
   const renderUserSelector = () => {
     if (isMasterUser) {
       return (
-        <Select onValueChange={field => form.setValue('userId', field)} defaultValue={form.getValues('userId')}>
+        <Select onValueChange={field => form.setValue('userId', field)} value={form.getValues('userId')}>
             <FormControl>
             <SelectTrigger>
                 <SelectValue placeholder="Select user" />
@@ -185,7 +189,7 @@ export function AddApplicationDialog({ children, users, selectedUserId, allLocat
 
     if (isSpecialUser && manviUser && kaunikUser) {
        return (
-        <Select onValueChange={field => form.setValue('userId', field)} defaultValue={manviUser.id}>
+        <Select onValueChange={field => form.setValue('userId', field)} value={form.getValues('userId')}>
             <FormControl>
                 <SelectTrigger>
                     <SelectValue placeholder="Select user" />
