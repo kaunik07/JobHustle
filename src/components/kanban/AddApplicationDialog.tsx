@@ -105,8 +105,8 @@ export function AddApplicationDialog({ children, users, selectedUserId, allLocat
     if (open) {
       let defaultUserId = selectedUserId;
       // For peer users, if they are on the combined view, default to adding for both.
-      if ((isManvi || isKaunik) && selectedUserId === 'kaunik-and-manvi') {
-        defaultUserId = 'kaunik-and-manvi';
+      if ((isManvi || isKaunik) && selectedUserId === 'mp-kk') {
+        defaultUserId = 'mp-kk';
       } else if (isManvi) {
         defaultUserId = users.find(u => u.username.toLowerCase() === 'manvi')?.id || selectedUserId;
       } else if (isKaunik) {
@@ -207,7 +207,7 @@ export function AddApplicationDialog({ children, users, selectedUserId, allLocat
             <SelectContent>
                 <SelectItem value={manviUser.id}>Manvi (Self)</SelectItem>
                 <SelectItem value={kaunikUser.id}>Kaunik</SelectItem>
-                <SelectItem value="manvi-and-kaunik">Manvi & Kaunik</SelectItem>
+                <SelectItem value="mp-kk">MP-KK Combined</SelectItem>
             </SelectContent>
         </Select>
        );
@@ -224,7 +224,7 @@ export function AddApplicationDialog({ children, users, selectedUserId, allLocat
              <SelectContent>
                  <SelectItem value={kaunikUser.id}>Kaunik (Self)</SelectItem>
                  <SelectItem value={manviUser.id}>Manvi</SelectItem>
-                 <SelectItem value="kaunik-and-manvi">Kaunik & Manvi</SelectItem>
+                 <SelectItem value="mp-kk">MP-KK Combined</SelectItem>
              </SelectContent>
          </Select>
         );

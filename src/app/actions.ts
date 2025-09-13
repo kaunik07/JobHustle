@@ -60,7 +60,7 @@ export async function addApplication(data: Omit<Application, 'id' | 'user' | 'ap
 
   if (data.userId === 'all') {
     usersToApplyFor = await db.select().from(users).where(not(eq(users.username, 'admin')));
-  } else if (data.userId === 'manvi-and-kaunik' || data.userId === 'kaunik-and-manvi') {
+  } else if (data.userId === 'mp-kk') {
     const manviAndKaunikUsers = await db
       .select()
       .from(users)

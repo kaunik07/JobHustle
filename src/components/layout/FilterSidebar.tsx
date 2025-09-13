@@ -37,7 +37,7 @@ export function FilterSidebar({
   companyQuery, onCompanyChange
 }: FilterSidebarProps) {
 
-  const canViewResumes = selectedUserId !== 'all' && selectedUserId !== 'kaunik-and-manvi';
+  const canViewResumes = selectedUserId !== 'all' && selectedUserId !== 'mp-kk';
 
   return (
     <aside className={cn(
