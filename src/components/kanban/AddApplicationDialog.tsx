@@ -76,8 +76,10 @@ export function AddApplicationDialog({ children, users, selectedUserId, allLocat
   const [inputValue, setInputValue] = React.useState('');
   const { toast } = useToast();
 
-  const isMasterUser = session.user?.username.toLowerCase() === 'kaunik';
-  const isSpecialUser = session.user?.username.toLowerCase() === 'manvi';
+  const loggedInUsername = session.user?.username.toLowerCase();
+  const isAdmin = loggedInUsername === 'admin';
+  const isManvi = loggedInUsername === 'manvi';
+  const isKaunik = loggedInUsername === 'kaunik';
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -100,9 +102,13 @@ export function AddApplicationDialog({ children, users, selectedUserId, allLocat
   const watchStatus = form.watch('status');
 
   React.useEffect(() => {
-    // When the dialog opens, reset the form and set the correct default userId
     if (open) {
-      const defaultUserId = isSpecialUser ? (users.find(u => u.username.toLowerCase() === 'manvi')?.id || selectedUserId) : selectedUserId;
+      let defaultUserId = selectedUserId;
+      if (isManvi) {
+        defaultUserId = users.find(u => u.username.toLowerCase() === 'manvi')?.id || selectedUserId;
+      } else if (isKaunik) {
+        defaultUserId = users.find(u => u.username.toLowerCase() === 'kaunik')?.id || selectedUserId;
+      }
       form.reset({
         companyName: '',
         jobTitle: '',
@@ -118,7 +124,7 @@ export function AddApplicationDialog({ children, users, selectedUserId, allLocat
         applyByDate: undefined,
       });
     }
-  }, [open, form, isSpecialUser, selectedUserId, users]);
+  }, [open, form, isManvi, isKaunik, selectedUserId, users]);
 
   async function onSubmit(values: FormValues) {
     setIsSubmitting(true);
@@ -169,7 +175,7 @@ export function AddApplicationDialog({ children, users, selectedUserId, allLocat
   const manviUser = users.find(u => u.username.toLowerCase() === 'manvi');
 
   const renderUserSelector = () => {
-    if (isMasterUser) {
+    if (isAdmin) {
       return (
         <Select onValueChange={field => form.setValue('userId', field)} value={form.getValues('userId')}>
             <FormControl>
@@ -187,7 +193,7 @@ export function AddApplicationDialog({ children, users, selectedUserId, allLocat
       );
     }
 
-    if (isSpecialUser && manviUser && kaunikUser) {
+    if (isManvi && manviUser && kaunikUser) {
        return (
         <Select onValueChange={field => form.setValue('userId', field)} value={form.getValues('userId')}>
             <FormControl>
@@ -203,6 +209,23 @@ export function AddApplicationDialog({ children, users, selectedUserId, allLocat
         </Select>
        );
     }
+    
+    if (isKaunik && manviUser && kaunikUser) {
+        return (
+         <Select onValueChange={field => form.setValue('userId', field)} value={form.getValues('userId')}>
+             <FormControl>
+                 <SelectTrigger>
+                     <SelectValue placeholder="Select user" />
+                 </SelectTrigger>
+             </FormControl>
+             <SelectContent>
+                 <SelectItem value={kaunikUser.id}>Kaunik (Self)</SelectItem>
+                 <SelectItem value={manviUser.id}>Manvi</SelectItem>
+                 <SelectItem value="kaunik-and-manvi">Kaunik & Manvi</SelectItem>
+             </SelectContent>
+         </Select>
+        );
+     }
 
     return (
       <div className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm">

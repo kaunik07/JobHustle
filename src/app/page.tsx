@@ -1,7 +1,7 @@
 
 import { db } from '@/lib/db';
 import { applications as applicationsSchema, users as usersSchema, resumes as resumesSchema } from '@/lib/db/schema';
-import { eq, desc } from 'drizzle-orm';
+import { eq, desc, or, inArray } from 'drizzle-orm';
 import type { Application, User, Resume, ResumeScore } from '@/lib/types';
 import { JobTrackerClient } from '@/components/layout/JobTrackerClient';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
@@ -28,21 +28,42 @@ export default async function Home({
       return <JobTrackerClient users={[]} applications={[]} resumes={[]} selectedUserId="all" selectedType="all" selectedCategory="all" selectedLocation="" selectedCompany="" selectedResumeId="" allLocations={suggestedLocations} session={session}/>;
     }
     
-    // Determine the selected user ID
+    // Determine the selected user ID and filter criteria for applications
     let selectedUserId: string;
     const userParam = searchParams.user;
+    let applicationFilter;
+
+    const loggedInUsername = session.user?.username?.toLowerCase();
     
-    // Master user logic
-    if (session.user?.username?.toLowerCase() === 'kaunik') {
+    // Master admin logic
+    if (loggedInUsername === 'admin') {
       if (!userParam || userParam === 'all') {
         selectedUserId = 'all';
+        // No user filter needed for applications
       } else {
         const userExists = allUsers.some(u => u.id === userParam);
         selectedUserId = userExists ? userParam : 'all';
+        if (selectedUserId !== 'all') {
+          applicationFilter = eq(applicationsSchema.userId, selectedUserId);
+        }
       }
+    } else if (loggedInUsername === 'kaunik' || loggedInUsername === 'manvi') {
+        // Special peer logic for kaunik and manvi
+        const peerUsernames = ['kaunik', 'manvi'];
+        const peerUsers = allUsers.filter(u => peerUsernames.includes(u.username.toLowerCase()));
+        const peerUserIds = peerUsers.map(u => u.id);
+        
+        if (userParam && peerUserIds.includes(userParam)) {
+            selectedUserId = userParam;
+            applicationFilter = eq(applicationsSchema.userId, selectedUserId);
+        } else {
+            selectedUserId = session.user.id;
+            applicationFilter = inArray(applicationsSchema.userId, peerUserIds);
+        }
     } else {
       // Non-master user can only see their own data
       selectedUserId = session.user.id;
+      applicationFilter = eq(applicationsSchema.userId, selectedUserId);
     }
 
     const selectedType = searchParams.type || 'all';
@@ -53,6 +74,7 @@ export default async function Home({
     
     // Fetch all applications and let the client component handle filtering
     const results = await db.query.applications.findMany({
+        where: applicationFilter,
         with: {
             user: {
               with: {

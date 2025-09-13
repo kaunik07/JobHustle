@@ -60,8 +60,7 @@ export async function addApplication(data: Omit<Application, 'id' | 'user' | 'ap
 
   if (data.userId === 'all') {
     usersToApplyFor = await db.select().from(users);
-  } else if (data.userId === 'manvi-and-kaunik') {
-    // Correctly find Manvi and Kaunik by their usernames.
+  } else if (data.userId === 'manvi-and-kaunik' || data.userId === 'kaunik-and-manvi') {
     const manviAndKaunikUsers = await db
       .select()
       .from(users)
@@ -320,7 +319,7 @@ export async function updateUser(userId: string, data: { firstName: string, last
 
 export async function addUser(data: { username: string; firstName: string, lastName: string, email: string }) {
   const session = await getSession();
-  if (!session.isLoggedIn || session.user?.username.toLowerCase() !== 'kaunik') {
+  if (!session.isLoggedIn || session.user?.username.toLowerCase() !== 'admin') {
     throw new Error('Unauthorized');
   }
 
@@ -340,7 +339,7 @@ export async function addUser(data: { username: string; firstName: string, lastN
 
 export async function deleteUser(userId: string) {
     const session = await getSession();
-    if (!session.isLoggedIn || session.user?.username.toLowerCase() !== 'kaunik') {
+    if (!session.isLoggedIn || session.user?.username.toLowerCase() !== 'admin') {
       throw new Error('Unauthorized');
     }
     if (session.user.id === userId) {

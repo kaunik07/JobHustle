@@ -27,6 +27,7 @@ import { EditUserDialog } from '../user/EditUserDialog';
 import Papa from 'papaparse';
 import { format } from 'date-fns';
 import { logout } from '@/app/auth/actions';
+import { cn } from '@/lib/utils';
 
 interface HeaderProps {
   session: Session;
@@ -40,7 +41,11 @@ interface HeaderProps {
 
 export function Header({ session, users, selectedUser, onUserChange, onUserRemoved, allLocations, applications }: HeaderProps) {
   const selectedUserDetails = users.find(u => u.id === selectedUser);
-  const isMasterUser = session.user?.username.toLowerCase() === 'kaunik';
+  const loggedInUsername = session.user?.username.toLowerCase();
+  const isAdmin = loggedInUsername === 'admin';
+  const isManvi = loggedInUsername === 'manvi';
+  const isKaunik = loggedInUsername === 'kaunik';
+
 
   const handleExport = () => {
     const dataToExport = applications.map(app => {
@@ -83,6 +88,17 @@ export function Header({ session, users, selectedUser, onUserChange, onUserRemov
     document.body.removeChild(link);
   };
 
+  const usersToShow = React.useMemo(() => {
+    if (isAdmin) {
+      return users;
+    }
+    if (isKaunik || isManvi) {
+      return users.filter(u => ['kaunik', 'manvi'].includes(u.username.toLowerCase()));
+    }
+    // Standard user
+    return users.filter(u => u.id === session.user?.id);
+  }, [users, isAdmin, isKaunik, isManvi, session.user?.id]);
+
   return (
     <header className="sticky top-0 z-30 flex h-16 items-center gap-4 border-b bg-background/95 px-4 backdrop-blur-sm md:px-6">
       <Link href="/" className="flex items-center gap-2 text-foreground no-underline">
@@ -93,10 +109,10 @@ export function Header({ session, users, selectedUser, onUserChange, onUserRemov
       <div className="flex items-center gap-2 ml-auto">
         <TooltipProvider>
           <div className="flex items-center gap-2">
-              {isMasterUser && (
+              {isAdmin && (
                 <Tooltip>
                     <TooltipTrigger asChild>
-                        <Button variant="ghost" size="icon" className={`rounded-full h-10 w-10 ${selectedUser === 'all' ? 'ring-2 ring-primary ring-offset-2 ring-offset-background' : ''}`} onClick={() => onUserChange?.('all')} disabled={!onUserChange}>
+                        <Button variant="ghost" size="icon" className={cn('rounded-full h-10 w-10', selectedUser === 'all' && 'ring-2 ring-primary ring-offset-2 ring-offset-background')} onClick={() => onUserChange?.('all')} disabled={!onUserChange}>
                             <Avatar className="h-10 w-10">
                                 <AvatarFallback className="bg-foreground text-background">All</AvatarFallback>
                             </Avatar>
@@ -105,14 +121,10 @@ export function Header({ session, users, selectedUser, onUserChange, onUserRemov
                     <TooltipContent><p>All Users</p></TooltipContent>
                 </Tooltip>
               )}
-              {users.map(user => {
-                if (!isMasterUser && user.id !== session.user?.id) {
-                    return null;
-                }
-                return (
+              {usersToShow.map(user => (
                    <Tooltip key={user.id}>
                       <TooltipTrigger asChild>
-                         <Button variant="ghost" size="icon" className={`rounded-full h-10 w-10 ${selectedUser === user.id ? 'ring-2 ring-primary ring-offset-2 ring-offset-background' : ''}`} onClick={() => onUserChange?.(user.id)} disabled={!onUserChange}>
+                         <Button variant="ghost" size="icon" className={cn('rounded-full h-10 w-10', selectedUser === user.id && 'ring-2 ring-primary ring-offset-2 ring-offset-background')} onClick={() => onUserChange?.(user.id)} disabled={!onUserChange}>
                             <Avatar className="h-10 w-10">
                                 <AvatarImage src={user.avatarUrl || undefined} alt={`${user.firstName} ${user.lastName}`} />
                                 <AvatarFallback className={getUserColor(user.id)}>{user.firstName.charAt(0)}</AvatarFallback>
@@ -124,13 +136,13 @@ export function Header({ session, users, selectedUser, onUserChange, onUserRemov
                       </TooltipContent>
                    </Tooltip>
                 )
-              })}
+              )}
           </div>
         </TooltipProvider>
 
-        {isMasterUser && <AddUserDialog />}
+        {isAdmin && <AddUserDialog />}
 
-        {selectedUserDetails && isMasterUser && (
+        {selectedUserDetails && isAdmin && (
           <EditUserDialog user={selectedUserDetails}>
             <Button variant="outline" size="icon" className="rounded-full h-10 w-10">
               <Pencil className="h-4 w-4" />
@@ -139,7 +151,7 @@ export function Header({ session, users, selectedUser, onUserChange, onUserRemov
           </EditUserDialog>
         )}
 
-        {isMasterUser && (
+        {isAdmin && (
           <AlertDialog>
             <AlertDialogTrigger asChild>
               <Button variant="destructive" size="icon" className="rounded-full h-10 w-10" disabled={!onUserRemoved || !selectedUserDetails || selectedUserDetails.id === session.user?.id}>
@@ -166,7 +178,7 @@ export function Header({ session, users, selectedUser, onUserChange, onUserRemov
       </div>
 
       <div className="flex items-center gap-2">
-        {isMasterUser && (
+        {isAdmin && (
             <>
                 <Button variant="outline" onClick={handleExport} disabled={applications.length === 0}>
                 <Download className="mr-2 h-4 w-4" />
