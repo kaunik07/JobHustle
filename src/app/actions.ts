@@ -4,7 +4,7 @@
 import { revalidatePath } from 'next/cache';
 import { db } from '@/lib/db';
 import { applications, users, resumes, applicationResumeScores } from '@/lib/db/schema';
-import { eq, and, isNotNull, or, inArray } from 'drizzle-orm';
+import { eq, and, isNotNull, or, inArray, not } from 'drizzle-orm';
 import type { Application, User, Resume } from '@/lib/types';
 import { extractResumeText } from '@/ai/flows/extract-resume-text';
 import { scoreResume } from '@/ai/flows/score-resume';
@@ -59,7 +59,7 @@ export async function addApplication(data: Omit<Application, 'id' | 'user' | 'ap
   let usersToApplyFor: User[] = [];
 
   if (data.userId === 'all') {
-    usersToApplyFor = await db.select().from(users);
+    usersToApplyFor = await db.select().from(users).where(not(eq(users.username, 'admin')));
   } else if (data.userId === 'manvi-and-kaunik' || data.userId === 'kaunik-and-manvi') {
     const manviAndKaunikUsers = await db
       .select()
@@ -142,10 +142,10 @@ export async function addApplication(data: Omit<Application, 'id' | 'user' | 'ap
 }
 
 export async function bulkAddApplications(applicationsData: Array<Omit<Application, 'id' | 'user' | 'appliedOn' | 'oaDueDate' | 'createdAt' | 'userId' | 'status' | 'locations'> & { location: string }>): Promise<Application[]> {
-  const allUsers = await db.select().from(users);
+  const allUsers = await db.select().from(users).where(not(eq(users.username, 'admin')));
   
   if (allUsers.length === 0) {
-    throw new Error("No users exist in the system. Please add a user before bulk importing.");
+    throw new Error("No users exist in the system to apply for. Please add a user before bulk importing.");
   }
 
   const createdApplications: Application[] = [];
@@ -339,8 +339,8 @@ export async function addUser(data: { username: string; firstName: string, lastN
 
 export async function deleteUser(userId: string) {
     const session = await getSession();
-    if (!session.isLoggedIn || session.user?.username.toLowerCase() !== 'admin') {
-      throw new Error('Unauthorized');
+    if (!session.isLoggedIn || (session.user?.username.toLowerCase() !== 'admin' && session.user?.username.toLowerCase() !== 'kaunik')) {
+        throw new Error('Unauthorized');
     }
     if (session.user.id === userId) {
       throw new Error('Cannot delete your own user account.');
@@ -504,3 +504,5 @@ export async function compileLatex(latexContent: string): Promise<{ pdfBase64: s
     return { error: `Failed to connect to the compiler service: ${errorMessage}` };
   }
 }
+
+    

@@ -90,7 +90,8 @@ export function Header({ session, users, selectedUser, onUserChange, onUserRemov
 
   const usersToShow = React.useMemo(() => {
     if (isAdmin) {
-      return users;
+      // Admin sees all users except itself in the selectable list
+      return users.filter(u => u.username.toLowerCase() !== 'admin');
     }
     if (isKaunik || isManvi) {
       return users.filter(u => ['kaunik', 'manvi'].includes(u.username.toLowerCase()));
@@ -114,7 +115,7 @@ export function Header({ session, users, selectedUser, onUserChange, onUserRemov
                     <TooltipTrigger asChild>
                         <Button variant="ghost" size="icon" className={cn('rounded-full h-10 w-10', selectedUser === 'all' && 'ring-2 ring-primary ring-offset-2 ring-offset-background')} onClick={() => onUserChange?.('all')} disabled={!onUserChange}>
                             <Avatar className="h-10 w-10">
-                                <AvatarFallback className="bg-foreground text-background">All</AvatarFallback>
+                                <AvatarFallback className="bg-foreground text-background text-xs font-bold">Admin</AvatarFallback>
                             </Avatar>
                         </Button>
                     </TooltipTrigger>
@@ -174,7 +175,7 @@ export function Header({ session, users, selectedUser, onUserChange, onUserRemov
           </EditUserDialog>
         )}
 
-        {isAdmin && (
+        {(isAdmin || isKaunik) && (
           <AlertDialog>
             <AlertDialogTrigger asChild>
               <Button variant="destructive" size="icon" className="rounded-full h-10 w-10" disabled={!onUserRemoved || !selectedUserDetails || selectedUserDetails.id === session.user?.id}>
@@ -221,3 +222,5 @@ export function Header({ session, users, selectedUser, onUserChange, onUserRemov
     </header>
   );
 }
+
+    
