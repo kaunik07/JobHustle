@@ -11,7 +11,7 @@ import {
 import { createId } from '@paralleldrive/cuid2';
 import { relations } from 'drizzle-orm';
 
-export const categoriesEnum = pgEnum('category', ['SWE', 'SRE/Devops', 'Quant', 'Systems', 'Data Scientist', 'Data Engineer']);
+export const categoriesEnum = pgEnum('category', ['SWE', 'SRE/Devops', 'Quant', 'Systems', 'Data Scientist', 'Data Engineer', 'ML']);
 export const statusesEnum = pgEnum('status', ['Yet to Apply', 'Applied', 'OA', 'Interview', 'Offer', 'Rejected', 'Not Applicable', 'Missed']);
 export const applicationTypeEnum = pgEnum('type', ['Internship', 'Full-Time']);
 export const workArrangementEnum = pgEnum('work_arrangement', ['On-site', 'Remote', 'Hybrid']);

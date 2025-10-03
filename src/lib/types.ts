@@ -5,9 +5,9 @@ export const statuses: ApplicationStatus[] = ['Yet to Apply', 'Applied', 'OA', '
 
 export const kanbanStatuses: ApplicationStatus[] = ['Applied', 'OA', 'Interview', 'Offer'];
 
-export type ApplicationCategory = 'SWE' | 'SRE/Devops' | 'Quant' | 'Systems' | 'Data Scientist' | 'Data Engineer';
+export type ApplicationCategory = 'SWE' | 'SRE/Devops' | 'Quant' | 'Systems' | 'Data Scientist' | 'Data Engineer' | 'ML';
 
-export const categories: ApplicationCategory[] = ['SWE', 'SRE/Devops', 'Quant', 'Systems', 'Data Scientist', 'Data Engineer'];
+export const categories: ApplicationCategory[] = ['SWE', 'SRE/Devops', 'Quant', 'Systems', 'Data Scientist', 'Data Engineer', 'ML'];
 
 export type ApplicationType = 'Internship' | 'Full-Time';
 

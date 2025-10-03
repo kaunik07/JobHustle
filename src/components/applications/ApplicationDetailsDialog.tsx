@@ -55,6 +55,7 @@ const categoryStyles: Record<ApplicationCategory, string> = {
   'Systems': 'bg-chart-4/20 text-chart-4 border-chart-4/30',
   'Data Scientist': 'bg-chart-5/20 text-chart-5 border-chart-5/30',
   'Data Engineer': 'bg-primary/10 text-primary border-primary/20',
+  'ML': 'bg-accent/20 text-accent-foreground border-accent/30',
 };
 
 const applicationTypeStyles: Record<ApplicationType, string> = {
