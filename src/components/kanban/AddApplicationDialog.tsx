@@ -197,7 +197,7 @@ export function AddApplicationDialog({ children, users, selectedUserId, allLocat
       );
     }
 
-    if (isKaunik && manviUser && kaunikUser && akshatUser) {
+    if (isKaunik) {
         return (
          <Select onValueChange={field => form.setValue('userId', field)} value={form.getValues('userId')}>
              <FormControl>
@@ -208,16 +208,16 @@ export function AddApplicationDialog({ children, users, selectedUserId, allLocat
              <SelectContent>
                  <SelectItem value="all-kaunik">All (KMA)</SelectItem>
                  <SelectItem value="mp-kk">MP-KK Combined</SelectItem>
-                 <SelectItem value={kaunikUser.id}>Kaunik (Self)</SelectItem>
-                 <SelectItem value={manviUser.id}>Manvi</SelectItem>
-                 <SelectItem value={akshatUser.id}>Akshat</SelectItem>
+                 {kaunikUser && <SelectItem value={kaunikUser.id}>Kaunik (Self)</SelectItem>}
+                 {manviUser && <SelectItem value={manviUser.id}>Manvi</SelectItem>}
+                 {akshatUser && <SelectItem value={akshatUser.id}>Akshat</SelectItem>}
                  <SelectItem value="kaunik-akshat">Kaunik-Akshat</SelectItem>
              </SelectContent>
          </Select>
         );
     }
     
-    if (isManvi && manviUser && kaunikUser) {
+    if (isManvi) {
        return (
         <Select onValueChange={field => form.setValue('userId', field)} value={form.getValues('userId')}>
             <FormControl>
@@ -226,14 +226,15 @@ export function AddApplicationDialog({ children, users, selectedUserId, allLocat
                 </SelectTrigger>
             </FormControl>
             <SelectContent>
-                <SelectItem value={manviUser.id}>Manvi (Self)</SelectItem>
-                <SelectItem value={kaunikUser.id}>Kaunik</SelectItem>
+                {manviUser && <SelectItem value={manviUser.id}>Manvi (Self)</SelectItem>}
+                {kaunikUser && <SelectItem value={kaunikUser.id}>Kaunik</SelectItem>}
                 <SelectItem value="mp-kk">MP-KK Combined</SelectItem>
             </SelectContent>
         </Select>
        );
     }
     
+    // Fallback for standard users
     return (
       <div className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm">
           <div className="flex items-center gap-2">
@@ -586,4 +587,3 @@ export function AddApplicationDialog({ children, users, selectedUserId, allLocat
   );
 }
 
-    
