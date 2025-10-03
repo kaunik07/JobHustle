@@ -189,7 +189,7 @@ export function AddApplicationDialog({ children, users, selectedUserId, allLocat
             </FormControl>
             <SelectContent>
             <SelectItem value="all">All Users</SelectItem>
-            {users.map(user => (
+            {users.filter(u => u.username !== 'admin').map(user => (
                 <SelectItem key={user.id} value={user.id}>{`${user.firstName} ${user.lastName}`.trim()}</SelectItem>
             ))}
             </SelectContent>
@@ -224,10 +224,10 @@ export function AddApplicationDialog({ children, users, selectedUserId, allLocat
              </FormControl>
              <SelectContent>
                  <SelectItem value="all-kaunik">All (KMA)</SelectItem>
+                 <SelectItem value="mp-kk">MP-KK Combined</SelectItem>
                  <SelectItem value={kaunikUser.id}>Kaunik (Self)</SelectItem>
                  <SelectItem value={manviUser.id}>Manvi</SelectItem>
                  <SelectItem value={akshatUser.id}>Akshat</SelectItem>
-                 <SelectItem value="mp-kk">MP-KK Combined</SelectItem>
                  <SelectItem value="kaunik-akshat">Kaunik-Akshat</SelectItem>
              </SelectContent>
          </Select>
@@ -585,5 +585,3 @@ export function AddApplicationDialog({ children, users, selectedUserId, allLocat
     </Dialog>
   );
 }
-
-    
