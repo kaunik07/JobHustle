@@ -61,9 +61,9 @@ export async function addApplication(data: Omit<Application, 'id' | 'user' | 'ap
   if (data.userId === 'all') {
     usersToApplyFor = await db.select().from(users).where(not(eq(users.username, 'admin')));
   } else if (data.userId === 'all-kaunik') {
-    usersToApplyFor = await db.select().from(users).where(inArray(users.username, ['manvi', 'kaunik', 'savage']));
+    usersToApplyFor = await db.select().from(users).where(inArray(users.username, ['manvi', 'kaunik', 'SavagE']));
   } else if (data.userId === 'kaunik-akshat') {
-    usersToApplyFor = await db.select().from(users).where(inArray(users.username, ['kaunik', 'savage']));
+    usersToApplyFor = await db.select().from(users).where(inArray(users.username, ['kaunik', 'SavagE']));
   } else if (data.userId === 'mp-kk') {
     const manviAndKaunikUsers = await db
       .select()
@@ -455,7 +455,7 @@ export async function copyLatexResumeForApplication(originalResumeId: string, ap
 export async function detachLatexResume(applicationId: string) {
     await db.update(applications)
         .set({ latexResumeId: null })
-        where(eq(applications.id, applicationId));
+        .where(eq(applications.id, applicationId));
     revalidatePath('/');
 }
 

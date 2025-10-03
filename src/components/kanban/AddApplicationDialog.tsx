@@ -176,7 +176,7 @@ export function AddApplicationDialog({ children, users, selectedUserId, allLocat
   const currentUser = users.find(u => u.id === session.user?.id);
   const kaunikUser = users.find(u => u.username.toLowerCase() === 'kaunik');
   const manviUser = users.find(u => u.username.toLowerCase() === 'manvi');
-  const akshatUser = users.find(u => u.username.toLowerCase() === 'savage');
+  const akshatUser = users.find(u => u.username === 'SavagE');
 
   const renderUserSelector = () => {
     if (isAdmin) {
