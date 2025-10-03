@@ -197,23 +197,6 @@ export function AddApplicationDialog({ children, users, selectedUserId, allLocat
       );
     }
 
-    if (isManvi && manviUser && kaunikUser) {
-       return (
-        <Select onValueChange={field => form.setValue('userId', field)} value={form.getValues('userId')}>
-            <FormControl>
-                <SelectTrigger>
-                    <SelectValue placeholder="Select user" />
-                </SelectTrigger>
-            </FormControl>
-            <SelectContent>
-                <SelectItem value={manviUser.id}>Manvi (Self)</SelectItem>
-                <SelectItem value={kaunikUser.id}>Kaunik</SelectItem>
-                <SelectItem value="mp-kk">MP-KK Combined</SelectItem>
-            </SelectContent>
-        </Select>
-       );
-    }
-    
     if (isKaunik && manviUser && kaunikUser && akshatUser) {
         return (
          <Select onValueChange={field => form.setValue('userId', field)} value={form.getValues('userId')}>
@@ -232,8 +215,25 @@ export function AddApplicationDialog({ children, users, selectedUserId, allLocat
              </SelectContent>
          </Select>
         );
-     }
-
+    }
+    
+    if (isManvi && manviUser && kaunikUser) {
+       return (
+        <Select onValueChange={field => form.setValue('userId', field)} value={form.getValues('userId')}>
+            <FormControl>
+                <SelectTrigger>
+                    <SelectValue placeholder="Select user" />
+                </SelectTrigger>
+            </FormControl>
+            <SelectContent>
+                <SelectItem value={manviUser.id}>Manvi (Self)</SelectItem>
+                <SelectItem value={kaunikUser.id}>Kaunik</SelectItem>
+                <SelectItem value="mp-kk">MP-KK Combined</SelectItem>
+            </SelectContent>
+        </Select>
+       );
+    }
+    
     return (
       <div className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm">
           <div className="flex items-center gap-2">
@@ -585,3 +585,5 @@ export function AddApplicationDialog({ children, users, selectedUserId, allLocat
     </Dialog>
   );
 }
+
+    
