@@ -206,7 +206,7 @@ export function AddApplicationDialog({ children, users, selectedUserId, allLocat
                  </SelectTrigger>
              </FormControl>
              <SelectContent>
-                 <SelectItem value="all-kaunik">All (KMA)</SelectItem>
+                 <SelectItem value="all-kaunik">All</SelectItem>
                  <SelectItem value="mp-kk">MP-KK Combined</SelectItem>
                  {kaunikUser && <SelectItem value={kaunikUser.id}>Kaunik (Self)</SelectItem>}
                  {manviUser && <SelectItem value={manviUser.id}>Manvi</SelectItem>}
@@ -586,5 +586,6 @@ export function AddApplicationDialog({ children, users, selectedUserId, allLocat
     </Dialog>
   );
 }
+
 
 
