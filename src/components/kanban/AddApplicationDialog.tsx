@@ -176,7 +176,7 @@ export function AddApplicationDialog({ children, users, selectedUserId, allLocat
   const currentUser = users.find(u => u.id === session.user?.id);
   const kaunikUser = users.find(u => u.username.toLowerCase() === 'kaunik');
   const manviUser = users.find(u => u.username.toLowerCase() === 'manvi');
-  const akshatUser = users.find(u => u.username.toLowerCase() === 'akshat');
+  const akshatUser = users.find(u => u.username.toLowerCase() === 'savage');
 
   const renderUserSelector = () => {
     if (isAdmin) {
@@ -210,8 +210,8 @@ export function AddApplicationDialog({ children, users, selectedUserId, allLocat
                  <SelectItem value="mp-kk">MP-KK Combined</SelectItem>
                  {kaunikUser && <SelectItem value={kaunikUser.id}>Kaunik (Self)</SelectItem>}
                  {manviUser && <SelectItem value={manviUser.id}>Manvi</SelectItem>}
-                 {akshatUser && <SelectItem value={akshatUser.id}>Akshat</SelectItem>}
-                 <SelectItem value="kaunik-akshat">Kaunik-Akshat</SelectItem>
+                 {akshatUser && <SelectItem value={akshatUser.id}>SavagE</SelectItem>}
+                 <SelectItem value="kaunik-akshat">Kaunik-SavagE</SelectItem>
              </SelectContent>
          </Select>
         );
@@ -586,4 +586,5 @@ export function AddApplicationDialog({ children, users, selectedUserId, allLocat
     </Dialog>
   );
 }
+
 
