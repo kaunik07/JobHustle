@@ -176,6 +176,7 @@ export function AddApplicationDialog({ children, users, selectedUserId, allLocat
   const currentUser = users.find(u => u.id === session.user?.id);
   const kaunikUser = users.find(u => u.username.toLowerCase() === 'kaunik');
   const manviUser = users.find(u => u.username.toLowerCase() === 'manvi');
+  const akshatUser = users.find(u => u.username.toLowerCase() === 'akshat');
 
   const renderUserSelector = () => {
     if (isAdmin) {
@@ -213,7 +214,7 @@ export function AddApplicationDialog({ children, users, selectedUserId, allLocat
        );
     }
     
-    if (isKaunik && manviUser && kaunikUser) {
+    if (isKaunik && manviUser && kaunikUser && akshatUser) {
         return (
          <Select onValueChange={field => form.setValue('userId', field)} value={form.getValues('userId')}>
              <FormControl>
@@ -222,9 +223,12 @@ export function AddApplicationDialog({ children, users, selectedUserId, allLocat
                  </SelectTrigger>
              </FormControl>
              <SelectContent>
+                 <SelectItem value="all-kaunik">All (KMA)</SelectItem>
                  <SelectItem value={kaunikUser.id}>Kaunik (Self)</SelectItem>
                  <SelectItem value={manviUser.id}>Manvi</SelectItem>
+                 <SelectItem value={akshatUser.id}>Akshat</SelectItem>
                  <SelectItem value="mp-kk">MP-KK Combined</SelectItem>
+                 <SelectItem value="kaunik-akshat">Kaunik-Akshat</SelectItem>
              </SelectContent>
          </Select>
         );
@@ -581,3 +585,5 @@ export function AddApplicationDialog({ children, users, selectedUserId, allLocat
     </Dialog>
   );
 }
+
+    
