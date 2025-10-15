@@ -47,8 +47,7 @@ export default async function Home({
           applicationFilter = eq(applicationsSchema.userId, selectedUserId);
         }
       }
-    } else if (loggedInUsername === 'kaunik' || loggedInUsername === 'manvi') {
-        // Special peer logic for kaunik and manvi
+    } else if (loggedInUsername === 'manvi') {
         const peerUsernames = ['kaunik', 'manvi'];
         const peerUsers = allUsers.filter(u => peerUsernames.includes(u.username.toLowerCase()));
         const peerUserIds = peerUsers.map(u => u.id);
@@ -65,7 +64,7 @@ export default async function Home({
             applicationFilter = inArray(applicationsSchema.userId, peerUserIds);
         }
     } else {
-      // Non-master user can only see their own data
+      // For kaunik or any other standard user, they can only see their own data
       selectedUserId = session.user.id;
       applicationFilter = eq(applicationsSchema.userId, selectedUserId);
     }

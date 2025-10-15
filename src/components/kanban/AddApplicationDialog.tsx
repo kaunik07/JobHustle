@@ -104,10 +104,7 @@ export function AddApplicationDialog({ children, users, selectedUserId, allLocat
   React.useEffect(() => {
     if (open) {
       let defaultUserId = selectedUserId;
-      // For peer users, if they are on the combined view, default to adding for both.
-      if ((isManvi || isKaunik) && selectedUserId === 'mp-kk') {
-        defaultUserId = 'mp-kk';
-      } else if (isManvi) {
+      if (isManvi) {
         defaultUserId = users.find(u => u.username.toLowerCase() === 'manvi')?.id || selectedUserId;
       } else if (isKaunik) {
         defaultUserId = users.find(u => u.username.toLowerCase() === 'kaunik')?.id || selectedUserId;
@@ -206,9 +203,7 @@ export function AddApplicationDialog({ children, users, selectedUserId, allLocat
             </FormControl>
             <SelectContent>
                 <SelectItem value="all-kaunik">All Users</SelectItem>
-                <SelectItem value="mp-kk">MP-KK Combined</SelectItem>
                 {kaunikUser && <SelectItem value={kaunikUser.id}>Kaunik (Self)</SelectItem>}
-                {manviUser && <SelectItem value={manviUser.id}>Manvi</SelectItem>}
                 {akshatUser && <SelectItem value={akshatUser.id}>SavagE</SelectItem>}
                 <SelectItem value="kaunik-akshat">Kaunik-SavagE</SelectItem>
             </SelectContent>
@@ -584,9 +579,3 @@ export function AddApplicationDialog({ children, users, selectedUserId, allLocat
     </Dialog>
   );
 }
-
-
-
-
-
-    

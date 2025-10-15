@@ -93,8 +93,11 @@ export function Header({ session, users, selectedUser, onUserChange, onUserRemov
       // Admin sees all users except itself in the selectable list
       return users.filter(u => u.username.toLowerCase() !== 'admin');
     }
-    if (isKaunik || isManvi) {
-      return users.filter(u => ['kaunik', 'manvi'].includes(u.username.toLowerCase()));
+    if (isManvi) {
+        return users.filter(u => ['kaunik', 'manvi'].includes(u.username.toLowerCase()));
+    }
+    if (isKaunik) {
+      return users.filter(u => u.username.toLowerCase() === 'kaunik');
     }
     // Standard user
     return users.filter(u => u.id === session.user?.id);
@@ -122,7 +125,7 @@ export function Header({ session, users, selectedUser, onUserChange, onUserRemov
                     <TooltipContent><p>All Users</p></TooltipContent>
                 </Tooltip>
               )}
-               {(isKaunik || isManvi) && (
+               {isManvi && (
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <Button
