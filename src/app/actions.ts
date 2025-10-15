@@ -58,10 +58,8 @@ async function scoreResumesForApplication(applicationId: string, userId: string,
 export async function addApplication(data: Omit<Application, 'id' | 'user' | 'appliedOn' | 'oaDueDate' | 'createdAt' | 'isUsCitizenOnly' | 'sponsorshipNotOffered' | 'keywords' | 'suggestions' | 'appliedWithEmail'>): Promise<Application[]> {
   let usersToApplyFor: User[] = [];
 
-  if (data.userId === 'all') {
+  if (data.userId === 'all' || data.userId === 'all-kaunik') {
     usersToApplyFor = await db.select().from(users).where(not(eq(users.username, 'admin')));
-  } else if (data.userId === 'all-kaunik') {
-    usersToApplyFor = await db.select().from(users).where(inArray(users.username, ['manvi', 'kaunik', 'SavagE']));
   } else if (data.userId === 'kaunik-akshat') {
     usersToApplyFor = await db.select().from(users).where(inArray(users.username, ['kaunik', 'SavagE']));
   } else if (data.userId === 'mp-kk') {
@@ -508,5 +506,7 @@ export async function compileLatex(latexContent: string): Promise<{ pdfBase64: s
     return { error: `Failed to connect to the compiler service: ${errorMessage}` };
   }
 }
+
+    
 
     

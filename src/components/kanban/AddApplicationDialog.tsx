@@ -196,29 +196,8 @@ export function AddApplicationDialog({ children, users, selectedUserId, allLocat
         </Select>
       );
     }
-
     if (isKaunik) {
-        return (
-         <Select onValueChange={field => form.setValue('userId', field)} value={form.getValues('userId')}>
-             <FormControl>
-                 <SelectTrigger>
-                     <SelectValue placeholder="Select user" />
-                 </SelectTrigger>
-             </FormControl>
-             <SelectContent>
-                 <SelectItem value="all-kaunik">All</SelectItem>
-                 <SelectItem value="mp-kk">MP-KK Combined</SelectItem>
-                 {kaunikUser && <SelectItem value={kaunikUser.id}>Kaunik (Self)</SelectItem>}
-                 {manviUser && <SelectItem value={manviUser.id}>Manvi</SelectItem>}
-                 {akshatUser && <SelectItem value={akshatUser.id}>SavagE</SelectItem>}
-                 <SelectItem value="kaunik-akshat">Kaunik-SavagE</SelectItem>
-             </SelectContent>
-         </Select>
-        );
-    }
-    
-    if (isManvi) {
-       return (
+      return (
         <Select onValueChange={field => form.setValue('userId', field)} value={form.getValues('userId')}>
             <FormControl>
                 <SelectTrigger>
@@ -226,13 +205,32 @@ export function AddApplicationDialog({ children, users, selectedUserId, allLocat
                 </SelectTrigger>
             </FormControl>
             <SelectContent>
-                {manviUser && <SelectItem value={manviUser.id}>Manvi (Self)</SelectItem>}
-                {kaunikUser && <SelectItem value={kaunikUser.id}>Kaunik</SelectItem>}
+                <SelectItem value="all-kaunik">All Users</SelectItem>
                 <SelectItem value="mp-kk">MP-KK Combined</SelectItem>
+                {kaunikUser && <SelectItem value={kaunikUser.id}>Kaunik (Self)</SelectItem>}
+                {manviUser && <SelectItem value={manviUser.id}>Manvi</SelectItem>}
+                {akshatUser && <SelectItem value={akshatUser.id}>SavagE</SelectItem>}
+                <SelectItem value="kaunik-akshat">Kaunik-SavagE</SelectItem>
             </SelectContent>
         </Select>
        );
     }
+    if (isManvi) {
+      return (
+       <Select onValueChange={field => form.setValue('userId', field)} value={form.getValues('userId')}>
+           <FormControl>
+               <SelectTrigger>
+                   <SelectValue placeholder="Select user" />
+               </SelectTrigger>
+           </FormControl>
+           <SelectContent>
+               {manviUser && <SelectItem value={manviUser.id}>Manvi (Self)</SelectItem>}
+               {kaunikUser && <SelectItem value={kaunikUser.id}>Kaunik</SelectItem>}
+               <SelectItem value="mp-kk">MP-KK Combined</SelectItem>
+           </SelectContent>
+       </Select>
+      );
+   }
     
     // Fallback for standard users
     return (
@@ -589,3 +587,6 @@ export function AddApplicationDialog({ children, users, selectedUserId, allLocat
 
 
 
+
+
+    
